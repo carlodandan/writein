@@ -1,4 +1,4 @@
-name: Release - WriteIn Application
+name: Release
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: "FreelanceDesk v__VERSION__"
+          releaseName: "WriteIn v__VERSION__"
           generateReleaseNotes: true
           releaseDraft: false
           prerelease: false
