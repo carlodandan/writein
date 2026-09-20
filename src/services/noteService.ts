@@ -8,9 +8,9 @@ export const noteService = {
     includeArchived: boolean = false,
   ): Promise<Note[]> {
     return invokeCommand<Note[]>('get_notes', {
-      project_id: projectId,
+      projectId,
       category: category === 'All' ? null : category,
-      include_archived: includeArchived,
+      includeArchived,
     });
   },
 

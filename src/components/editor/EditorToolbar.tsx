@@ -19,18 +19,24 @@ import {
   Undo,
   Redo,
   Search,
+  History,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 interface EditorToolbarProps {
   editor: Editor | null;
   onToggleFind: () => void;
   isFindOpen: boolean;
+  onToggleHistory?: () => void;
+  onTogglePreferences?: () => void;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editor,
   onToggleFind,
   isFindOpen,
+  onToggleHistory,
+  onTogglePreferences,
 }) => {
   if (!editor) return null;
 
@@ -215,8 +221,32 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <Redo className="w-4 h-4" />
       </button>
 
-      {/* Find in Document */}
-      <div className="ml-auto flex items-center">
+      {/* Find, History & Preferences */}
+      <div className="ml-auto flex items-center space-x-0.5">
+        {onToggleHistory && (
+          <button
+            type="button"
+            onClick={onToggleHistory}
+            className={btnClass(false)}
+            title="Version History & Snapshots"
+          >
+            <History className="w-4 h-4" />
+          </button>
+        )}
+
+        {onTogglePreferences && (
+          <button
+            type="button"
+            onClick={onTogglePreferences}
+            className={btnClass(false)}
+            title="Editor Preferences (Fonts, Spacing)"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
+        )}
+
+        {divider}
+
         <button
           type="button"
           onClick={onToggleFind}

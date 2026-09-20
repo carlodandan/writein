@@ -1,13 +1,18 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorToolbar } from './EditorToolbar';
 import { EditorStatus } from './EditorStatus';
 import { FindReplaceBar } from './FindReplaceBar';
+import { VersionHistoryPanel } from './VersionHistoryPanel';
+import { EditorPreferencesPanel } from './EditorPreferencesPanel';
 import { useManuscript } from '../../context/ManuscriptContext';
+import { useProject } from '../../context/ProjectContext';
+import { useEditorPreferences } from '../../hooks/useEditorPreferences';
+import { useWritingSession } from '../../hooks/useWritingSession';
+import { versionService } from '../../services/versionService';
 import { countWordsAndCharacters } from '../../utils/wordCount';
 import { PenTool } from 'lucide-react';
 
@@ -16,6 +21,7 @@ interface EditorProps {
 }
 
 export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => {
+  const { currentProject } = useProject();
   const {
     activeNode,
     activeDocument,
@@ -26,13 +32,32 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
   } = useManuscript();
 
   const [isFindOpen, setIsFindOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [liveWordCount, setLiveWordCount] = useState(0);
   const [liveCharCount, setLiveCharCount] = useState(0);
   const [liveCharNoSpaces, setLiveCharNoSpaces] = useState(0);
+  const [loadedDocumentNodeId, setLoadedDocumentNodeId] = useState<string | null>(null);
+
+  const {
+    preferences,
+    updatePreference,
+    resetPreferences,
+    containerMaxWidth,
+    fontFamilyClass,
+    lineHeightClass,
+  } = useEditorPreferences();
+
+  const { sessionWords } = useWritingSession({
+    projectId: currentProject?.id,
+    nodeId: activeNode?.id,
+    currentWordCount: liveWordCount,
+    isDocumentReady: loadedDocumentNodeId === activeNode?.id,
+  });
 
   // Convenient page title editing
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   useEffect(() => {
     if (activeNode) {
@@ -67,7 +92,6 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
           levels: [1, 2, 3],
         },
       }),
-      Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -119,6 +143,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
     setLiveWordCount(counts.words);
     setLiveCharCount(counts.characters);
     setLiveCharNoSpaces(counts.charactersNoSpaces);
+    setLoadedDocumentNodeId(activeDocument.node_id);
   }, [editor, activeDocument]);
 
   // Unsaved content protection: flush pending save when switching chapters or on page unload
@@ -149,6 +174,15 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
         e.preventDefault();
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         performSave(editorRef.current);
+
+        if (activeDocument && editorRef.current && activeNode) {
+          const txt = editorRef.current.getText();
+          if (txt.trim().length > 0) {
+            versionService
+              .createDocumentSnapshot(activeDocument.id, activeNode.id, txt, liveWordCount)
+              .catch(() => {});
+          }
+        }
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         setIsFindOpen((prev) => !prev);
@@ -157,7 +191,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [performSave]);
+  }, [performSave, activeDocument, activeNode, liveWordCount]);
 
   if (!activeNode) {
     return (
@@ -178,6 +212,8 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
           editor={editor}
           onToggleFind={() => setIsFindOpen(!isFindOpen)}
           isFindOpen={isFindOpen}
+          onToggleHistory={() => setIsHistoryOpen(true)}
+          onTogglePreferences={() => setIsPreferencesOpen(true)}
         />
       )}
 
@@ -191,11 +227,12 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
       {/* Writing Surface */}
       <div className="flex-1 overflow-y-auto px-6 py-10 flex justify-center">
         <div
-          className={`w-full bg-[var(--paper-surface)] border border-[var(--paper-border)] shadow-xs rounded-xl transition-all duration-200 ${
+          className={`w-full bg-[var(--paper-surface)] border border-[var(--paper-border)] shadow-xs rounded-xl transition-all duration-200 ${containerMaxWidth} ${fontFamilyClass} ${lineHeightClass} ${
             isDistractionFree
-              ? 'max-w-3xl p-14 sm:p-20 my-2'
-              : 'max-w-3xl p-10 sm:p-14 my-4'
+              ? 'p-14 sm:p-20 my-2'
+              : 'p-10 sm:p-14 my-4'
           }`}
+          style={{ fontSize: `${preferences.fontSize}px` }}
         >
           {/* Chapter / Scene Header */}
           <div className="mb-8 pb-4 border-b border-[var(--paper-border-subtle)]">
@@ -259,6 +296,36 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
         wordCount={liveWordCount}
         characterCount={liveCharCount}
         characterCountNoSpaces={liveCharNoSpaces}
+        sessionWords={sessionWords}
+      />
+
+      {/* Version History Panel */}
+      <VersionHistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        documentId={activeDocument?.id}
+        nodeId={activeNode?.id}
+        currentText={editor?.getText() || ''}
+        currentWordCount={liveWordCount}
+        onRestore={(text) => {
+          if (editor) {
+            editor.commands.setContent(text);
+            const counts = countWordsAndCharacters(text);
+            setLiveWordCount(counts.words);
+            setLiveCharCount(counts.characters);
+            setLiveCharNoSpaces(counts.charactersNoSpaces);
+            performSave(editor);
+          }
+        }}
+      />
+
+      {/* Editor Preferences Panel */}
+      <EditorPreferencesPanel
+        isOpen={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
+        preferences={preferences}
+        onUpdatePreference={updatePreference}
+        onResetPreferences={resetPreferences}
       />
     </div>
   );

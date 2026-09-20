@@ -9,6 +9,9 @@ import {
   Moon,
   Settings,
   ShieldCheck,
+  BookDown,
+  Upload,
+  Archive,
 } from 'lucide-react';
 import { useProject } from '../../context/ProjectContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -20,6 +23,9 @@ interface HeaderBarProps {
   isDistractionFree: boolean;
   onOpenSettings: () => void;
   onOpenSearch?: () => void;
+  onOpenCompile?: () => void;
+  onOpenImport?: () => void;
+  onOpenBackup?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -29,6 +35,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   isDistractionFree,
   onOpenSettings,
   onOpenSearch,
+  onOpenCompile,
+  onOpenImport,
+  onOpenBackup,
 }) => {
   const { currentProject } = useProject();
   const { isDark, setTheme } = useTheme();
@@ -83,6 +92,41 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
       {/* Right: Actions */}
       <div className="flex items-center space-x-1 text-[var(--ink-secondary)]">
+        {onOpenCompile && (
+          <button
+            onClick={onOpenCompile}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[var(--ink-secondary)] hover:bg-[var(--paper-desk)] hover:text-[var(--ink-primary)] transition-colors"
+            title="Compile & Export Manuscript"
+          >
+            <BookDown className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
+            <span className="hidden sm:inline">Compile</span>
+          </button>
+        )}
+
+        {onOpenImport && (
+          <button
+            onClick={onOpenImport}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[var(--ink-secondary)] hover:bg-[var(--paper-desk)] hover:text-[var(--ink-primary)] transition-colors"
+            title="Import Manuscript Draft"
+          >
+            <Upload className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
+            <span className="hidden sm:inline">Import</span>
+          </button>
+        )}
+
+        {onOpenBackup && (
+          <button
+            onClick={onOpenBackup}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[var(--ink-secondary)] hover:bg-[var(--paper-desk)] hover:text-[var(--ink-primary)] transition-colors"
+            title="Project Backups & Recovery"
+          >
+            <Archive className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
+            <span className="hidden sm:inline">Backup</span>
+          </button>
+        )}
+
+        <span className="text-[var(--paper-border)] mx-1">|</span>
+
         <button
           onClick={onToggleDistractionFree}
           className={`p-1.5 rounded-md hover:bg-[var(--paper-desk)] hover:text-[var(--ink-primary)] transition-colors ${

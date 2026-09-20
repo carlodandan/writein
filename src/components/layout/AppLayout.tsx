@@ -11,6 +11,9 @@ interface AppLayoutProps {
   onOpenNewProject: () => void;
   onOpenSettings: () => void;
   onOpenSearch?: () => void;
+  onOpenCompile?: () => void;
+  onOpenImport?: () => void;
+  onOpenBackup?: () => void;
   isDistractionFree: boolean;
   onSetDistractionFree: (val: boolean) => void;
   children: React.ReactNode;
@@ -23,6 +26,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   onOpenNewProject,
   onOpenSettings,
   onOpenSearch,
+  onOpenCompile,
+  onOpenImport,
+  onOpenBackup,
   isDistractionFree,
   onSetDistractionFree,
   children,
@@ -55,6 +61,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           isDistractionFree={isDistractionFree}
           onOpenSettings={onOpenSettings}
           onOpenSearch={onOpenSearch}
+          onOpenCompile={onOpenCompile}
+          onOpenImport={onOpenImport}
+          onOpenBackup={onOpenBackup}
         />
       )}
 

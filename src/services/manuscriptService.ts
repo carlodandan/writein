@@ -12,7 +12,7 @@ import type {
 export const manuscriptService = {
   async getManuscriptTree(projectId: string): Promise<ManuscriptNode[]> {
     return invokeCommand<ManuscriptNode[]>('get_manuscript_tree', {
-      project_id: projectId,
+      projectId,
     });
   },
 
@@ -45,7 +45,7 @@ export const manuscriptService = {
   },
 
   async getDocument(nodeId: string): Promise<DocumentContent> {
-    return invokeCommand<DocumentContent>('get_document', { node_id: nodeId });
+    return invokeCommand<DocumentContent>('get_document', { nodeId });
   },
 
   async saveDocument(input: SaveDocumentInput): Promise<DocumentContent> {

@@ -12,7 +12,7 @@ export const timelineService = {
     filter?: TimelineFilter,
   ): Promise<TimelineEvent[]> {
     return invokeCommand<TimelineEvent[]>('get_timeline_events', {
-      project_id: projectId,
+      projectId,
       filter: filter || null,
     });
   },

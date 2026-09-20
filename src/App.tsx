@@ -14,12 +14,16 @@ import { WorldbuildingWorkspace } from './components/story/worldbuilding/Worldbu
 import { TimelineWorkspace } from './components/story/timeline/TimelineWorkspace';
 import { NotesWorkspace } from './components/story/notes/NotesWorkspace';
 import { ReferenceWorkspace } from './components/story/references/ReferenceWorkspace';
+import { WritingGoalsWorkspace } from './components/story/goals/WritingGoalsWorkspace';
+import { StatisticsWorkspace } from './components/story/statistics/StatisticsWorkspace';
+import { CompileModal } from './components/manuscript/CompileModal';
+import { ImportModal } from './components/manuscript/ImportModal';
 import { GlobalSearchModal } from './components/search/GlobalSearchModal';
+import { TrashWorkspace } from './components/story/trash/TrashWorkspace';
+import { BackupModal } from './components/project/BackupModal';
 import {
-  GenericPlaceholder,
   SettingsView,
 } from './components/views/PlaceholderViews';
-import { Trash2 } from 'lucide-react';
 import './App.css';
 
 function MainContent({
@@ -85,15 +89,14 @@ function MainContent({
     case 'references':
       return <ReferenceWorkspace selectedAttachmentId={selectedEntityId} />;
 
+    case 'goals':
+      return <WritingGoalsWorkspace />;
+
+    case 'statistics':
+      return <StatisticsWorkspace />;
+
     case 'trash':
-      return (
-        <GenericPlaceholder
-          title="Trash & Recovery"
-          description="Safely recover deleted chapters, characters, and notes"
-          icon={Trash2}
-          phase="Phase 7 Target"
-        />
-      );
+      return <TrashWorkspace />;
 
     case 'settings':
       return <SettingsView />;
@@ -114,13 +117,14 @@ function App() {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCompileOpen, setIsCompileOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
 
   const handleNavigate = (tab: ActiveNavTab, entityId?: string) => {
     setActiveTab(tab);
-    if (entityId) {
-      setSelectedEntityId(entityId);
-    }
+    setSelectedEntityId(entityId || null);
   };
 
   const handleSearchNavigate = (tab: ActiveNavTab, entityId?: string) => {
@@ -139,6 +143,9 @@ function App() {
             onOpenNewProject={() => setIsCreateModalOpen(true)}
             onOpenSettings={() => setActiveTab('settings')}
             onOpenSearch={() => setIsSearchOpen(true)}
+            onOpenCompile={() => setIsCompileOpen(true)}
+            onOpenImport={() => setIsImportOpen(true)}
+            onOpenBackup={() => setIsBackupOpen(true)}
             isDistractionFree={isDistractionFree}
             onSetDistractionFree={setIsDistractionFree}
           >
@@ -168,6 +175,21 @@ function App() {
               isOpen={isSearchOpen}
               onClose={() => setIsSearchOpen(false)}
               onNavigate={handleSearchNavigate}
+            />
+
+            <CompileModal
+              isOpen={isCompileOpen}
+              onClose={() => setIsCompileOpen(false)}
+            />
+
+            <ImportModal
+              isOpen={isImportOpen}
+              onClose={() => setIsImportOpen(false)}
+            />
+
+            <BackupModal
+              isOpen={isBackupOpen}
+              onClose={() => setIsBackupOpen(false)}
             />
           </AppLayout>
         </ManuscriptProvider>

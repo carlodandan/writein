@@ -59,8 +59,35 @@ pub fn run_migrations(conn: &mut Connection) -> Result<()> {
         tx.commit()?;
     }
 
+    if !applied_versions.contains(&5) {
+        let tx = conn.transaction()?;
+        tx.execute_batch(MIGRATION_005)?;
+        tx.execute(
+            "INSERT INTO _migrations (version, name, applied_at) VALUES (?1, ?2, datetime('now'))",
+            params![5, "005_writing_sessions"],
+        )?;
+        tx.commit()?;
+    }
+
     Ok(())
 }
+
+const MIGRATION_005: &str = r#"
+-- Writing Sessions: track per-session word counts and durations
+CREATE TABLE IF NOT EXISTS writing_sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    project_id TEXT NOT NULL,
+    node_id TEXT,
+    started_at TEXT NOT NULL,
+    ended_at TEXT,
+    duration_seconds INTEGER NOT NULL DEFAULT 0,
+    words_written INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY(node_id) REFERENCES manuscript_nodes(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_project_date ON writing_sessions(project_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sessions_node ON writing_sessions(node_id);
+"#;
 
 const MIGRATION_004: &str = r#"
 -- Secure Attachments & Entity Linking
@@ -384,6 +411,15 @@ mod tests {
                 .unwrap();
             let mut rows = stmt.query([]).unwrap();
             assert!(rows.next().unwrap().is_some());
+        }
+
+        // Verify Migration 005: writing_sessions table
+        {
+            let mut stmt = conn
+                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='writing_sessions'")
+                .unwrap();
+            let mut rows = stmt.query([]).unwrap();
+            assert!(rows.next().unwrap().is_some(), "writing_sessions table should exist after migration 005");
         }
 
         // Idempotency: Running it a second time should succeed without error

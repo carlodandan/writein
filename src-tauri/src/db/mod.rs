@@ -10,6 +10,13 @@ pub mod tag_repo;
 pub mod search_repo;
 pub mod attachment_repo;
 pub mod cross_link_repo;
+pub mod version_repo;
+pub mod goals_repo;
+pub mod session_repo;
+pub mod settings_repo;
+pub mod export_repo;
+pub mod trash_repo;
+pub mod backup_repo;
 
 use rusqlite::Connection;
 use std::fs;
@@ -78,6 +85,16 @@ impl DbManager {
             AppError::Internal(format!("Database lock error: {}", e))
         })?;
         f(&conn)
+    }
+
+    pub fn with_conn_mut<F, R>(&self, f: F) -> Result<R, AppError>
+    where
+        F: FnOnce(&mut Connection) -> Result<R, AppError>,
+    {
+        let mut conn = self.conn.lock().map_err(|e| {
+            AppError::Internal(format!("Database lock error: {}", e))
+        })?;
+        f(&mut conn)
     }
 
     pub fn ensure_project_directories(&self, project_id: &str) -> Result<PathBuf, AppError> {

@@ -38,7 +38,7 @@ interface ManuscriptContextType {
   moveNode: (nodeId: string, targetParentId: string | null, targetSortOrder: number) => Promise<void>;
   reorderNodes: (items: ReorderItem[]) => Promise<void>;
   saveCurrentDocument: (contentJson: string, contentText: string, wordCount: number, characterCount: number) => Promise<void>;
-  refreshTree: () => Promise<void>;
+  refreshTree: (nodeIdToSelect?: string) => Promise<void>;
 }
 
 export const ManuscriptContext = createContext<ManuscriptContextType | undefined>(undefined);
@@ -56,7 +56,7 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const activeNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
-  const refreshTree = useCallback(async () => {
+  const refreshTree = useCallback(async (nodeIdToSelect?: string) => {
     if (!currentProject) {
       setNodes([]);
       setSelectedNodeId(null);
@@ -70,9 +70,12 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const tree = await manuscriptService.getManuscriptTree(currentProject.id);
       setNodes(tree);
 
-      // If nothing selected or selected node no longer exists, select first scene or chapter
+      // If nodeIdToSelect specified, select it; otherwise keep prev or select first node
       if (tree.length > 0) {
         setSelectedNodeId((prev) => {
+          if (nodeIdToSelect && tree.some((n) => n.id === nodeIdToSelect)) {
+            return nodeIdToSelect;
+          }
           if (prev && tree.some((n) => n.id === prev)) {
             return prev;
           }
@@ -151,7 +154,7 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       title,
     });
 
-    await refreshTree();
+    await refreshTree(created.id);
     setSelectedNodeId(created.id);
     return created;
   };
