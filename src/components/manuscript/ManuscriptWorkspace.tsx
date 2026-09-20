@@ -14,13 +14,13 @@ export const ManuscriptWorkspace: React.FC<ManuscriptWorkspaceProps> = ({
   selectedChapterId,
 }) => {
   const [isTreeVisible, setIsTreeVisible] = useState(true);
-  const { selectNode, selectedNodeId } = useManuscript();
+  const { selectNode } = useManuscript();
 
   useEffect(() => {
-    if (selectedChapterId && selectedChapterId !== selectedNodeId) {
+    if (selectedChapterId) {
       selectNode(selectedChapterId);
     }
-  }, [selectedChapterId, selectedNodeId, selectNode]);
+  }, [selectedChapterId, selectNode]);
 
   if (isDistractionFree) {
     return <Editor isDistractionFree={true} />;

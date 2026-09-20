@@ -8,7 +8,7 @@ import {
 export const worldbuildingService = {
   async getEntries(projectId: string, category?: string): Promise<WorldbuildingEntry[]> {
     return invokeCommand<WorldbuildingEntry[]>('get_worldbuilding_entries', {
-      project_id: projectId,
+      projectId,
       category: category === 'All' ? null : category,
     });
   },

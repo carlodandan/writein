@@ -124,9 +124,7 @@ function App() {
 
   const handleNavigate = (tab: ActiveNavTab, entityId?: string) => {
     setActiveTab(tab);
-    if (entityId) {
-      setSelectedEntityId(entityId);
-    }
+    setSelectedEntityId(entityId || null);
   };
 
   const handleSearchNavigate = (tab: ActiveNavTab, entityId?: string) => {

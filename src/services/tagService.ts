@@ -3,7 +3,7 @@ import { CreateTagInput, SetEntityTagsInput, Tag, TagWithUsageCount } from '../t
 
 export const tagService = {
   async getTags(projectId: string): Promise<TagWithUsageCount[]> {
-    return invokeCommand<TagWithUsageCount[]>('get_tags', { project_id: projectId });
+    return invokeCommand<TagWithUsageCount[]>('get_tags', { projectId });
   },
 
   async createTag(input: CreateTagInput): Promise<Tag> {
@@ -11,7 +11,7 @@ export const tagService = {
   },
 
   async renameTag(id: string, newName: string): Promise<Tag> {
-    return invokeCommand<Tag>('rename_tag', { id, new_name: newName });
+    return invokeCommand<Tag>('rename_tag', { id, newName });
   },
 
   async deleteTag(id: string): Promise<boolean> {
@@ -23,13 +23,13 @@ export const tagService = {
     entityId: string,
   ): Promise<Tag[]> {
     return invokeCommand<Tag[]>('get_entity_tags', {
-      entity_type: entityType,
-      entity_id: entityId,
+      entityType,
+      entityId,
     });
   },
 
   async updateTag(id: string, newName: string): Promise<Tag> {
-    return invokeCommand<Tag>('update_tag', { id, new_name: newName });
+    return invokeCommand<Tag>('update_tag', { id, newName });
   },
 
   async assignTag(
@@ -39,10 +39,10 @@ export const tagService = {
     tagName: string,
   ): Promise<Tag> {
     return invokeCommand<Tag>('assign_tag', {
-      project_id: projectId,
-      entity_type: entityType,
-      entity_id: entityId,
-      tag_name: tagName,
+      projectId,
+      entityType,
+      entityId,
+      tagName,
     });
   },
 
@@ -52,9 +52,9 @@ export const tagService = {
     tagId: string,
   ): Promise<boolean> {
     return invokeCommand<boolean>('remove_tag', {
-      entity_type: entityType,
-      entity_id: entityId,
-      tag_id: tagId,
+      entityType,
+      entityId,
+      tagId,
     });
   },
 

@@ -5,13 +5,13 @@ import type { DocumentVersion } from '../types/phase5';
 export const versionService = {
   async listDocumentVersions(nodeId: string): Promise<DocumentVersion[]> {
     return invokeCommand<DocumentVersion[]>('list_document_versions', {
-      node_id: nodeId,
+      nodeId,
     });
   },
 
   async getDocumentVersion(versionId: string): Promise<DocumentVersion> {
     return invokeCommand<DocumentVersion>('get_document_version', {
-      version_id: versionId,
+      versionId,
     });
   },
 
@@ -22,10 +22,10 @@ export const versionService = {
     wordCount: number
   ): Promise<DocumentVersion> {
     return invokeCommand<DocumentVersion>('create_document_snapshot', {
-      document_id: documentId,
-      node_id: nodeId,
-      snapshot_text: snapshotText,
-      word_count: wordCount,
+      documentId,
+      nodeId,
+      snapshotText,
+      wordCount,
     });
   },
 
@@ -34,14 +34,14 @@ export const versionService = {
     versionId: string
   ): Promise<DocumentContent> {
     return invokeCommand<DocumentContent>('restore_document_version', {
-      node_id: nodeId,
-      version_id: versionId,
+      nodeId,
+      versionId,
     });
   },
 
   async deleteDocumentVersion(versionId: string): Promise<boolean> {
     return invokeCommand<boolean>('delete_document_version', {
-      version_id: versionId,
+      versionId,
     });
   },
 };

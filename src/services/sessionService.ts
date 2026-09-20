@@ -7,8 +7,8 @@ export const sessionService = {
     nodeId?: string
   ): Promise<WritingSession> {
     return invokeCommand<WritingSession>('start_writing_session', {
-      project_id: projectId,
-      node_id: nodeId,
+      projectId,
+      nodeId,
     });
   },
 
@@ -18,9 +18,9 @@ export const sessionService = {
     durationSeconds: number
   ): Promise<WritingSession> {
     return invokeCommand<WritingSession>('end_writing_session', {
-      session_id: sessionId,
-      words_written: wordsWritten,
-      duration_seconds: durationSeconds,
+      sessionId,
+      wordsWritten,
+      durationSeconds,
     });
   },
 
@@ -29,14 +29,14 @@ export const sessionService = {
     limit?: number
   ): Promise<WritingSession[]> {
     return invokeCommand<WritingSession[]>('list_writing_sessions', {
-      project_id: projectId,
+      projectId,
       limit,
     });
   },
 
   async getSessionStats(projectId: string): Promise<SessionStats> {
     return invokeCommand<SessionStats>('get_session_stats', {
-      project_id: projectId,
+      projectId,
     });
   },
 };

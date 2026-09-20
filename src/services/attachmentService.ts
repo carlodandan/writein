@@ -14,9 +14,9 @@ export const attachmentService = {
     entityId?: string,
   ): Promise<Attachment[]> {
     return invokeCommand<Attachment[]>('get_attachments', {
-      project_id: projectId,
-      entity_type: entityType || null,
-      entity_id: entityId || null,
+      projectId,
+      entityType: entityType || null,
+      entityId: entityId || null,
     });
   },
 
@@ -53,9 +53,9 @@ export const attachmentService = {
     entityId: string,
   ): Promise<RelatedContentResponse> {
     return invokeCommand<RelatedContentResponse>('get_related_content', {
-      project_id: projectId,
-      entity_type: entityType,
-      entity_id: entityId,
+      projectId,
+      entityType,
+      entityId,
     });
   },
 };

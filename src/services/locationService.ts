@@ -3,7 +3,7 @@ import { Location, CreateLocationInput, UpdateLocationInput } from '../types/loc
 
 export const locationService = {
   async getLocations(projectId: string): Promise<Location[]> {
-    return invokeCommand<Location[]>('get_locations', { project_id: projectId });
+    return invokeCommand<Location[]>('get_locations', { projectId });
   },
 
   async getLocation(id: string): Promise<Location> {

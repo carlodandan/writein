@@ -11,7 +11,7 @@ export const exportService = {
     options: CompileOptions
   ): Promise<CompileResult> {
     return invokeCommand<CompileResult>('compile_manuscript', {
-      project_id: projectId,
+      projectId,
       options,
     });
   },
@@ -21,7 +21,7 @@ export const exportService = {
     format?: string
   ): Promise<StoryBibleExportResult> {
     return invokeCommand<StoryBibleExportResult>('export_story_bible', {
-      project_id: projectId,
+      projectId,
       format,
     });
   },

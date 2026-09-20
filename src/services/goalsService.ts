@@ -8,7 +8,7 @@ import type {
 export const goalsService = {
   async getWritingGoals(projectId: string): Promise<WritingGoal[]> {
     return invokeCommand<WritingGoal[]>('get_writing_goals', {
-      project_id: projectId,
+      projectId,
     });
   },
 

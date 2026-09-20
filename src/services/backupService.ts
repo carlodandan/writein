@@ -4,25 +4,25 @@ import type { BackupFileInfo, BackupResult } from '../types/backupTrash';
 export const backupService = {
   async createBackup(projectId: string): Promise<BackupResult> {
     return invokeCommand<BackupResult>('create_project_backup', {
-      project_id: projectId,
+      projectId,
     });
   },
 
   async restoreBackup(backupJson: string): Promise<string> {
     return invokeCommand<string>('restore_project_backup', {
-      backup_json: backupJson,
+      backupJson,
     });
   },
 
   async listBackups(projectId?: string): Promise<BackupFileInfo[]> {
     return invokeCommand<BackupFileInfo[]>('list_backups', {
-      project_id: projectId ?? null,
+      projectId: projectId ?? null,
     });
   },
 
   async deleteBackupFile(fileName: string): Promise<boolean> {
     return invokeCommand<boolean>('delete_backup_file', {
-      file_name: fileName,
+      fileName,
     });
   },
 

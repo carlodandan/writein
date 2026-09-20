@@ -5,11 +5,43 @@ import { compileManuscript } from '../utils/manuscriptCompiler';
  * Checks if the current environment is running inside Tauri.
  */
 export function isTauri(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+  return (
+    typeof window !== 'undefined' &&
+    ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
+  );
+}
+
+const STORAGE_KEY = 'writein_mock_store_v1';
+
+function loadMockStore(): any | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.projects) && Array.isArray(parsed.characters)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load mock store from localStorage:', e);
+    }
+  }
+  return null;
+}
+
+export function persistMockStore(): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStore));
+    } catch (e) {
+      console.warn('Failed to persist mock store to localStorage:', e);
+    }
+  }
 }
 
 // In-memory mock store for browser development and unit testing outside Tauri
-const mockStore: {
+const defaultMockStore: {
   projects: any[];
   nodes: any[];
   documents: Record<string, any>;
@@ -423,24 +455,58 @@ const mockStore: {
   settings: {},
 };
 
+const loadedStore = loadMockStore();
+const mockStore: typeof defaultMockStore = loadedStore || defaultMockStore;
+
+function toCamelCaseKey(key: string): string {
+  return key.replace(/_([a-z0-9])/g, (_, letter) => letter.toUpperCase());
+}
+
+function toSnakeCaseKey(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+function normalizeArgsToCamelCase(args?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!args) return undefined;
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(args)) {
+    normalized[toCamelCaseKey(key)] = value;
+  }
+  return normalized;
+}
+
+function createDualCaseArgs(args?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!args) return undefined;
+  const dual: Record<string, unknown> = { ...args };
+  for (const [key, value] of Object.entries(args)) {
+    dual[toCamelCaseKey(key)] = value;
+    dual[toSnakeCaseKey(key)] = value;
+  }
+  return dual;
+}
+
 /**
  * Type-safe IPC invoke with browser fallback.
  */
 export async function invokeCommand<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (isTauri()) {
     try {
-      return await tauriInvoke<T>(cmd, args);
+      const normalizedArgs = normalizeArgsToCamelCase(args);
+      return await tauriInvoke<T>(cmd, normalizedArgs);
     } catch (err: any) {
       console.error(`[Tauri IPC Error] ${cmd}:`, err);
       throw new Error(typeof err === 'string' ? err : err?.message || 'IPC Command Failed');
     }
   }
 
+  args = createDualCaseArgs(args);
+
   // Browser / Headless fallback simulation
   console.warn(`[Tauri IPC Simulation] Falling back for: ${cmd}`, args);
   await new Promise((resolve) => setTimeout(resolve, 30));
 
-  switch (cmd) {
+  const runSimulation = (): T => {
+    switch (cmd) {
     case 'get_projects':
       return [...mockStore.projects] as unknown as T;
 
@@ -2241,5 +2307,25 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
 
     default:
       throw new Error(`Command ${cmd} not mocked in fallback`);
+    }
+  };
+
+  const result = runSimulation();
+
+  if (
+    cmd.startsWith('create_') ||
+    cmd.startsWith('update_') ||
+    cmd.startsWith('delete_') ||
+    cmd.startsWith('save_') ||
+    cmd.startsWith('restore_') ||
+    cmd.startsWith('move_') ||
+    cmd.startsWith('reorder_') ||
+    cmd.startsWith('empty_') ||
+    cmd.startsWith('commit_') ||
+    cmd.startsWith('add_')
+  ) {
+    persistMockStore();
   }
+
+  return result;
 }

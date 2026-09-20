@@ -10,7 +10,7 @@ import {
 
 export const characterService = {
   async getCharacters(projectId: string): Promise<Character[]> {
-    return invokeCommand<Character[]>('get_characters', { project_id: projectId });
+    return invokeCommand<Character[]>('get_characters', { projectId });
   },
 
   async getCharacter(id: string): Promise<Character> {
@@ -31,7 +31,7 @@ export const characterService = {
 
   async getRelationships(projectId: string): Promise<CharacterRelationshipWithNames[]> {
     return invokeCommand<CharacterRelationshipWithNames[]>('get_character_relationships', {
-      project_id: projectId,
+      projectId,
     });
   },
 
