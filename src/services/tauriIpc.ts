@@ -488,6 +488,12 @@ function createDualCaseArgs(args?: Record<string, unknown>): Record<string, unkn
 /**
  * Type-safe IPC invoke with browser fallback.
  */
+function secureRandomIdSuffix(lengthBytes: number = 8): string {
+  const randomBytes = new Uint8Array(lengthBytes);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function invokeCommand<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (isTauri()) {
     try {
@@ -2253,7 +2259,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     case 'restore_project_backup': {
       const backupJson = args?.backup_json as string;
       const bundle = JSON.parse(backupJson);
-      const newProjId = `proj-restored-${Math.random().toString(36).substring(2, 9)}`;
+      const newProjId = `proj-restored-${secureRandomIdSuffix(8)}`;
 
       const restoredProject = {
         ...bundle.project,
