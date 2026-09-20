@@ -1,14 +1,17 @@
+use rusqlite::{Connection, Transaction};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
-use rusqlite::Connection;
 
-use crate::db::manuscript_repo::{create_node, get_manuscript_tree, get_document, recalculate_project_word_count, save_document};
-use crate::db::project_repo::get_project;
 use crate::db::character_repo::list_characters;
 use crate::db::location_repo::list_locations;
-use crate::db::worldbuilding_repo::list_worldbuilding_entries;
-use crate::db::timeline_repo::list_timeline_events;
+use crate::db::manuscript_repo::{
+    create_node, get_document, get_manuscript_tree, recalculate_project_word_count, save_document,
+};
 use crate::db::note_repo::list_notes;
+use crate::db::project_repo::get_project;
+use crate::db::timeline_repo::list_timeline_events;
+use crate::db::worldbuilding_repo::list_worldbuilding_entries;
 use crate::models::{
     AppError, CommitImportInput, CompileOptions, CompileResult, CreateNodeInput,
     ImportDetectedNode, ManuscriptNode, NodeType, SaveDocumentInput, StoryBibleExportResult,
@@ -34,6 +37,60 @@ pub fn compile_manuscript(
             }
         })
         .collect();
+    let selected_id_set: HashSet<&str> =
+        filtered_nodes.iter().map(|node| node.id.as_str()).collect();
+    let mut roots = Vec::new();
+    let mut children_by_parent: HashMap<&str, Vec<&ManuscriptNode>> = HashMap::new();
+
+    for node in &filtered_nodes {
+        match node.parent_id.as_deref() {
+            Some(parent_id) if selected_id_set.contains(parent_id) => {
+                children_by_parent.entry(parent_id).or_default().push(node);
+            }
+            _ => roots.push(*node),
+        }
+    }
+
+    let sort_siblings = |nodes: &mut Vec<&ManuscriptNode>| {
+        nodes.sort_by(|a, b| {
+            a.sort_order
+                .cmp(&b.sort_order)
+                .then_with(|| a.created_at.cmp(&b.created_at))
+                .then_with(|| a.id.cmp(&b.id))
+        });
+    };
+    sort_siblings(&mut roots);
+    for children in children_by_parent.values_mut() {
+        sort_siblings(children);
+    }
+
+    fn emit_depth_first<'a>(
+        node: &'a ManuscriptNode,
+        children_by_parent: &HashMap<&str, Vec<&'a ManuscriptNode>>,
+        visited: &mut HashSet<&'a str>,
+        ordered: &mut Vec<&'a ManuscriptNode>,
+    ) {
+        if !visited.insert(node.id.as_str()) {
+            return;
+        }
+        ordered.push(node);
+        if let Some(children) = children_by_parent.get(node.id.as_str()) {
+            for child in children {
+                emit_depth_first(child, children_by_parent, visited, ordered);
+            }
+        }
+    }
+
+    let mut ordered_nodes = Vec::with_capacity(filtered_nodes.len());
+    let mut visited = HashSet::new();
+    for root in roots {
+        emit_depth_first(root, &children_by_parent, &mut visited, &mut ordered_nodes);
+    }
+    // Corrupt cyclic hierarchies have no natural root. Emit each remaining node
+    // once so compilation remains finite and does not silently omit content.
+    for node in &filtered_nodes {
+        emit_depth_first(node, &children_by_parent, &mut visited, &mut ordered_nodes);
+    }
 
     let mut output = String::new();
     let mut chapter_counter = 0;
@@ -65,13 +122,22 @@ pub fn compile_manuscript(
                 escape_html(&project.title)
             ));
             if let Some(sub) = &project.subtitle {
-                output.push_str(&format!("  <h2 class=\"book-subtitle\">{}</h2>\n", escape_html(sub)));
+                output.push_str(&format!(
+                    "  <h2 class=\"book-subtitle\">{}</h2>\n",
+                    escape_html(sub)
+                ));
             }
             if let Some(auth) = &project.author {
-                output.push_str(&format!("  <p class=\"book-author\">By {}</p>\n", escape_html(auth)));
+                output.push_str(&format!(
+                    "  <p class=\"book-author\">By {}</p>\n",
+                    escape_html(auth)
+                ));
             }
             if let Some(genre) = &project.genre {
-                output.push_str(&format!("  <p class=\"book-genre\">{}</p>\n", escape_html(genre)));
+                output.push_str(&format!(
+                    "  <p class=\"book-genre\">{}</p>\n",
+                    escape_html(genre)
+                ));
             }
             output.push_str("</div>\n<div class=\"page-break\"></div>\n");
         } else {
@@ -88,7 +154,7 @@ pub fn compile_manuscript(
 
     // 2. Table of Contents
     if options.include_toc {
-        let chapters: Vec<&&ManuscriptNode> = filtered_nodes
+        let chapters: Vec<&&ManuscriptNode> = ordered_nodes
             .iter()
             .filter(|n| n.node_type == NodeType::Chapter)
             .collect();
@@ -121,7 +187,7 @@ pub fn compile_manuscript(
     }
 
     // 3. Render Nodes
-    for node in &filtered_nodes {
+    for node in &ordered_nodes {
         let doc = get_document(conn, &node.id).ok();
         let body_text = doc.map(|d| d.content_text).unwrap_or_default();
 
@@ -291,7 +357,11 @@ pub fn export_story_bible(
     // Timeline
     md.push_str("## Timeline & Chronology\n\n");
     for event in &timeline {
-        let date_str = event.date_label.as_deref().or(event.event_date.as_deref()).unwrap_or("Undated");
+        let date_str = event
+            .date_label
+            .as_deref()
+            .or(event.event_date.as_deref())
+            .unwrap_or("Undated");
         md.push_str(&format!("- **{}**: {}\n", date_str, event.title));
         if let Some(desc) = &event.description {
             md.push_str(&format!("  {}\n", desc));
@@ -305,7 +375,10 @@ pub fn export_story_bible(
         md.push_str(&format!("{}\n\n", note.content));
     }
 
-    let file_name = format!("{}_story_bible.md", project.title.to_lowercase().replace(' ', "_"));
+    let file_name = format!(
+        "{}_story_bible.md",
+        project.title.to_lowercase().replace(' ', "_")
+    );
     let exports_dir = base_dir.join("projects").join(project_id).join("exports");
     let _ = fs::create_dir_all(&exports_dir);
     let file_path = exports_dir.join(&file_name);
@@ -323,13 +396,14 @@ pub fn export_story_bible(
 }
 
 pub fn commit_imported_manuscript(
-    conn: &Connection,
+    conn: &mut Connection,
     input: CommitImportInput,
 ) -> Result<Vec<ManuscriptNode>, AppError> {
+    let tx = conn.transaction()?;
     let mut created_nodes = Vec::new();
 
     fn insert_node_recursive(
-        conn: &Connection,
+        tx: &Transaction<'_>,
         project_id: &str,
         parent_id: Option<&str>,
         item: &ImportDetectedNode,
@@ -342,7 +416,7 @@ pub fn commit_imported_manuscript(
         };
 
         let node = create_node(
-            conn,
+            tx,
             CreateNodeInput {
                 project_id: project_id.to_string(),
                 parent_id: parent_id.map(|s| s.to_string()),
@@ -357,7 +431,7 @@ pub fn commit_imported_manuscript(
             let words = item.content_text.split_whitespace().count() as i64;
             let chars = item.content_text.chars().count() as i64;
             save_document(
-                conn,
+                tx,
                 SaveDocumentInput {
                     node_id: node.id.clone(),
                     content_json: String::new(),
@@ -372,7 +446,7 @@ pub fn commit_imported_manuscript(
 
         if let Some(children) = &item.children {
             for child in children {
-                insert_node_recursive(conn, project_id, Some(&node.id), child, created)?;
+                insert_node_recursive(tx, project_id, Some(&node.id), child, created)?;
             }
         }
 
@@ -380,11 +454,12 @@ pub fn commit_imported_manuscript(
     }
 
     for item in &input.items {
-        insert_node_recursive(conn, &input.project_id, None, item, &mut created_nodes)?;
+        insert_node_recursive(&tx, &input.project_id, None, item, &mut created_nodes)?;
     }
 
-    recalculate_project_word_count(conn, &input.project_id)?;
+    recalculate_project_word_count(&tx, &input.project_id)?;
 
+    tx.commit()?;
     Ok(created_nodes)
 }
 
@@ -412,7 +487,7 @@ mod tests {
 
     #[test]
     fn test_compile_manuscript_and_story_bible() {
-        let conn = setup_test_db();
+        let mut conn = setup_test_db();
         let proj = create_project(
             &conn,
             CreateProjectInput {
@@ -450,6 +525,51 @@ mod tests {
         )
         .unwrap();
 
+        let part = create_node(
+            &conn,
+            CreateNodeInput {
+                project_id: proj.id.clone(),
+                parent_id: None,
+                node_type: NodeType::Part,
+                title: "Nested Part".into(),
+                synopsis: None,
+            },
+        )
+        .unwrap();
+        let nested_chapter = create_node(
+            &conn,
+            CreateNodeInput {
+                project_id: proj.id.clone(),
+                parent_id: Some(part.id.clone()),
+                node_type: NodeType::Chapter,
+                title: "Nested Chapter".into(),
+                synopsis: None,
+            },
+        )
+        .unwrap();
+        let nested_scene = create_node(
+            &conn,
+            CreateNodeInput {
+                project_id: proj.id.clone(),
+                parent_id: Some(nested_chapter.id.clone()),
+                node_type: NodeType::Scene,
+                title: "Nested Scene".into(),
+                synopsis: None,
+            },
+        )
+        .unwrap();
+        save_document(
+            &conn,
+            SaveDocumentInput {
+                node_id: nested_scene.id,
+                content_json: String::new(),
+                content_text: "Nested Scene body".into(),
+                word_count: 3,
+                character_count: 17,
+            },
+        )
+        .unwrap();
+
         let temp_dir = std::env::temp_dir().join("writein_export_test");
         let _ = fs::create_dir_all(&temp_dir);
 
@@ -471,11 +591,50 @@ mod tests {
 
         assert!(res_md.content.contains("# Compile Test Book"));
         assert!(res_md.content.contains("Chapter 1: Arrival"));
-        assert!(res_md.content.contains("The ship docked silently at the station."));
+        assert!(res_md
+            .content
+            .contains("The ship docked silently at the station."));
         assert_eq!(res_md.file_name, "compile_test_book.md");
+        let part_position = res_md.content.find("# Nested Part").unwrap();
+        let chapter_position = res_md.content.find("## Chapter 2: Nested Chapter").unwrap();
+        let scene_position = res_md.content.find("Nested Scene").unwrap();
+        assert!(part_position < chapter_position);
+        assert!(chapter_position < scene_position);
 
         // Export Story Bible
         let res_bible = export_story_bible(&conn, &temp_dir, &proj.id, "markdown").unwrap();
-        assert!(res_bible.content.contains("# Story Bible: Compile Test Book"));
+        assert!(res_bible
+            .content
+            .contains("# Story Bible: Compile Test Book"));
+
+        let invalid_import = CommitImportInput {
+            project_id: proj.id.clone(),
+            items: vec![ImportDetectedNode {
+                node_type: "chapter".into(),
+                title: "Imported Parent".into(),
+                content_text: String::new(),
+                word_count: 0,
+                character_count: 0,
+                order_index: 1,
+                children: Some(vec![ImportDetectedNode {
+                    node_type: "scene".into(),
+                    title: String::new(),
+                    content_text: String::new(),
+                    word_count: 0,
+                    character_count: 0,
+                    order_index: 1,
+                    children: None,
+                }]),
+            }],
+        };
+        assert!(commit_imported_manuscript(&mut conn, invalid_import).is_err());
+        let imported_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM manuscript_nodes WHERE title = 'Imported Parent'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(imported_count, 0);
     }
 }

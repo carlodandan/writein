@@ -34,5 +34,5 @@ pub fn commit_imported_manuscript(
     db: State<DbManager>,
     input: CommitImportInput,
 ) -> Result<Vec<ManuscriptNode>, AppError> {
-    db.with_conn(|conn| export_repo::commit_imported_manuscript(conn, input))
+    db.with_conn_mut(|conn| export_repo::commit_imported_manuscript(conn, input))
 }

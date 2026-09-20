@@ -23,10 +23,10 @@ describe('backupService', () => {
 
   it('restores a project from a backup bundle', async () => {
     const backup = await backupService.createBackup(projectId);
-    const newProjectId = await backupService.restoreBackup(backup.contentJson);
+    const restoredProject = await backupService.restoreBackup(backup.contentJson);
 
-    expect(newProjectId).toBeDefined();
-    expect(newProjectId).toMatch(/^proj-restored-/);
+    expect(restoredProject).toBeDefined();
+    expect(restoredProject.id).toMatch(/^proj-restored-/);
   });
 
   it('lists backups and deletes a backup file', async () => {

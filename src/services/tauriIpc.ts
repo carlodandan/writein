@@ -2300,7 +2300,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         }
       }
 
-      return newProjId as unknown as T;
+      return restoredProject as unknown as T;
     }
 
     case 'list_backups': {

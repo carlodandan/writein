@@ -20,7 +20,7 @@ pub fn move_to_trash(
     entity_id: String,
     title: String,
 ) -> Result<TrashItem, AppError> {
-    db.with_conn(|conn| {
+    db.with_conn_mut(|conn| {
         trash_repo::move_to_trash(conn, &project_id, &entity_type, &entity_id, &title)
     })
 }
@@ -31,7 +31,7 @@ pub fn restore_from_trash(
     db: State<DbManager>,
     trash_id: String,
 ) -> Result<bool, AppError> {
-    db.with_conn(|conn| trash_repo::restore_from_trash(conn, &trash_id))
+    db.with_conn_mut(|conn| trash_repo::restore_from_trash(conn, &trash_id))
 }
 
 /// Permanently deletes a single trashed entity.
@@ -40,7 +40,7 @@ pub fn delete_permanently(
     db: State<DbManager>,
     trash_id: String,
 ) -> Result<bool, AppError> {
-    db.with_conn(|conn| trash_repo::delete_permanently(conn, &trash_id))
+    db.with_conn_mut(|conn| trash_repo::delete_permanently(conn, &trash_id))
 }
 
 /// Permanently deletes every trashed entity for a project.
@@ -49,7 +49,7 @@ pub fn empty_trash(
     db: State<DbManager>,
     project_id: String,
 ) -> Result<i64, AppError> {
-    db.with_conn(|conn| trash_repo::empty_trash(conn, &project_id))
+    db.with_conn_mut(|conn| trash_repo::empty_trash(conn, &project_id))
 }
 
 /// Creates a portable backup of the requested project.
@@ -68,7 +68,7 @@ pub fn restore_project_backup(
     db: State<DbManager>,
     backup_json: String,
 ) -> Result<Project, AppError> {
-    db.with_conn(|conn| backup_repo::restore_project_backup(conn, &backup_json))
+    db.with_conn_mut(|conn| backup_repo::restore_project_backup(conn, &backup_json))
 }
 
 /// Lists saved backup files, optionally restricted to one project.

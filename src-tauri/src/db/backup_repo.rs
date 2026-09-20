@@ -4,20 +4,23 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::db::character_repo::{create_character, list_characters};
+use crate::db::character_repo::{create_character, list_characters, list_relationships};
+use crate::db::goals_repo::list_goals;
 use crate::db::location_repo::{create_location, list_locations};
 use crate::db::manuscript_repo::{
     create_node, get_document, get_manuscript_tree, recalculate_project_word_count, save_document,
 };
 use crate::db::note_repo::{create_note, list_notes};
 use crate::db::project_repo::{create_project, get_project};
+use crate::db::session_repo::list_sessions;
 use crate::db::settings_repo::get_all_settings;
 use crate::db::timeline_repo::{create_timeline_event, list_timeline_events};
 use crate::db::worldbuilding_repo::{create_worldbuilding_entry, list_worldbuilding_entries};
 use crate::models::{
-    AppError, BackupFileInfo, BackupResult, CreateCharacterInput, CreateLocationInput,
-    CreateNodeInput, CreateNoteInput, CreateProjectInput, CreateTimelineEventInput,
-    CreateWorldbuildingInput, Project, ProjectBackupBundle, SaveDocumentInput,
+    AppError, BackupFileInfo, BackupResult, CharacterRelationship, CreateCharacterInput,
+    CreateLocationInput, CreateNodeInput, CreateNoteInput, CreateProjectInput,
+    CreateTimelineEventInput, CreateWorldbuildingInput, Project, ProjectBackupBundle,
+    SaveDocumentInput,
 };
 
 pub fn create_project_backup(
@@ -36,10 +39,24 @@ pub fn create_project_backup(
     }
 
     let characters = list_characters(conn, project_id)?;
+    let relationships = list_relationships(conn, project_id)?
+        .into_iter()
+        .map(|relationship| CharacterRelationship {
+            id: relationship.id,
+            project_id: relationship.project_id,
+            character_a_id: relationship.character_a_id,
+            character_b_id: relationship.character_b_id,
+            relation_type: relationship.relation_type,
+            description: relationship.description,
+            created_at: relationship.created_at,
+        })
+        .collect();
     let locations = list_locations(conn, project_id)?;
     let worldbuilding = list_worldbuilding_entries(conn, project_id, None)?;
     let timeline = list_timeline_events(conn, project_id, None)?;
     let notes = list_notes(conn, project_id, None, false)?;
+    let writing_goals = list_goals(conn, project_id)?;
+    let writing_sessions = list_sessions(conn, project_id, -1)?;
     let settings = get_all_settings(conn)?;
 
     let bundle = ProjectBackupBundle {
@@ -49,13 +66,13 @@ pub fn create_project_backup(
         nodes: tree,
         documents,
         characters,
-        relationships: Vec::new(),
+        relationships,
         locations,
         worldbuilding,
         timeline,
         notes,
-        writing_goals: Vec::new(),
-        writing_sessions: Vec::new(),
+        writing_goals,
+        writing_sessions,
         settings,
     };
 
@@ -89,16 +106,17 @@ pub fn create_project_backup(
 }
 
 pub fn restore_project_backup(
-    conn: &Connection,
+    conn: &mut Connection,
     backup_json: &str,
 ) -> Result<Project, AppError> {
     let bundle: ProjectBackupBundle = serde_json::from_str(backup_json)
         .map_err(|e| AppError::Validation(format!("Invalid .writein backup file: {}", e)))?;
+    let tx = conn.transaction()?;
 
     // Create a new project with restored title
     let new_title = format!("{} (Restored)", bundle.project.title);
     let new_proj = create_project(
-        conn,
+        &tx,
         CreateProjectInput {
             title: new_title,
             subtitle: bundle.project.subtitle,
@@ -112,18 +130,30 @@ pub fn restore_project_backup(
     // Map old node IDs to new node IDs
     let mut node_id_map: HashMap<String, String> = HashMap::new();
 
-    // Sort nodes to ensure parents are created before children
-    let mut sorted_nodes = bundle.nodes.clone();
-    sorted_nodes.sort_by_key(|n| if n.parent_id.is_none() { 0 } else { 1 });
+    // Process nodes in passes so a node is only created after its parent. If no
+    // node can be processed, the backup contains a cycle or a missing parent.
+    let mut pending_nodes = bundle.nodes.clone();
+    while !pending_nodes.is_empty() {
+        let mut next_pass = Vec::new();
+        let mut made_progress = false;
 
-    for old_node in sorted_nodes {
-        let parent_id = old_node.parent_id.and_then(|p| node_id_map.get(&p).cloned());
+        for old_node in pending_nodes {
+            let parent_id = match old_node.parent_id.as_ref() {
+                Some(old_parent_id) => match node_id_map.get(old_parent_id) {
+                    Some(new_parent_id) => Some(new_parent_id.clone()),
+                    None => {
+                        next_pass.push(old_node);
+                        continue;
+                    }
+                },
+                None => None,
+            };
 
-        let created_node = create_node(
-            conn,
-            CreateNodeInput {
-                project_id: new_proj.id.clone(),
-                parent_id,
+            let created_node = create_node(
+                &tx,
+                CreateNodeInput {
+                    project_id: new_proj.id.clone(),
+                    parent_id,
                 node_type: old_node.node_type,
                 title: old_node.title,
                 synopsis: old_node.synopsis,
@@ -132,25 +162,34 @@ pub fn restore_project_backup(
 
         node_id_map.insert(old_node.id.clone(), created_node.id.clone());
 
-        // Restore document content if exists
-        if let Some(doc) = bundle.documents.get(&old_node.id) {
-            let _ = save_document(
-                conn,
-                SaveDocumentInput {
-                    node_id: created_node.id.clone(),
-                    content_json: doc.content_json.clone(),
+            // Restore document content if exists
+            if let Some(doc) = bundle.documents.get(&old_node.id) {
+                save_document(
+                    &tx,
+                    SaveDocumentInput {
+                        node_id: created_node.id.clone(),
+                        content_json: doc.content_json.clone(),
                     content_text: doc.content_text.clone(),
-                    word_count: doc.word_count,
-                    character_count: doc.character_count,
-                },
-            );
+                        word_count: doc.word_count,
+                        character_count: doc.character_count,
+                    },
+                )?;
+            }
+            made_progress = true;
         }
+
+        if !made_progress {
+            return Err(AppError::Validation(
+                "Backup manuscript hierarchy contains a cycle or missing parent".to_string(),
+            ));
+        }
+        pending_nodes = next_pass;
     }
 
     // Restore characters
     for c in bundle.characters {
-        let _ = create_character(
-            conn,
+        create_character(
+            &tx,
             CreateCharacterInput {
                 project_id: new_proj.id.clone(),
                 name: c.name,
@@ -169,13 +208,13 @@ pub fn restore_project_backup(
                 tags: c.tags,
                 custom_fields_json: c.custom_fields_json,
             },
-        );
+        )?;
     }
 
     // Restore locations
     for loc in bundle.locations {
-        let _ = create_location(
-            conn,
+        create_location(
+            &tx,
             CreateLocationInput {
                 project_id: new_proj.id.clone(),
                 name: loc.name,
@@ -188,13 +227,13 @@ pub fn restore_project_backup(
                 map_path: loc.map_path,
                 tags: loc.tags,
             },
-        );
+        )?;
     }
 
     // Restore worldbuilding
     for entry in bundle.worldbuilding {
-        let _ = create_worldbuilding_entry(
-            conn,
+        create_worldbuilding_entry(
+            &tx,
             CreateWorldbuildingInput {
                 project_id: new_proj.id.clone(),
                 category: entry.category,
@@ -202,13 +241,13 @@ pub fn restore_project_backup(
                 content: Some(entry.content),
                 tags: entry.tags,
             },
-        );
+        )?;
     }
 
     // Restore timeline
     for event in bundle.timeline {
-        let _ = create_timeline_event(
-            conn,
+        create_timeline_event(
+            &tx,
             CreateTimelineEventInput {
                 project_id: new_proj.id.clone(),
                 title: event.title,
@@ -224,13 +263,13 @@ pub fn restore_project_backup(
                 character_ids: Some(event.character_ids),
                 tags: event.tags,
             },
-        );
+        )?;
     }
 
     // Restore notes
     for note in bundle.notes {
-        let _ = create_note(
-            conn,
+        create_note(
+            &tx,
             CreateNoteInput {
                 project_id: new_proj.id.clone(),
                 category: Some(note.category),
@@ -238,15 +277,20 @@ pub fn restore_project_backup(
                 content: Some(note.content),
                 tags: note.tags,
             },
-        );
+        )?;
     }
 
-    recalculate_project_word_count(conn, &new_proj.id)?;
+    recalculate_project_word_count(&tx, &new_proj.id)?;
 
-    get_project(conn, &new_proj.id)
+    let restored_project = get_project(&tx, &new_proj.id)?;
+    tx.commit()?;
+    Ok(restored_project)
 }
 
-pub fn list_backups(base_dir: &Path, _project_id: Option<&str>) -> Result<Vec<BackupFileInfo>, AppError> {
+pub fn list_backups(
+    base_dir: &Path,
+    _project_id: Option<&str>,
+) -> Result<Vec<BackupFileInfo>, AppError> {
     let backups_dir = base_dir.join("backups");
     if !backups_dir.exists() {
         return Ok(Vec::new());
@@ -299,6 +343,7 @@ mod tests {
     use super::*;
     use crate::db::migrations::run_migrations;
     use crate::models::{CreateNodeInput, CreateProjectInput, NodeType, SaveDocumentInput};
+    use rusqlite::params;
 
     fn setup_test_db() -> Connection {
         let mut conn = Connection::open_in_memory().unwrap();
@@ -309,7 +354,7 @@ mod tests {
 
     #[test]
     fn test_backup_and_restore_roundtrip() {
-        let conn = setup_test_db();
+        let mut conn = setup_test_db();
         let proj = create_project(
             &conn,
             CreateProjectInput {
@@ -323,13 +368,35 @@ mod tests {
         )
         .unwrap();
 
-        let ch = create_node(
+        let part = create_node(
             &conn,
             CreateNodeInput {
                 project_id: proj.id.clone(),
                 parent_id: None,
+                node_type: NodeType::Part,
+                title: "Part One".into(),
+                synopsis: None,
+            },
+        )
+        .unwrap();
+        let ch = create_node(
+            &conn,
+            CreateNodeInput {
+                project_id: proj.id.clone(),
+                parent_id: Some(part.id.clone()),
                 node_type: NodeType::Chapter,
                 title: "Chapter 1: The Storm".into(),
+                synopsis: None,
+            },
+        )
+        .unwrap();
+        let scene = create_node(
+            &conn,
+            CreateNodeInput {
+                project_id: proj.id.clone(),
+                parent_id: Some(ch.id.clone()),
+                node_type: NodeType::Scene,
+                title: "The Lightning".into(),
                 synopsis: None,
             },
         )
@@ -338,12 +405,41 @@ mod tests {
         save_document(
             &conn,
             SaveDocumentInput {
-                node_id: ch.id.clone(),
+                node_id: scene.id.clone(),
                 content_json: String::new(),
                 content_text: "Lightning struck the high spires.".into(),
                 word_count: 5,
                 character_count: 34,
             },
+        )
+        .unwrap();
+
+        conn.execute(
+            "INSERT INTO characters (id, project_id, name, role, created_at, updated_at)
+             VALUES ('char-a', ?1, 'A', 'protagonist', 'now', 'now'),
+                    ('char-b', ?1, 'B', 'supporting', 'now', 'now')",
+            params![proj.id],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO character_relationships
+             (id, project_id, character_a_id, character_b_id, relation_type, created_at)
+             VALUES ('rel', ?1, 'char-a', 'char-b', 'ally', 'now')",
+            params![proj.id],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO writing_goals
+             (id, project_id, goal_type, target_words, current_words, is_active, created_at)
+             VALUES ('goal', ?1, 'daily', 500, 25, 1, 'now')",
+            params![proj.id],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO writing_sessions
+             (id, project_id, node_id, started_at, duration_seconds, words_written)
+             VALUES ('session', ?1, ?2, 'now', 60, 25)",
+            params![proj.id, scene.id],
         )
         .unwrap();
 
@@ -353,16 +449,52 @@ mod tests {
         // 1. Create backup
         let backup = create_project_backup(&conn, &temp_dir, &proj.id).unwrap();
         assert!(backup.content_json.contains("Original Epic"));
-        assert!(backup.content_json.contains("Lightning struck the high spires."));
+        assert!(backup
+            .content_json
+            .contains("Lightning struck the high spires."));
+        let mut bundle: ProjectBackupBundle = serde_json::from_str(&backup.content_json).unwrap();
+        assert_eq!(bundle.relationships.len(), 1);
+        assert_eq!(bundle.writing_goals.len(), 1);
+        assert_eq!(bundle.writing_sessions.len(), 1);
 
-        // 2. Restore backup
-        let restored_proj = restore_project_backup(&conn, &backup.content_json).unwrap();
+        // 2. Restore a deliberately child-first archive.
+        bundle.nodes.reverse();
+        let child_first_json = serde_json::to_string(&bundle).unwrap();
+        let restored_proj = restore_project_backup(&mut conn, &child_first_json).unwrap();
         assert_eq!(restored_proj.title, "Original Epic (Restored)");
 
         // Verify tree in restored project
         let restored_tree = get_manuscript_tree(&conn, &restored_proj.id).unwrap();
-        assert_eq!(restored_tree.len(), 1);
-        assert_eq!(restored_tree[0].title, "Chapter 1: The Storm");
+        assert_eq!(restored_tree.len(), 3);
+        let restored_part = restored_tree
+            .iter()
+            .find(|n| n.title == "Part One")
+            .unwrap();
+        let restored_chapter = restored_tree
+            .iter()
+            .find(|n| n.title == "Chapter 1: The Storm")
+            .unwrap();
+        let restored_scene = restored_tree
+            .iter()
+            .find(|n| n.title == "The Lightning")
+            .unwrap();
+        assert_eq!(restored_chapter.parent_id.as_ref(), Some(&restored_part.id));
+        assert_eq!(
+            restored_scene.parent_id.as_ref(),
+            Some(&restored_chapter.id)
+        );
+
+        // A cyclic archive must fail without leaving its newly-created project behind.
+        let project_count_before: i64 = conn
+            .query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))
+            .unwrap();
+        bundle.nodes[0].parent_id = Some(bundle.nodes[0].id.clone());
+        let cyclic_json = serde_json::to_string(&bundle).unwrap();
+        assert!(restore_project_backup(&mut conn, &cyclic_json).is_err());
+        let project_count_after: i64 = conn
+            .query_row("SELECT COUNT(*) FROM projects", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(project_count_after, project_count_before);
 
         // 3. List backups
         let list = list_backups(&temp_dir, None).unwrap();

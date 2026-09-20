@@ -6,6 +6,7 @@ interface UseWritingSessionOptions {
   projectId?: string | null;
   nodeId?: string | null;
   currentWordCount?: number;
+  isDocumentReady?: boolean;
 }
 
 /**
@@ -15,6 +16,7 @@ export function useWritingSession({
   projectId,
   nodeId,
   currentWordCount = 0,
+  isDocumentReady = false,
 }: UseWritingSessionOptions) {
   const [activeSession, setActiveSession] = useState<WritingSession | null>(null);
   const [sessionDuration, setSessionDuration] = useState<number>(0);
@@ -36,16 +38,16 @@ export function useWritingSession({
 
   // Track words written delta during the session
   useEffect(() => {
-    if (activeSession) {
+    if (activeSession && isDocumentReady) {
       const delta = Math.max(0, currentWordCount - initialWordCountRef.current);
       setSessionWords(delta);
       wordsWrittenRef.current = delta;
     }
-  }, [currentWordCount, activeSession]);
+  }, [currentWordCount, activeSession, isDocumentReady]);
 
   // Start session on mount/project/node change
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || !isDocumentReady) return;
 
     let isMounted = true;
     initialWordCountRef.current = currentWordCount;
@@ -82,7 +84,7 @@ export function useWritingSession({
           });
       }
     };
-  }, [projectId, nodeId]);
+  }, [projectId, nodeId, isDocumentReady]);
 
   const endCurrentSession = useCallback(async () => {
     if (!activeSessionRef.current) return null;

@@ -37,6 +37,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
   const [liveWordCount, setLiveWordCount] = useState(0);
   const [liveCharCount, setLiveCharCount] = useState(0);
   const [liveCharNoSpaces, setLiveCharNoSpaces] = useState(0);
+  const [loadedDocumentNodeId, setLoadedDocumentNodeId] = useState<string | null>(null);
 
   const {
     preferences,
@@ -51,6 +52,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
     projectId: currentProject?.id,
     nodeId: activeNode?.id,
     currentWordCount: liveWordCount,
+    isDocumentReady: loadedDocumentNodeId === activeNode?.id,
   });
 
   // Convenient page title editing
@@ -141,6 +143,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
     setLiveWordCount(counts.words);
     setLiveCharCount(counts.characters);
     setLiveCharNoSpaces(counts.charactersNoSpaces);
+    setLoadedDocumentNodeId(activeDocument.node_id);
   }, [editor, activeDocument]);
 
   // Unsaved content protection: flush pending save when switching chapters or on page unload

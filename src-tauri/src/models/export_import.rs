@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CompileOptions {
     pub format: String, // "markdown" | "text" | "html"
     pub include_title_page: bool,
+    #[serde(rename = "includeTableOfContents")]
     pub include_toc: bool,
     pub chapter_header_format: String, // "numbered_with_title" | "numbered_only" | "title_only"
     pub scene_separator: String,       // "* * *" | "###" | "---" | "blank_line"
@@ -45,6 +47,7 @@ pub struct ImportPreview {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CommitImportInput {
     pub project_id: String,
     pub items: Vec<ImportDetectedNode>,

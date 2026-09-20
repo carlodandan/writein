@@ -51,8 +51,6 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isOpen, onClose }) => 
     }
   }, [isOpen, currentProject?.id]);
 
-  if (!isOpen) return null;
-
   const handleCreateBackup = async () => {
     if (!currentProject) return;
     setIsProcessing(true);
@@ -105,9 +103,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isOpen, onClose }) => 
     setIsProcessing(true);
     setFeedback(null);
     try {
-      const newProjId = await backupService.restoreBackup(restoreFileJson);
+      const restoredProject = await backupService.restoreBackup(restoreFileJson);
       await refreshProjects();
-      await selectProject(newProjId);
+      await selectProject(restoredProject.id);
       setFeedback({
         type: 'success',
         message: 'Project restored and switched successfully!',

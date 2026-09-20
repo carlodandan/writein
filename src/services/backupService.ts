@@ -1,5 +1,6 @@
 import { invokeCommand } from './tauriIpc';
 import type { BackupFileInfo, BackupResult } from '../types/backupTrash';
+import type { Project } from '../types/project';
 
 export const backupService = {
   async createBackup(projectId: string): Promise<BackupResult> {
@@ -8,8 +9,8 @@ export const backupService = {
     });
   },
 
-  async restoreBackup(backupJson: string): Promise<string> {
-    return invokeCommand<string>('restore_project_backup', {
+  async restoreBackup(backupJson: string): Promise<Project> {
+    return invokeCommand<Project>('restore_project_backup', {
       backupJson,
     });
   },

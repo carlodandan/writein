@@ -87,6 +87,16 @@ impl DbManager {
         f(&conn)
     }
 
+    pub fn with_conn_mut<F, R>(&self, f: F) -> Result<R, AppError>
+    where
+        F: FnOnce(&mut Connection) -> Result<R, AppError>,
+    {
+        let mut conn = self.conn.lock().map_err(|e| {
+            AppError::Internal(format!("Database lock error: {}", e))
+        })?;
+        f(&mut conn)
+    }
+
     pub fn ensure_project_directories(&self, project_id: &str) -> Result<PathBuf, AppError> {
         let project_dir = self.base_dir.join("projects").join(project_id);
         fs::create_dir_all(&project_dir)?;

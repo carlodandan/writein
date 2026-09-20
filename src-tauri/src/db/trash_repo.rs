@@ -32,38 +32,39 @@ pub fn list_trash(conn: &Connection, project_id: &str) -> Result<Vec<TrashItem>,
 }
 
 pub fn move_to_trash(
-    conn: &Connection,
+    conn: &mut Connection,
     project_id: &str,
     entity_type: &str,
     entity_id: &str,
     title: &str,
 ) -> Result<TrashItem, AppError> {
+    let tx = conn.transaction()?;
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
 
     // 1. Soft-delete entity by setting archived_at
     match entity_type {
         "manuscript" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE manuscript_nodes SET archived_at = ?1 WHERE id = ?2",
                 params![now, entity_id],
             )?;
-            let _ = recalculate_project_word_count(conn, project_id);
+            recalculate_project_word_count(&tx, project_id)?;
         }
         "character" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE characters SET archived_at = ?1 WHERE id = ?2",
                 params![now, entity_id],
             )?;
         }
         "location" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE locations SET archived_at = ?1 WHERE id = ?2",
                 params![now, entity_id],
             )?;
         }
         "note" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE notes SET archived_at = ?1 WHERE id = ?2",
                 params![now, entity_id],
             )?;
@@ -72,24 +73,27 @@ pub fn move_to_trash(
     }
 
     // 2. Insert into trash_items
-    conn.execute(
+    tx.execute(
         "INSERT INTO trash_items (id, project_id, entity_type, entity_id, entity_name, original_data_json, deleted_at)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![id, project_id, entity_type, entity_id, title, "{}", now],
     )?;
 
-    Ok(TrashItem {
+    let item = TrashItem {
         id,
         project_id: project_id.to_string(),
         entity_type: entity_type.to_string(),
         entity_id: entity_id.to_string(),
         title: title.to_string(),
         deleted_at: now,
-    })
+    };
+    tx.commit()?;
+    Ok(item)
 }
 
-pub fn restore_from_trash(conn: &Connection, trash_id: &str) -> Result<bool, AppError> {
-    let item: Option<(String, String, String)> = conn
+pub fn restore_from_trash(conn: &mut Connection, trash_id: &str) -> Result<bool, AppError> {
+    let tx = conn.transaction()?;
+    let item: Option<(String, String, String)> = tx
         .query_row(
             "SELECT project_id, entity_type, entity_id FROM trash_items WHERE id = ?1",
             params![trash_id],
@@ -105,26 +109,26 @@ pub fn restore_from_trash(conn: &Connection, trash_id: &str) -> Result<bool, App
     // Unarchive entity
     match entity_type.as_str() {
         "manuscript" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE manuscript_nodes SET archived_at = NULL WHERE id = ?1",
                 params![entity_id],
             )?;
-            let _ = recalculate_project_word_count(conn, &project_id);
+            recalculate_project_word_count(&tx, &project_id)?;
         }
         "character" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE characters SET archived_at = NULL WHERE id = ?1",
                 params![entity_id],
             )?;
         }
         "location" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE locations SET archived_at = NULL WHERE id = ?1",
                 params![entity_id],
             )?;
         }
         "note" => {
-            conn.execute(
+            tx.execute(
                 "UPDATE notes SET archived_at = NULL WHERE id = ?1",
                 params![entity_id],
             )?;
@@ -132,12 +136,14 @@ pub fn restore_from_trash(conn: &Connection, trash_id: &str) -> Result<bool, App
         _ => {}
     }
 
-    conn.execute("DELETE FROM trash_items WHERE id = ?1", params![trash_id])?;
+    tx.execute("DELETE FROM trash_items WHERE id = ?1", params![trash_id])?;
+    tx.commit()?;
     Ok(true)
 }
 
-pub fn delete_permanently(conn: &Connection, trash_id: &str) -> Result<bool, AppError> {
-    let item: Option<(String, String, String)> = conn
+pub fn delete_permanently(conn: &mut Connection, trash_id: &str) -> Result<bool, AppError> {
+    let tx = conn.transaction()?;
+    let item: Option<(String, String, String)> = tx
         .query_row(
             "SELECT project_id, entity_type, entity_id FROM trash_items WHERE id = ?1",
             params![trash_id],
@@ -153,26 +159,30 @@ pub fn delete_permanently(conn: &Connection, trash_id: &str) -> Result<bool, App
     // Hard delete entity
     match entity_type.as_str() {
         "manuscript" => {
-            conn.execute("DELETE FROM manuscript_nodes WHERE id = ?1", params![entity_id])?;
-            let _ = recalculate_project_word_count(conn, &project_id);
+            tx.execute(
+                "DELETE FROM manuscript_nodes WHERE id = ?1",
+                params![entity_id],
+            )?;
+            recalculate_project_word_count(&tx, &project_id)?;
         }
         "character" => {
-            conn.execute("DELETE FROM characters WHERE id = ?1", params![entity_id])?;
+            tx.execute("DELETE FROM characters WHERE id = ?1", params![entity_id])?;
         }
         "location" => {
-            conn.execute("DELETE FROM locations WHERE id = ?1", params![entity_id])?;
+            tx.execute("DELETE FROM locations WHERE id = ?1", params![entity_id])?;
         }
         "note" => {
-            conn.execute("DELETE FROM notes WHERE id = ?1", params![entity_id])?;
+            tx.execute("DELETE FROM notes WHERE id = ?1", params![entity_id])?;
         }
         _ => {}
     }
 
-    conn.execute("DELETE FROM trash_items WHERE id = ?1", params![trash_id])?;
+    tx.execute("DELETE FROM trash_items WHERE id = ?1", params![trash_id])?;
+    tx.commit()?;
     Ok(true)
 }
 
-pub fn empty_trash(conn: &Connection, project_id: &str) -> Result<i64, AppError> {
+pub fn empty_trash(conn: &mut Connection, project_id: &str) -> Result<i64, AppError> {
     let items = list_trash(conn, project_id)?;
     let count = items.len() as i64;
     for item in items {
@@ -185,8 +195,8 @@ pub fn empty_trash(conn: &Connection, project_id: &str) -> Result<i64, AppError>
 mod tests {
     use super::*;
     use crate::db::migrations::run_migrations;
-    use crate::db::project_repo::create_project;
     use crate::db::note_repo::create_note;
+    use crate::db::project_repo::create_project;
     use crate::models::{CreateNoteInput, CreateProjectInput};
 
     fn setup_test_db() -> Connection {
@@ -198,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_trash_lifecycle() {
-        let conn = setup_test_db();
+        let mut conn = setup_test_db();
         let proj = create_project(
             &conn,
             CreateProjectInput {
@@ -225,7 +235,7 @@ mod tests {
         .unwrap();
 
         // 1. Move note to trash
-        let trash_item = move_to_trash(&conn, &proj.id, "note", &note.id, &note.title).unwrap();
+        let trash_item = move_to_trash(&mut conn, &proj.id, "note", &note.id, &note.title).unwrap();
         assert_eq!(trash_item.title, "Important Clue");
 
         // List trash
@@ -233,18 +243,47 @@ mod tests {
         assert_eq!(list.len(), 1);
 
         // 2. Restore note from trash
-        let restored = restore_from_trash(&conn, &trash_item.id).unwrap();
+        let restored = restore_from_trash(&mut conn, &trash_item.id).unwrap();
         assert!(restored);
 
         let list_after_restore = list_trash(&conn, &proj.id).unwrap();
         assert_eq!(list_after_restore.len(), 0);
 
         // 3. Move to trash and delete permanently
-        let trash_again = move_to_trash(&conn, &proj.id, "note", &note.id, &note.title).unwrap();
-        let deleted = delete_permanently(&conn, &trash_again.id).unwrap();
+        let trash_again =
+            move_to_trash(&mut conn, &proj.id, "note", &note.id, &note.title).unwrap();
+        let deleted = delete_permanently(&mut conn, &trash_again.id).unwrap();
         assert!(deleted);
 
         let list_after_delete = list_trash(&conn, &proj.id).unwrap();
         assert_eq!(list_after_delete.len(), 0);
+
+        let rollback_note = create_note(
+            &conn,
+            CreateNoteInput {
+                project_id: proj.id,
+                title: "Rollback Note".into(),
+                content: None,
+                category: None,
+                tags: None,
+            },
+        )
+        .unwrap();
+        assert!(move_to_trash(
+            &mut conn,
+            "missing-project",
+            "note",
+            &rollback_note.id,
+            &rollback_note.title,
+        )
+        .is_err());
+        let archived_at: Option<String> = conn
+            .query_row(
+                "SELECT archived_at FROM notes WHERE id = ?1",
+                params![rollback_note.id],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(archived_at.is_none());
     }
 }
