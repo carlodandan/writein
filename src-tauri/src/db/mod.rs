@@ -10,6 +10,13 @@ pub mod tag_repo;
 pub mod search_repo;
 pub mod attachment_repo;
 pub mod cross_link_repo;
+pub mod version_repo;
+pub mod goals_repo;
+pub mod session_repo;
+pub mod settings_repo;
+pub mod export_repo;
+pub mod trash_repo;
+pub mod backup_repo;
 
 use rusqlite::Connection;
 use std::fs;

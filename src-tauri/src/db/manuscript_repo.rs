@@ -422,7 +422,7 @@ pub fn save_document(
     get_document(conn, &input.node_id)
 }
 
-fn recalculate_project_word_count(conn: &Connection, project_id: &str) -> Result<(), AppError> {
+pub fn recalculate_project_word_count(conn: &Connection, project_id: &str) -> Result<(), AppError> {
     let total_words: i64 = conn.query_row(
         "SELECT COALESCE(SUM(word_count), 0) FROM manuscript_nodes WHERE project_id = ?1 AND archived_at IS NULL",
         params![project_id],
