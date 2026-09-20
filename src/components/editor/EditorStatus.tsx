@@ -8,6 +8,7 @@ interface EditorStatusProps {
   wordCount: number;
   characterCount: number;
   characterCountNoSpaces?: number;
+  sessionWords?: number;
 }
 
 export const EditorStatus: React.FC<EditorStatusProps> = ({
@@ -16,6 +17,7 @@ export const EditorStatus: React.FC<EditorStatusProps> = ({
   wordCount,
   characterCount,
   characterCountNoSpaces,
+  sessionWords,
 }) => {
   const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 225));
 
@@ -67,6 +69,11 @@ export const EditorStatus: React.FC<EditorStatusProps> = ({
       <div className="flex items-center space-x-3">
         <span>
           <strong className="text-[var(--ink-secondary)]">{wordCount.toLocaleString()}</strong> words
+          {sessionWords !== undefined && sessionWords > 0 && (
+            <span className="text-[10px] text-emerald-600 font-semibold ml-1.5" title="Words written in current session">
+              (+{sessionWords.toLocaleString()} session)
+            </span>
+          )}
         </span>
         <span className="text-[var(--paper-border)]">•</span>
         <span

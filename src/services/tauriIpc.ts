@@ -1,4 +1,5 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/core';
+import { compileManuscript } from '../utils/manuscriptCompiler';
 
 /**
  * Checks if the current environment is running inside Tauri.
@@ -21,6 +22,11 @@ const mockStore: {
   tags: any[];
   entity_tags: any[];
   attachments: any[];
+  writing_goals: any[];
+  writing_sessions: any[];
+  document_versions: any[];
+  trash_items: any[];
+  settings: Record<string, string>;
 } = {
   projects: [
     {
@@ -378,6 +384,43 @@ const mockStore: {
       created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
     },
   ],
+  writing_goals: [
+    {
+      id: 'goal-1',
+      project_id: 'demo-novel-1',
+      goal_type: 'daily',
+      target_words: 500,
+      current_words: 350,
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    },
+  ],
+  writing_sessions: [
+    {
+      id: 'sess-1',
+      project_id: 'demo-novel-1',
+      node_id: 'scene-1',
+      started_at: new Date(Date.now() - 3600000).toISOString(),
+      ended_at: new Date().toISOString(),
+      duration_seconds: 1800,
+      words_written: 350,
+    },
+  ],
+  document_versions: [
+    {
+      id: 'ver-1',
+      document_id: 'doc-part-1',
+      node_id: 'part-1',
+      version_num: 1,
+      snapshot_text: 'It was a cold and windy evening on the cliffs.',
+      word_count: 10,
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ],
+  trash_items: [],
+  settings: {},
 };
 
 /**
@@ -1681,6 +1724,519 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     }
     case 'close_splashscreen': {
       return undefined as unknown as T;
+    }
+
+    // ─── Writing Goals ──────────────────────────────────────────────────────────
+    case 'get_writing_goals': {
+      const projId = args?.project_id as string;
+      const goals = mockStore.writing_goals.filter((g) => g.project_id === projId);
+      return goals as unknown as T;
+    }
+    case 'create_writing_goal': {
+      const input = args?.input as any;
+      if (!input || input.target_words <= 0) {
+        throw new Error('Target words must be greater than zero');
+      }
+      mockStore.writing_goals.forEach((g) => {
+        if (g.project_id === input.project_id && g.goal_type === input.goal_type) {
+          g.is_active = false;
+        }
+      });
+      const newGoal = {
+        id: `goal-${Math.random().toString(36).substring(2, 9)}`,
+        project_id: input.project_id,
+        goal_type: input.goal_type,
+        target_words: input.target_words,
+        current_words: 0,
+        start_date: input.start_date || null,
+        end_date: input.end_date || null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      };
+      mockStore.writing_goals.unshift(newGoal);
+      return newGoal as unknown as T;
+    }
+    case 'update_writing_goal': {
+      const id = args?.id as string;
+      const input = args?.input as any;
+      const goal = mockStore.writing_goals.find((g) => g.id === id);
+      if (!goal) throw new Error(`Goal ${id} not found`);
+      if (input.target_words !== undefined) goal.target_words = input.target_words;
+      if (input.current_words !== undefined) goal.current_words = input.current_words;
+      if (input.is_active !== undefined) goal.is_active = input.is_active;
+      if (input.start_date !== undefined) goal.start_date = input.start_date;
+      if (input.end_date !== undefined) goal.end_date = input.end_date;
+      return goal as unknown as T;
+    }
+    case 'delete_writing_goal': {
+      const id = args?.id as string;
+      const idx = mockStore.writing_goals.findIndex((g) => g.id === id);
+      if (idx !== -1) {
+        mockStore.writing_goals.splice(idx, 1);
+        return true as unknown as T;
+      }
+      return false as unknown as T;
+    }
+
+    // ─── Writing Sessions ───────────────────────────────────────────────────────
+    case 'start_writing_session': {
+      const projId = args?.project_id as string;
+      const nodeId = args?.node_id as string | undefined;
+      const newSession = {
+        id: `sess-${Math.random().toString(36).substring(2, 9)}`,
+        project_id: projId,
+        node_id: nodeId || null,
+        started_at: new Date().toISOString(),
+        ended_at: null,
+        duration_seconds: 0,
+        words_written: 0,
+      };
+      mockStore.writing_sessions.unshift(newSession);
+      return newSession as unknown as T;
+    }
+    case 'end_writing_session': {
+      const sessId = args?.session_id as string;
+      const wordsWritten = Number(args?.words_written || 0);
+      const duration = Number(args?.duration_seconds || 0);
+      const sess = mockStore.writing_sessions.find((s) => s.id === sessId);
+      if (!sess) throw new Error(`Session ${sessId} not found`);
+      sess.ended_at = new Date().toISOString();
+      sess.words_written = wordsWritten;
+      sess.duration_seconds = duration;
+      return sess as unknown as T;
+    }
+    case 'list_writing_sessions': {
+      const projId = args?.project_id as string;
+      const limit = Number(args?.limit || 20);
+      const list = mockStore.writing_sessions
+        .filter((s) => s.project_id === projId)
+        .slice(0, limit);
+      return list as unknown as T;
+    }
+    case 'get_session_stats': {
+      const projId = args?.project_id as string;
+      const sessions = mockStore.writing_sessions.filter((s) => s.project_id === projId && s.ended_at);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todaySessions = sessions.filter((s) => s.started_at.startsWith(todayStr));
+      const todayWords = todaySessions.reduce((acc, s) => acc + s.words_written, 0);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+      const weekSessions = sessions.filter((s) => s.started_at >= sevenDaysAgo);
+      const weekWords = weekSessions.reduce((acc, s) => acc + s.words_written, 0);
+      const allTimeWords = sessions.reduce((acc, s) => acc + s.words_written, 0);
+      const avgWords = sessions.length > 0 ? Math.round(allTimeWords / sessions.length) : 0;
+
+      return {
+        today_words: todayWords,
+        week_words: weekWords,
+        all_time_words: allTimeWords,
+        today_sessions: todaySessions.length,
+        avg_session_words: avgWords,
+      } as unknown as T;
+    }
+
+    // ─── Settings ───────────────────────────────────────────────────────────────
+    case 'get_setting': {
+      const key = args?.key as string;
+      return (mockStore.settings[key] ?? null) as unknown as T;
+    }
+    case 'save_setting': {
+      const key = args?.key as string;
+      const value = args?.value as string;
+      mockStore.settings[key] = value;
+      return {
+        key,
+        value,
+        updated_at: new Date().toISOString(),
+      } as unknown as T;
+    }
+    case 'get_all_settings': {
+      return { ...mockStore.settings } as unknown as T;
+    }
+    case 'delete_setting': {
+      const key = args?.key as string;
+      delete mockStore.settings[key];
+      return true as unknown as T;
+    }
+
+    // ─── Document Versions ─────────────────────────────────────────────────────
+    case 'list_document_versions': {
+      const nodeId = args?.node_id as string;
+      const list = mockStore.document_versions
+        .filter((v) => v.node_id === nodeId)
+        .sort((a, b) => b.version_num - a.version_num);
+      return list as unknown as T;
+    }
+    case 'get_document_version': {
+      const verId = args?.version_id as string;
+      const ver = mockStore.document_versions.find((v) => v.id === verId);
+      if (!ver) throw new Error(`Document version ${verId} not found`);
+      return ver as unknown as T;
+    }
+    case 'create_document_snapshot': {
+      const docId = args?.document_id as string;
+      const nodeId = args?.node_id as string;
+      const text = (args?.snapshot_text as string) || '';
+      const wc = Number(args?.word_count || 0);
+      const existing = mockStore.document_versions.filter((v) => v.document_id === docId);
+      const nextNum = existing.length > 0 ? Math.max(...existing.map((v) => v.version_num)) + 1 : 1;
+      const newVersion = {
+        id: `ver-${Math.random().toString(36).substring(2, 9)}`,
+        document_id: docId,
+        node_id: nodeId,
+        version_num: nextNum,
+        snapshot_text: text,
+        word_count: wc,
+        created_at: new Date().toISOString(),
+      };
+      mockStore.document_versions.unshift(newVersion);
+      return newVersion as unknown as T;
+    }
+    case 'restore_document_version': {
+      const nodeId = args?.node_id as string;
+      const verId = args?.version_id as string;
+      const ver = mockStore.document_versions.find((v) => v.id === verId);
+      if (!ver) throw new Error(`Version ${verId} not found`);
+
+      // Snapshot current state if doc exists
+      const currentDoc = mockStore.documents[nodeId];
+      if (currentDoc && currentDoc.content_text) {
+        const nextNum =
+          mockStore.document_versions.filter((v) => v.node_id === nodeId).length + 1;
+        mockStore.document_versions.unshift({
+          id: `ver-${Math.random().toString(36).substring(2, 9)}`,
+          document_id: currentDoc.id || `doc-${nodeId}`,
+          node_id: nodeId,
+          version_num: nextNum,
+          snapshot_text: currentDoc.content_text,
+          word_count: currentDoc.word_count,
+          created_at: new Date().toISOString(),
+        });
+      }
+
+      const updated = {
+        id: currentDoc?.id || `doc-${nodeId}`,
+        node_id: nodeId,
+        content_json: '',
+        content_text: ver.snapshot_text,
+        word_count: ver.word_count,
+        character_count: ver.snapshot_text.length,
+        last_edited_at: new Date().toISOString(),
+      };
+      mockStore.documents[nodeId] = updated;
+      return updated as unknown as T;
+    }
+    case 'delete_document_version': {
+      const verId = args?.version_id as string;
+      const idx = mockStore.document_versions.findIndex((v) => v.id === verId);
+      if (idx !== -1) {
+        mockStore.document_versions.splice(idx, 1);
+        return true as unknown as T;
+      }
+      return false as unknown as T;
+    }
+
+    // ─── Phase 6: Import & Export ───────────────────────────────────────────────
+    case 'compile_manuscript': {
+      const projId = args?.project_id as string;
+      const options = args?.options as any;
+      const project = mockStore.projects.find((p) => p.id === projId) || {
+        id: projId,
+        title: 'Untitled Manuscript',
+        author: 'Anonymous',
+        genre: 'General Fiction',
+      };
+      const nodes = mockStore.nodes.filter((n) => n.project_id === projId);
+      const result = compileManuscript(project, nodes, mockStore.documents, options);
+      return result as unknown as T;
+    }
+    case 'export_story_bible': {
+      const projId = args?.project_id as string;
+      const project = mockStore.projects.find((p) => p.id === projId) || { title: 'Story Bible' };
+      const characters = mockStore.characters.filter((c) => c.project_id === projId);
+      const locations = mockStore.locations.filter((l) => l.project_id === projId);
+      const lore = mockStore.worldbuilding.filter((w) => w.project_id === projId);
+      const timeline = mockStore.timeline.filter((t) => t.project_id === projId);
+      const notes = mockStore.notes.filter((n) => n.project_id === projId);
+
+      let md = `# Story Bible: ${project.title}\n\n`;
+      md += `## Characters (${characters.length})\n\n`;
+      characters.forEach((c) => {
+        md += `### ${c.name} (${c.role})\n${c.description || ''}\n\n`;
+      });
+      md += `## Locations (${locations.length})\n\n`;
+      locations.forEach((l) => {
+        md += `### ${l.name}\n${l.description || ''}\n\n`;
+      });
+      md += `## Worldbuilding & Lore (${lore.length})\n\n`;
+      lore.forEach((entry) => {
+        md += `### ${entry.title} [${entry.category}]\n${entry.content || ''}\n\n`;
+      });
+      md += `## Timeline (${timeline.length})\n\n`;
+      timeline.forEach((event) => {
+        md += `- **${event.date_label || event.event_date || 'Undated'}**: ${event.title}\n`;
+      });
+      md += `\n## Notes (${notes.length})\n\n`;
+      notes.forEach((n) => {
+        md += `### ${n.title}\n${n.content || ''}\n\n`;
+      });
+
+      return {
+        fileName: `${project.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_story_bible.md`,
+        filePath: null,
+        content: md,
+      } as unknown as T;
+    }
+    case 'commit_imported_manuscript': {
+      const input = args?.input as any;
+      const createdNodes: any[] = [];
+      let order = mockStore.nodes.length + 1;
+
+      function insertRecursive(item: any, parentId: string | null) {
+        const nodeId = `node-imp-${Math.random().toString(36).substring(2, 9)}`;
+        const node = {
+          id: nodeId,
+          project_id: input.project_id,
+          parent_id: parentId,
+          node_type: item.nodeType || item.node_type,
+          title: item.title,
+          synopsis: null,
+          sort_order: order++,
+          status: 'draft',
+          word_count: item.wordCount || item.word_count || 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          archived_at: null,
+        };
+        mockStore.nodes.push(node);
+        mockStore.documents[nodeId] = {
+          id: `doc-${nodeId}`,
+          node_id: nodeId,
+          content_json: '',
+          content_text: item.contentText || item.content_text || '',
+          word_count: node.word_count,
+          character_count: (item.contentText || item.content_text || '').length,
+          last_edited_at: new Date().toISOString(),
+        };
+        createdNodes.push(node);
+
+        if (item.children && item.children.length > 0) {
+          item.children.forEach((child: any) => insertRecursive(child, nodeId));
+        }
+      }
+
+      if (input?.items) {
+        input.items.forEach((item: any) => insertRecursive(item, null));
+      }
+
+      return createdNodes as unknown as T;
+    }
+
+    case 'list_trash': {
+      const projId = args?.project_id as string;
+      const items = mockStore.trash_items.filter((i) => i.project_id === projId);
+      return items as unknown as T;
+    }
+
+    case 'move_to_trash': {
+      const { project_id, entity_type, entity_id, title } = args as any;
+      const item = {
+        id: `trash-${Math.random().toString(36).substring(2, 9)}`,
+        project_id,
+        entity_type,
+        entity_id,
+        title,
+        deleted_at: new Date().toISOString(),
+      };
+      mockStore.trash_items.push(item);
+
+      if (entity_type === 'manuscript') {
+        const node = mockStore.nodes.find((n) => n.id === entity_id);
+        if (node) node.archived_at = item.deleted_at;
+      } else if (entity_type === 'note') {
+        const note = mockStore.notes.find((n) => n.id === entity_id);
+        if (note) note.archived_at = item.deleted_at;
+      } else if (entity_type === 'character') {
+        const char = mockStore.characters.find((c) => c.id === entity_id);
+        if (char) char.archived_at = item.deleted_at;
+      } else if (entity_type === 'location') {
+        const loc = mockStore.locations.find((l) => l.id === entity_id);
+        if (loc) loc.archived_at = item.deleted_at;
+      }
+
+      return item as unknown as T;
+    }
+
+    case 'restore_from_trash': {
+      const trashId = args?.trash_id as string;
+      const index = mockStore.trash_items.findIndex((i) => i.id === trashId);
+      if (index !== -1) {
+        const item = mockStore.trash_items[index];
+        if (item.entity_type === 'manuscript') {
+          const node = mockStore.nodes.find((n) => n.id === item.entity_id);
+          if (node) node.archived_at = null;
+        } else if (item.entity_type === 'note') {
+          const note = mockStore.notes.find((n) => n.id === item.entity_id);
+          if (note) note.archived_at = null;
+        } else if (item.entity_type === 'character') {
+          const char = mockStore.characters.find((c) => c.id === item.entity_id);
+          if (char) char.archived_at = null;
+        } else if (item.entity_type === 'location') {
+          const loc = mockStore.locations.find((l) => l.id === item.entity_id);
+          if (loc) loc.archived_at = null;
+        }
+        mockStore.trash_items.splice(index, 1);
+      }
+      return true as unknown as T;
+    }
+
+    case 'delete_permanently': {
+      const trashId = args?.trash_id as string;
+      const index = mockStore.trash_items.findIndex((i) => i.id === trashId);
+      if (index !== -1) {
+        const item = mockStore.trash_items[index];
+        if (item.entity_type === 'manuscript') {
+          mockStore.nodes = mockStore.nodes.filter((n) => n.id !== item.entity_id);
+          delete mockStore.documents[item.entity_id];
+        } else if (item.entity_type === 'note') {
+          mockStore.notes = mockStore.notes.filter((n) => n.id !== item.entity_id);
+        } else if (item.entity_type === 'character') {
+          mockStore.characters = mockStore.characters.filter((c) => c.id !== item.entity_id);
+        } else if (item.entity_type === 'location') {
+          mockStore.locations = mockStore.locations.filter((l) => l.id !== item.entity_id);
+        }
+        mockStore.trash_items.splice(index, 1);
+      }
+      return true as unknown as T;
+    }
+
+    case 'empty_trash': {
+      const projId = args?.project_id as string;
+      const toDelete = mockStore.trash_items.filter((i) => i.project_id === projId);
+      for (const item of toDelete) {
+        if (item.entity_type === 'manuscript') {
+          mockStore.nodes = mockStore.nodes.filter((n) => n.id !== item.entity_id);
+          delete mockStore.documents[item.entity_id];
+        } else if (item.entity_type === 'note') {
+          mockStore.notes = mockStore.notes.filter((n) => n.id !== item.entity_id);
+        } else if (item.entity_type === 'character') {
+          mockStore.characters = mockStore.characters.filter((c) => c.id !== item.entity_id);
+        } else if (item.entity_type === 'location') {
+          mockStore.locations = mockStore.locations.filter((l) => l.id !== item.entity_id);
+        }
+      }
+      const count = toDelete.length;
+      mockStore.trash_items = mockStore.trash_items.filter((i) => i.project_id !== projId);
+      return count as unknown as T;
+    }
+
+    case 'create_project_backup': {
+      const projId = args?.project_id as string;
+      const project = mockStore.projects.find((p) => p.id === projId) || {
+        id: projId,
+        title: 'Project',
+        subtitle: null,
+        author: null,
+        description: null,
+        genre: null,
+        status: 'draft',
+        target_word_count: null,
+        current_word_count: 0,
+        cover_image: null,
+        project_notes: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        archived_at: null,
+      };
+
+      const nodes = mockStore.nodes.filter((n) => n.project_id === projId);
+      const docs: Record<string, any> = {};
+      for (const n of nodes) {
+        if (mockStore.documents[n.id]) {
+          docs[n.id] = mockStore.documents[n.id];
+        }
+      }
+
+      const bundle = {
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        project,
+        nodes,
+        documents: docs,
+        characters: mockStore.characters.filter((c) => c.project_id === projId),
+        relationships: mockStore.relationships.filter((r) => r.project_id === projId),
+        locations: mockStore.locations.filter((l) => l.project_id === projId),
+        worldbuilding: mockStore.worldbuilding.filter((w) => w.project_id === projId),
+        timeline: mockStore.timeline.filter((t) => t.project_id === projId),
+        notes: mockStore.notes.filter((n) => n.project_id === projId),
+        tags: mockStore.tags.filter((t) => t.project_id === projId),
+        entityTags: mockStore.entity_tags.filter((et) => et.project_id === projId),
+        writingGoals: mockStore.writing_goals.filter((g) => g.project_id === projId),
+        writingSessions: mockStore.writing_sessions.filter((s) => s.project_id === projId),
+        settings: mockStore.settings,
+      };
+
+      const cleanTitle = project.title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      const fileName = `${cleanTitle}_backup_${Date.now()}.writein`;
+      return {
+        fileName,
+        filePath: null,
+        contentJson: JSON.stringify(bundle, null, 2),
+      } as unknown as T;
+    }
+
+    case 'restore_project_backup': {
+      const backupJson = args?.backup_json as string;
+      const bundle = JSON.parse(backupJson);
+      const newProjId = `proj-restored-${Math.random().toString(36).substring(2, 9)}`;
+
+      const restoredProject = {
+        ...bundle.project,
+        id: newProjId,
+        title: `${bundle.project.title} (Restored)`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      mockStore.projects.push(restoredProject);
+
+      if (bundle.nodes && Array.isArray(bundle.nodes)) {
+        for (const n of bundle.nodes) {
+          mockStore.nodes.push({ ...n, project_id: newProjId });
+        }
+      }
+
+      if (bundle.documents && typeof bundle.documents === 'object') {
+        for (const [nodeId, doc] of Object.entries(bundle.documents)) {
+          mockStore.documents[nodeId] = doc;
+        }
+      }
+
+      if (bundle.characters && Array.isArray(bundle.characters)) {
+        for (const c of bundle.characters) {
+          mockStore.characters.push({ ...c, project_id: newProjId });
+        }
+      }
+
+      if (bundle.locations && Array.isArray(bundle.locations)) {
+        for (const l of bundle.locations) {
+          mockStore.locations.push({ ...l, project_id: newProjId });
+        }
+      }
+
+      if (bundle.notes && Array.isArray(bundle.notes)) {
+        for (const note of bundle.notes) {
+          mockStore.notes.push({ ...note, project_id: newProjId });
+        }
+      }
+
+      return newProjId as unknown as T;
+    }
+
+    case 'list_backups': {
+      return [] as unknown as T;
+    }
+
+    case 'delete_backup_file': {
+      return true as unknown as T;
     }
 
     default:

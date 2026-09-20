@@ -11,6 +11,8 @@ import {
   Trash2,
   Settings,
   FolderOpen,
+  Target,
+  BarChart2,
 } from 'lucide-react';
 import { useProject } from '../../context/ProjectContext';
 
@@ -23,6 +25,8 @@ export type ActiveNavTab =
   | 'timeline'
   | 'notes'
   | 'references'
+  | 'goals'
+  | 'statistics'
   | 'trash'
   | 'settings';
 
@@ -48,6 +52,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'timeline', label: 'Timeline', icon: Clock },
     { id: 'notes', label: 'Notes', icon: StickyNote },
     { id: 'references', label: 'Research & Files', icon: Paperclip },
+    { id: 'goals', label: 'Writing Goals', icon: Target },
+    { id: 'statistics', label: 'Statistics', icon: BarChart2 },
   ];
 
   return (
