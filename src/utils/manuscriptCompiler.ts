@@ -3,6 +3,9 @@ import type { ManuscriptNode } from '../types/manuscript';
 import type { CompileOptions, CompileResult } from '../types/exportImport';
 import { countWordsAndCharacters } from './wordCount';
 
+/**
+ * Compiles selected manuscript nodes into the configured export format.
+ */
 export function compileManuscript(
   project: Project,
   nodes: ManuscriptNode[],

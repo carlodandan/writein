@@ -5,6 +5,7 @@ use crate::models::{
     StoryBibleExportResult,
 };
 
+/// Compiles the selected project manuscript using the supplied export options.
 #[tauri::command]
 pub fn compile_manuscript(
     db: State<DbManager>,
@@ -15,6 +16,7 @@ pub fn compile_manuscript(
     db.with_conn(|conn| export_repo::compile_manuscript(conn, &base_dir, &project_id, options))
 }
 
+/// Exports a project's Story Bible in the requested format.
 #[tauri::command]
 pub fn export_story_bible(
     db: State<DbManager>,
@@ -26,6 +28,7 @@ pub fn export_story_bible(
     db.with_conn(|conn| export_repo::export_story_bible(conn, &base_dir, &project_id, &fmt))
 }
 
+/// Persists a previously parsed manuscript import into the project database.
 #[tauri::command]
 pub fn commit_imported_manuscript(
     db: State<DbManager>,

@@ -2,6 +2,7 @@ use tauri::State;
 use crate::db::{manuscript_repo, version_repo, DbManager};
 use crate::models::{AppError, DocumentContent, DocumentVersion, SaveDocumentInput};
 
+/// Lists the saved document snapshots for a manuscript node.
 #[tauri::command]
 pub fn list_document_versions(
     db: State<DbManager>,
@@ -10,6 +11,7 @@ pub fn list_document_versions(
     db.with_conn(|conn| version_repo::list_snapshots(conn, &node_id))
 }
 
+/// Retrieves the content and metadata for a saved document snapshot.
 #[tauri::command]
 pub fn get_document_version(
     db: State<DbManager>,
@@ -18,6 +20,7 @@ pub fn get_document_version(
     db.with_conn(|conn| version_repo::get_snapshot_content(conn, &version_id))
 }
 
+/// Creates a document snapshot from the supplied text and word count.
 #[tauri::command]
 pub fn create_document_snapshot(
     db: State<DbManager>,
@@ -31,6 +34,7 @@ pub fn create_document_snapshot(
     })
 }
 
+/// Restores a document snapshot after preserving the current non-empty content.
 #[tauri::command]
 pub fn restore_document_version(
     db: State<DbManager>,
@@ -68,6 +72,7 @@ pub fn restore_document_version(
     })
 }
 
+/// Deletes a saved document snapshot by identifier.
 #[tauri::command]
 pub fn delete_document_version(
     db: State<DbManager>,

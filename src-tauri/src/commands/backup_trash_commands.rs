@@ -2,6 +2,7 @@ use tauri::State;
 use crate::db::{backup_repo, trash_repo, DbManager};
 use crate::models::{AppError, BackupFileInfo, BackupResult, Project, TrashItem};
 
+/// Lists the trashed items that belong to a project.
 #[tauri::command]
 pub fn list_trash(
     db: State<DbManager>,
@@ -10,6 +11,7 @@ pub fn list_trash(
     db.with_conn(|conn| trash_repo::list_trash(conn, &project_id))
 }
 
+/// Moves an entity into a project's trash while retaining its display title.
 #[tauri::command]
 pub fn move_to_trash(
     db: State<DbManager>,
@@ -23,6 +25,7 @@ pub fn move_to_trash(
     })
 }
 
+/// Restores a trashed entity to its active state.
 #[tauri::command]
 pub fn restore_from_trash(
     db: State<DbManager>,
@@ -31,6 +34,7 @@ pub fn restore_from_trash(
     db.with_conn(|conn| trash_repo::restore_from_trash(conn, &trash_id))
 }
 
+/// Permanently deletes a single trashed entity.
 #[tauri::command]
 pub fn delete_permanently(
     db: State<DbManager>,
@@ -39,6 +43,7 @@ pub fn delete_permanently(
     db.with_conn(|conn| trash_repo::delete_permanently(conn, &trash_id))
 }
 
+/// Permanently deletes every trashed entity for a project.
 #[tauri::command]
 pub fn empty_trash(
     db: State<DbManager>,
@@ -47,6 +52,7 @@ pub fn empty_trash(
     db.with_conn(|conn| trash_repo::empty_trash(conn, &project_id))
 }
 
+/// Creates a portable backup of the requested project.
 #[tauri::command]
 pub fn create_project_backup(
     db: State<DbManager>,
@@ -56,6 +62,7 @@ pub fn create_project_backup(
     db.with_conn(|conn| backup_repo::create_project_backup(conn, &base_dir, &project_id))
 }
 
+/// Restores a project from its serialized backup payload.
 #[tauri::command]
 pub fn restore_project_backup(
     db: State<DbManager>,
@@ -64,6 +71,7 @@ pub fn restore_project_backup(
     db.with_conn(|conn| backup_repo::restore_project_backup(conn, &backup_json))
 }
 
+/// Lists saved backup files, optionally restricted to one project.
 #[tauri::command]
 pub fn list_backups(
     db: State<DbManager>,
@@ -73,6 +81,7 @@ pub fn list_backups(
     backup_repo::list_backups(&base_dir, project_id.as_deref())
 }
 
+/// Deletes a saved backup file by name.
 #[tauri::command]
 pub fn delete_backup_file(
     db: State<DbManager>,

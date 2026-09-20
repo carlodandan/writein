@@ -1,6 +1,9 @@
 import type { ImportDetectedNode, ImportPreview } from '../types/exportImport';
 import { countWordsAndCharacters } from './wordCount';
 
+/**
+ * Parses Markdown or conventional manuscript text into an import preview tree.
+ */
 export function parseManuscriptText(rawText: string): ImportPreview {
   const trimmed = rawText.trim();
   if (!trimmed) {

@@ -7,6 +7,9 @@ import {
 
 const STORAGE_KEY = 'writein_editor_preferences';
 
+/**
+ * Loads editor preferences and keeps browser and backend persistence in sync.
+ */
 export function useEditorPreferences() {
   const [preferences, setPreferences] = useState<EditorPreferences>(() => {
     try {

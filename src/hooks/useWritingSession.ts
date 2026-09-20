@@ -8,6 +8,9 @@ interface UseWritingSessionOptions {
   currentWordCount?: number;
 }
 
+/**
+ * Tracks an active writing session and records its elapsed time and word delta.
+ */
 export function useWritingSession({
   projectId,
   nodeId,

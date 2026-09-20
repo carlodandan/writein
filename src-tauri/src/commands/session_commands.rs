@@ -2,6 +2,7 @@ use tauri::State;
 use crate::db::{session_repo, DbManager};
 use crate::models::{AppError, SessionStats, WritingSession};
 
+/// Starts a writing session for a project and optional manuscript node.
 #[tauri::command]
 pub fn start_writing_session(
     db: State<DbManager>,
@@ -11,6 +12,7 @@ pub fn start_writing_session(
     db.with_conn(|conn| session_repo::start_session(conn, &project_id, node_id.as_deref()))
 }
 
+/// Completes a writing session with its final duration and word count.
 #[tauri::command]
 pub fn end_writing_session(
     db: State<DbManager>,
@@ -23,6 +25,7 @@ pub fn end_writing_session(
     })
 }
 
+/// Lists a project's most recent writing sessions.
 #[tauri::command]
 pub fn list_writing_sessions(
     db: State<DbManager>,
@@ -33,6 +36,7 @@ pub fn list_writing_sessions(
     db.with_conn(|conn| session_repo::list_sessions(conn, &project_id, lim))
 }
 
+/// Returns aggregate writing-session statistics for a project.
 #[tauri::command]
 pub fn get_session_stats(
     db: State<DbManager>,
