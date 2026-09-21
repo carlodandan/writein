@@ -9,6 +9,14 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            let handle = app.handle().clone();
+
+            #[cfg(desktop)]
+            {
+                handle.plugin(tauri_plugin_updater::Builder::new().build())?;
+                handle.plugin(tauri_plugin_process::init())?;
+            }
+
             let app_data = app
                 .path()
                 .app_data_dir()

@@ -24,6 +24,8 @@ import { BackupModal } from './components/project/BackupModal';
 import {
   SettingsView,
 } from './components/views/PlaceholderViews';
+import { UpdateWatcher } from './components/updater/UpdateWatcher';
+import { UpdateNotificationDialog } from './components/updater/UpdateNotificationDialog';
 import './App.css';
 
 function MainContent({
@@ -121,6 +123,10 @@ function App() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState<{
+    version: string;
+    notes?: string | null;
+  } | null>(null);
 
   const handleNavigate = (tab: ActiveNavTab, entityId?: string) => {
     setActiveTab(tab);
@@ -190,6 +196,23 @@ function App() {
             <BackupModal
               isOpen={isBackupOpen}
               onClose={() => setIsBackupOpen(false)}
+            />
+
+            <UpdateWatcher
+              onAvailable={(version, notes) => {
+                setUpdateAvailable({ version, notes });
+              }}
+            />
+
+            <UpdateNotificationDialog
+              isOpen={!!updateAvailable}
+              version={updateAvailable?.version || ''}
+              notes={updateAvailable?.notes}
+              onClose={() => setUpdateAvailable(null)}
+              onOpenPreferences={() => {
+                setUpdateAvailable(null);
+                setActiveTab('settings');
+              }}
             />
           </AppLayout>
         </ManuscriptProvider>

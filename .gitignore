@@ -26,3 +26,11 @@ dist-ssr
 # Tauri Icons
 src-tauri/icons/ios/
 src-tauri/icons/android/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Tauri Signing Keys
+signkey/
