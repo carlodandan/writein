@@ -15,6 +15,7 @@ export interface DownloadProgress {
  */
 let pending: Promise<Update | null> | null = null;
 
+/** Checks for an update, optionally bypassing the session-level cached result. */
 export function checkForUpdate(force = false): Promise<Update | null> {
   if (!isTauri()) {
     return Promise.resolve(null);

@@ -10,6 +10,7 @@ import {
   Info,
 } from 'lucide-react';
 
+/** Renders the Preferences panel for checking and installing application updates. */
 export const UpdateCheck: React.FC = () => {
   const currentVersion = useAppVersion();
   const { state, check, install } = useUpdater();

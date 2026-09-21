@@ -10,6 +10,7 @@ interface UpdateNotificationDialogProps {
   onOpenPreferences?: () => void;
 }
 
+/** Presents an available update and lets the user review or install it. */
 export const UpdateNotificationDialog: React.FC<UpdateNotificationDialogProps> = ({
   isOpen,
   version,
@@ -26,6 +27,7 @@ export const UpdateNotificationDialog: React.FC<UpdateNotificationDialogProps> =
   const percentLabel =
     state.percent === null ? null : `${Math.round(state.percent * 100)}%`;
 
+  /** Starts installation of the update retained by the shared updater hook. */
   const handleInstall = async () => {
     await install();
   };

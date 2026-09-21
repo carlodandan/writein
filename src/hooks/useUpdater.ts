@@ -26,6 +26,7 @@ const CHECKING: UpdaterState = {
   error: null,
 };
 
+/** Manages update checks, installation progress, and updater UI state. */
 export function useUpdater() {
   const [state, setState] = useState<UpdaterState>(CHECKING);
   const found = useRef<Update | null>(null);
