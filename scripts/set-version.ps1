@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 $Version = $Version.Trim().TrimStart('v')
 
 # Validate SemVer format
-if ($Version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+if ($Version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*)|(?:\d*[A-Za-z-][0-9A-Za-z-]*))(?:\.(?:(?:0|[1-9]\d*)|(?:\d*[A-Za-z-][0-9A-Za-z-]*)))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$') {
     Write-Error "Invalid version format: '$Version'. Must be valid SemVer (e.g. 1.0.0 or 1.0.0-beta.1)."
     exit 1
 }
