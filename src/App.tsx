@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ProjectProvider } from './context/ProjectContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ManuscriptProvider } from './context/ManuscriptContext';
@@ -138,6 +138,13 @@ function App() {
     setIsSearchOpen(false);
   };
 
+  const handleUpdateAvailable = useCallback(
+    (version: string, notes?: string | null) => {
+      setUpdateAvailable({ version, notes });
+    },
+    []
+  );
+
   return (
     <ThemeProvider>
       <ProjectProvider>
@@ -198,11 +205,7 @@ function App() {
               onClose={() => setIsBackupOpen(false)}
             />
 
-            <UpdateWatcher
-              onAvailable={(version, notes) => {
-                setUpdateAvailable({ version, notes });
-              }}
-            />
+            <UpdateWatcher onAvailable={handleUpdateAvailable} />
 
             <UpdateNotificationDialog
               isOpen={!!updateAvailable}

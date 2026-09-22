@@ -38,7 +38,7 @@ export const UpdateCheck: React.FC = () => {
         <button
           type="button"
           onClick={() => void check(true)}
-          disabled={busy}
+          disabled={busy || confirming}
           className="px-3 py-1.5 rounded-lg border border-[var(--paper-border)] hover:bg-[var(--paper-desk-hover)] text-xs font-medium text-[var(--ink-primary)] transition-colors flex items-center space-x-1.5 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${state.stage === 'checking' ? 'animate-spin text-[var(--amber-accent)]' : ''}`} />

@@ -13,6 +13,16 @@ interface UpdateNotificationDialogProps {
 /** Presents an available update and lets the user review or install it. */
 export const UpdateNotificationDialog: React.FC<UpdateNotificationDialogProps> = ({
   isOpen,
+  ...dialogProps
+}) => {
+  if (!isOpen) return null;
+
+  return <OpenUpdateNotificationDialog {...dialogProps} />;
+};
+
+const OpenUpdateNotificationDialog: React.FC<
+  Omit<UpdateNotificationDialogProps, 'isOpen'>
+> = ({
   version,
   notes,
   onClose,
@@ -20,8 +30,6 @@ export const UpdateNotificationDialog: React.FC<UpdateNotificationDialogProps> =
 }) => {
   const { state, install } = useUpdater();
   const [showNotes, setShowNotes] = useState(false);
-
-  if (!isOpen) return null;
 
   const isDownloading = state.stage === 'downloading';
   const percentLabel =

@@ -26,6 +26,8 @@ const CHECKING: UpdaterState = {
   error: null,
 };
 
+let activeInstallation: Promise<UpdaterState> | null = null;
+
 /** Manages update checks, installation progress, and updater UI state. */
 export function useUpdater() {
   const [state, setState] = useState<UpdaterState>(CHECKING);
@@ -78,36 +80,47 @@ export function useUpdater() {
     void check();
   }, [check]);
 
-  const install = useCallback(async (): Promise<UpdaterState> => {
+  const install = useCallback((): Promise<UpdaterState> => {
+    if (activeInstallation) return activeInstallation;
+
     const update = found.current;
     // No update found or it expired — re-check rather than install stale data
     if (!update) return check(true);
 
-    const version = update.version;
-    const notes = update.body?.trim() || null;
-    settle({ stage: 'downloading', version, notes, percent: null, error: null });
+    const installation = (async (): Promise<UpdaterState> => {
+      const version = update.version;
+      const notes = update.body?.trim() || null;
+      settle({ stage: 'downloading', version, notes, percent: null, error: null });
 
-    // Throttle renders: only re-render when the whole-percent value changes
-    let announced = 0;
-    try {
-      await installUpdate(update, ({ received, total }) => {
-        if (!total) return;
-        const percent = Math.min(received / total, 1);
-        const whole = Math.round(percent * 100);
-        if (whole === announced) return;
-        announced = whole;
-        settle({ stage: 'downloading', version, notes, percent, error: null });
-      });
-      return settle({ stage: 'downloading', version, notes, percent: 1, error: null });
-    } catch (error) {
-      return settle({
-        stage: 'failed',
-        version,
-        notes,
-        percent: null,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+      // Throttle renders: only re-render when the whole-percent value changes
+      let announced = 0;
+      try {
+        await installUpdate(update, ({ received, total }) => {
+          if (!total) return;
+          const percent = Math.min(received / total, 1);
+          const whole = Math.round(percent * 100);
+          if (whole === announced) return;
+          announced = whole;
+          settle({ stage: 'downloading', version, notes, percent, error: null });
+        });
+        return settle({ stage: 'downloading', version, notes, percent: 1, error: null });
+      } catch (error) {
+        return settle({
+          stage: 'failed',
+          version,
+          notes,
+          percent: null,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
+
+    activeInstallation = installation;
+    const clearInstallation = () => {
+      if (activeInstallation === installation) activeInstallation = null;
+    };
+    void installation.then(clearInstallation, clearInstallation);
+    return installation;
   }, [check, settle]);
 
   return { state, check, install };
