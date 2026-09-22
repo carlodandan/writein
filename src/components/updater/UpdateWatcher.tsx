@@ -11,6 +11,7 @@ export interface UpdateWatcherProps {
   onAvailable: (version: string, notes?: string | null) => void;
 }
 
+/** Checks once after startup and announces an available update. */
 export function UpdateWatcher({ onAvailable }: UpdateWatcherProps) {
   useEffect(() => {
     if (announced) return;

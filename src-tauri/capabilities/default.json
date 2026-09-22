@@ -6,6 +6,8 @@
   "permissions": [
     "core:default",
     "core:app:default",
-    "opener:default"
+    "opener:default",
+    "updater:default",
+    "process:default"
   ]
 }

@@ -11,6 +11,15 @@ export function isTauri(): boolean {
   );
 }
 
+/** Checks whether the current environment is a desktop Tauri WebView. */
+export function isDesktopTauri(): boolean {
+  const platform = import.meta.env.TAURI_ENV_PLATFORM;
+  return (
+    isTauri() &&
+    (platform === 'windows' || platform === 'macos' || platform === 'linux')
+  );
+}
+
 const STORAGE_KEY = 'writein_mock_store_v1';
 
 function loadMockStore(): any | null {

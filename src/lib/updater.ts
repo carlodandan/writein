@@ -1,7 +1,7 @@
 import { check } from '@tauri-apps/plugin-updater';
 import type { DownloadEvent, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { isTauri } from '../services/tauriIpc';
+import { isDesktopTauri } from '../services/tauriIpc';
 
 export interface DownloadProgress {
   received: number;
@@ -15,8 +15,9 @@ export interface DownloadProgress {
  */
 let pending: Promise<Update | null> | null = null;
 
+/** Checks for an update, optionally bypassing the session-level cached result. */
 export function checkForUpdate(force = false): Promise<Update | null> {
-  if (!isTauri()) {
+  if (!isDesktopTauri()) {
     return Promise.resolve(null);
   }
   if (force) pending = null;
@@ -38,7 +39,7 @@ export async function installUpdate(
   update: Update,
   onProgress: (progress: DownloadProgress) => void
 ): Promise<void> {
-  if (!isTauri()) {
+  if (!isDesktopTauri()) {
     return;
   }
   let received = 0;
