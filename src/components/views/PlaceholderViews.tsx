@@ -102,6 +102,8 @@ export const GenericPlaceholder: React.FC<{
   );
 };
 
+import { UpdateCheck } from '../updater/UpdateCheck';
+
 export const SettingsView: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
@@ -117,6 +119,9 @@ export const SettingsView: React.FC = () => {
       </div>
 
       <div className="space-y-6 text-sm">
+        {/* Application Updates */}
+        <UpdateCheck />
+
         {/* Appearance */}
         <div className="bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl p-5 space-y-4">
           <h3 className="font-serif-novel text-base font-semibold text-[var(--ink-primary)]">
