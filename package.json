@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "version:set": "powershell -ExecutionPolicy Bypass -File ./scripts/set-version.ps1"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
