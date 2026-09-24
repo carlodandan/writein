@@ -61,7 +61,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
             onClick={onOpenDeepLinkModal}
             className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl text-xs font-medium text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] underline decoration-[var(--paper-border)] hover:decoration-[var(--amber-accent)] transition-all cursor-pointer"
           >
-            <span>Have app installed? Launch (`writein://`)</span>
+            <span>Have app installed? Launch (writein://)</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

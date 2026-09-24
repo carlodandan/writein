@@ -196,13 +196,13 @@ Marlowe stepped softly over the damp floorboards. In his hand, the small iron pr
                       })
                     }
                     rows={10}
-                    className="w-full flex-1 font-serif-novel text-base leading-relaxed text-[var(--ink-primary)] bg-transparent resize-none border-none focus:outline-hidden selection:bg-[var(--amber-soft)]"
+                    className="w-full flex-1 font-serif-novel text-base leading-relaxed text-[var(--ink-primary)] bg-transparent resize-none border-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-accent)] selection:bg-[var(--amber-soft)]"
                     placeholder="Begin typing your manuscript scene here..."
                   />
 
                   {/* Footbar Status */}
                   <div className="pt-3 border-t border-[var(--paper-border-subtle)] flex items-center justify-between text-[11px] text-[var(--ink-muted)] font-mono">
-                    <span>Autosaved to SQLite</span>
+                    <span>Demo only — edits are not saved</span>
                     <span>Typewriter Scrolling: ON</span>
                   </div>
                 </div>

@@ -31,7 +31,7 @@ export const FAQ: React.FC = () => {
     },
     {
       q: 'Can I sync my projects between multiple computers?',
-      a: 'Because WriteIn uses local SQLite databases and offers one-click .writein project backup archives, you can easily synchronize your project directory or backup archives across computers using your preferred local sync tools like Syncthing, OneDrive, or Dropbox.',
+      a: 'Sync only completed .writein project backup archives between computers using a tool like Syncthing, OneDrive, or Dropbox. Restore an archive on the other computer before editing; do not sync the live SQLite project directory.',
     },
     {
       q: 'Does WriteIn send any data to external servers or AI providers?',
@@ -65,6 +65,9 @@ export const FAQ: React.FC = () => {
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
+                  id={`faq-question-${i}`}
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${i}`}
                   className="w-full p-5 text-left flex items-center justify-between text-sm font-bold text-[var(--ink-primary)] hover:text-[var(--amber-accent)] transition-colors cursor-pointer"
                 >
                   <span className="font-serif-novel text-base">{faq.q}</span>
@@ -75,11 +78,15 @@ export const FAQ: React.FC = () => {
                   />
                 </button>
 
-                {isOpen && (
-                  <div className="px-5 pb-5 text-xs sm:text-sm text-[var(--ink-secondary)] leading-relaxed border-t border-[var(--paper-border-subtle)] pt-4">
-                    {faq.a}
-                  </div>
-                )}
+                <div
+                  id={`faq-answer-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-question-${i}`}
+                  hidden={!isOpen}
+                  className="px-5 pb-5 text-xs sm:text-sm text-[var(--ink-secondary)] leading-relaxed border-t border-[var(--paper-border-subtle)] pt-4"
+                >
+                  {faq.a}
+                </div>
               </div>
             );
           })}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X, Minus } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 export const ComparisonTable: React.FC = () => {
   const features = [
@@ -64,7 +64,7 @@ export const ComparisonTable: React.FC = () => {
       writein: '100% Free & Open',
       scrivener: '$59.99 per OS',
       ulysses: '$49.99 / year',
-      docs: '$6.99–$9.99 / month',
+      docs: 'Word: Paid (Microsoft 365); Google Docs: Free for personal use',
     },
   ];
 
@@ -73,8 +73,9 @@ export const ComparisonTable: React.FC = () => {
       return (
         <div className="flex items-center justify-center">
           <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isWriteIn ? 'bg-[var(--amber-soft)] text-[var(--amber-accent)]' : 'bg-emerald-500/20 text-emerald-600'}`}>
-            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+            <Check aria-hidden="true" className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
+          <span className="sr-only">Yes</span>
         </div>
       );
     }
@@ -82,8 +83,9 @@ export const ComparisonTable: React.FC = () => {
       return (
         <div className="flex items-center justify-center">
           <div className="w-5 h-5 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
-            <X className="w-3.5 h-3.5" />
+            <X aria-hidden="true" className="w-3.5 h-3.5" />
           </div>
+          <span className="sr-only">No</span>
         </div>
       );
     }
@@ -125,9 +127,9 @@ export const ComparisonTable: React.FC = () => {
             <tbody className="divide-y divide-[var(--paper-border-subtle)] text-xs text-[var(--ink-secondary)]">
               {features.map((row, i) => (
                 <tr key={i} className="hover:bg-[var(--paper-desk)]/30 transition-colors">
-                  <td className="py-3.5 px-6 font-medium text-[var(--ink-primary)]">
+                  <th scope="row" className="py-3.5 px-6 font-medium text-[var(--ink-primary)]">
                     {row.name}
-                  </td>
+                  </th>
                   <td className="py-3.5 px-4 text-center bg-[var(--amber-soft)]/20 font-bold">
                     {renderValue(row.writein, true)}
                   </td>

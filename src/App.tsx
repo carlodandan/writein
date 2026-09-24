@@ -4,7 +4,7 @@ import { ProjectProvider } from './context/ProjectContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ManuscriptProvider } from './context/ManuscriptContext';
 import { AppLayout } from './components/layout/AppLayout';
-import { ActiveNavTab } from './components/layout/Sidebar';
+import { ACTIVE_NAV_TABS, type ActiveNavTab } from './components/layout/Sidebar';
 import { ProjectHomeView } from './components/projects/ProjectHomeView';
 import { ManuscriptWorkspace } from './components/manuscript/ManuscriptWorkspace';
 import { CreateProjectModal } from './components/projects/CreateProjectModal';
@@ -150,7 +150,9 @@ function App() {
     deepLinkService.initialize({
       onNewProject: () => setIsCreateModalOpen(true),
       onNavigateTab: (tab: string) => {
-        handleNavigate(tab as ActiveNavTab);
+        if ((ACTIVE_NAV_TABS as readonly string[]).includes(tab)) {
+          handleNavigate(tab as ActiveNavTab);
+        }
       },
     });
   }, []);

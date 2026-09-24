@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, HardDrive, WifiOff, Sparkles, Database, KeyRound, Ban } from 'lucide-react';
+import { Shield, WifiOff, Database, Ban } from 'lucide-react';
 
 export const PrivacyManifesto: React.FC = () => {
   return (

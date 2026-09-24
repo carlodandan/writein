@@ -17,7 +17,7 @@ This website is pre-configured for seamless deployment to **Cloudflare Pages**.
 #### If Project Root is repository root (`/`):
 - **Framework preset**: `Vite`
 - **Build command**: `pnpm run build:web`
-- **Build output directory**: `dist-web`
+- **Build output directory**: `website/dist`
 
 #### If Root directory is set to `/website`:
 - **Framework preset**: `Vite`
@@ -37,7 +37,7 @@ You can also deploy directly from your local terminal using Wrangler:
 pnpm run build:web
 
 # 2. Deploy to Cloudflare Pages
-npx wrangler pages deploy dist-web --project-name writein-website
+npx wrangler pages deploy website/dist --project-name writein-website
 ```
 
 ---
@@ -70,7 +70,7 @@ pnpm run preview:web
 WriteIn integrates the `@tauri-apps/plugin-deep-link` / `tauri-plugin-deep-link` plugin to register the custom URI scheme `writein://`.
 
 Supported actions:
-- `writein://open`: Launches the application and restores the main desk window.
+- `writein://open`: Launches WriteIn.
 - `writein://new`: Triggers the project creation modal.
 - `writein://tab?to=manuscript`: Opens directly to the manuscript binder & editor.
 - `writein://tab?to=characters`: Opens directly to the character relationship web.

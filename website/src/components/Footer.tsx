@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Cloud, ExternalLink, GitBranch } from 'lucide-react';
+import { Shield, Cloud, ExternalLink } from 'lucide-react';
 
 interface FooterProps {
   onOpenDeepLinkModal: () => void;

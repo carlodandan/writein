@@ -12,7 +12,7 @@ export const DownloadSection: React.FC = () => {
       file: 'write-in_2.0.0_x64-setup.exe',
       size: '~12 MB',
       recommended: true,
-      href: 'https://github.com/carlodandan/writein/releases/latest/download/write-in_2.0.0_x64-setup.exe',
+      href: 'https://github.com/carlodandan/writein/releases/download/v2.0.0/write-in_2.0.0_x64-setup.exe',
     },
     {
       title: 'Windows MSI Package',
@@ -20,10 +20,10 @@ export const DownloadSection: React.FC = () => {
       icon: Package,
       badge: 'Standard Installer',
       desc: 'Native Microsoft Windows Installer package with passive installation support for clean setups.',
-      file: 'write-in_2.0.0_x64.msi',
+      file: 'write-in_2.0.0_x64_en-US.msi',
       size: '~14 MB',
       recommended: false,
-      href: 'https://github.com/carlodandan/writein/releases/latest/download/write-in_2.0.0_x64.msi',
+      href: 'https://github.com/carlodandan/writein/releases/download/v2.0.0/write-in_2.0.0_x64_en-US.msi',
     },
   ];
 
@@ -39,7 +39,7 @@ export const DownloadSection: React.FC = () => {
             Download WriteIn for Windows
           </h2>
           <p className="text-sm sm:text-base text-[var(--ink-secondary)] leading-relaxed">
-            Purpose-engineered for Windows 10 & 11 (64-bit). 100% free, private, and local-first with zero accounts or subscriptions.
+            Purpose-engineered for Windows 10 (x64) and Windows 11 (x64 and ARM64). 100% free, private, and local-first with zero accounts or subscriptions.
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, X, Check, Copy, Download, Terminal, Sparkles } from 'lucide-react';
+import { ExternalLink, X, Check, Copy, Sparkles } from 'lucide-react';
 
 interface DeepLinkModalProps {
   isOpen: boolean;

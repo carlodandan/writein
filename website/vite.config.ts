@@ -10,7 +10,7 @@ export default defineConfig({
   root: __dirname,
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: resolve(__dirname, '../dist-web'),
+    outDir: resolve(__dirname, 'dist'),
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {

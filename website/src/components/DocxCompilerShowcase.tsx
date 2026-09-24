@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileType, CheckCircle2, Sliders, ShieldCheck, Download, Sparkles } from 'lucide-react';
+import { FileType, CheckCircle2, Sparkles } from 'lucide-react';
 
 export const DocxCompilerShowcase: React.FC = () => {
   return (
