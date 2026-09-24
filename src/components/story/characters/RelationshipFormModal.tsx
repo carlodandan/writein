@@ -55,8 +55,11 @@ export const RelationshipFormModal: React.FC<RelationshipFormModalProps> = ({
       setRelationType(editingRelationship.relation_type);
       setDescription(editingRelationship.description || '');
     } else {
-      setCharA(defaultCharAId || (characters[0]?.id ?? ''));
-      setCharB(defaultCharBId || (characters[1]?.id ?? ''));
+      const initialA = defaultCharAId || (characters[0]?.id ?? '');
+      const otherChar = characters.find((c) => c.id !== initialA);
+      const initialB = defaultCharBId || (otherChar ? otherChar.id : (characters[1]?.id ?? ''));
+      setCharA(initialA);
+      setCharB(initialB);
       setRelationType('Ally / Partner');
       setDescription('');
     }
@@ -90,7 +93,10 @@ export const RelationshipFormModal: React.FC<RelationshipFormModalProps> = ({
       } else {
         await onSubmit(
           {
-            project_id: characters[0]?.project_id || '',
+            project_id:
+              characters.find((c) => c.id === charA)?.project_id ||
+              characters[0]?.project_id ||
+              '',
             character_a_id: charA,
             character_b_id: charB,
             relation_type: relationType.trim(),

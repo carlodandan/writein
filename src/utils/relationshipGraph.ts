@@ -121,3 +121,99 @@ export function getRoleColor(role: CharacterRole | string): {
       };
   }
 }
+
+export interface GraphBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+}
+
+/**
+ * Computes the 2D bounding box covering all nodes with optional margin padding.
+ */
+export function calculateBoundingBox(
+  nodes: GraphNode[],
+  nodePadding: number = 60,
+): GraphBounds {
+  if (nodes.length === 0) {
+    return {
+      minX: 0,
+      maxX: 0,
+      minY: 0,
+      maxY: 0,
+      width: 0,
+      height: 0,
+      centerX: 0,
+      centerY: 0,
+    };
+  }
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const node of nodes) {
+    if (node.x < minX) minX = node.x;
+    if (node.x > maxX) maxX = node.x;
+    if (node.y < minY) minY = node.y;
+    if (node.y > maxY) maxY = node.y;
+  }
+
+  minX -= nodePadding;
+  maxX += nodePadding;
+  minY -= nodePadding;
+  maxY += nodePadding;
+
+  const width = Math.max(1, maxX - minX);
+  const height = Math.max(1, maxY - minY);
+
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    width,
+    height,
+    centerX: (minX + maxX) / 2,
+    centerY: (minY + maxY) / 2,
+  };
+}
+
+/**
+ * Calculates pan and zoom coordinates to frame all nodes inside the viewport.
+ */
+export function calculateFitView(
+  nodes: GraphNode[],
+  viewportWidth: number,
+  viewportHeight: number,
+  padding: number = 80,
+  minZoom: number = 0.25,
+  maxZoom: number = 1.8,
+): { pan: { x: number; y: number }; zoom: number } {
+  if (nodes.length === 0 || viewportWidth <= 0 || viewportHeight <= 0) {
+    return { pan: { x: 0, y: 0 }, zoom: 1 };
+  }
+
+  const bounds = calculateBoundingBox(nodes, 60);
+  const availableWidth = Math.max(100, viewportWidth - padding * 2);
+  const availableHeight = Math.max(100, viewportHeight - padding * 2);
+
+  const scaleX = availableWidth / bounds.width;
+  const scaleY = availableHeight / bounds.height;
+  const rawZoom = Math.min(scaleX, scaleY);
+  const targetZoom = Math.min(Math.max(rawZoom, minZoom), maxZoom);
+
+  const panX = viewportWidth / 2 - bounds.centerX * targetZoom;
+  const panY = viewportHeight / 2 - bounds.centerY * targetZoom;
+
+  return {
+    pan: { x: Math.round(panX), y: Math.round(panY) },
+    zoom: Number(targetZoom.toFixed(2)),
+  };
+}

@@ -211,6 +211,7 @@ export const CharacterWorkspace: React.FC<CharacterWorkspaceProps> = ({
         <CharacterRelationshipMap
           characters={characters}
           relationships={relationships}
+          projectId={currentProject.id}
           onSelectCharacter={(c) => setSelectedCharForDetail(c)}
           onEditRelationship={(r) => {
             setEditingRelationship(r);
