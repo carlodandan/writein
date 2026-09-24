@@ -44,7 +44,10 @@ pub fn create_worldbuilding_entry(
     get_worldbuilding_entry(conn, &id)
 }
 
-pub fn get_worldbuilding_entry(conn: &Connection, id: &str) -> Result<WorldbuildingEntry, AppError> {
+pub fn get_worldbuilding_entry(
+    conn: &Connection,
+    id: &str,
+) -> Result<WorldbuildingEntry, AppError> {
     let mut stmt = conn.prepare(
         "SELECT id, project_id, category, title, content, tags, created_at, updated_at
          FROM worldbuilding_entries
@@ -66,7 +69,9 @@ pub fn get_worldbuilding_entry(conn: &Connection, id: &str) -> Result<Worldbuild
         })
         .optional()?;
 
-    entry.ok_or_else(|| AppError::NotFound(format!("Worldbuilding entry with id '{}' not found", id)))
+    entry.ok_or_else(|| {
+        AppError::NotFound(format!("Worldbuilding entry with id '{}' not found", id))
+    })
 }
 
 pub fn list_worldbuilding_entries(
@@ -213,7 +218,9 @@ pub mod tests {
                 project_id: proj.id.clone(),
                 category: "Magic System".into(),
                 title: "The Three Aethers".into(),
-                content: Some("Channeling raw elemental currents requires crystal conduits.".into()),
+                content: Some(
+                    "Channeling raw elemental currents requires crystal conduits.".into(),
+                ),
                 tags: Some("magic,rules".into()),
             },
         )

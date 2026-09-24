@@ -3,9 +3,8 @@ use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::models::{
-    AppError, Character, CharacterRelationshipWithNames, CharacterRole,
-    CreateCharacterInput, CreateRelationshipInput, UpdateCharacterInput,
-    UpdateRelationshipInput,
+    AppError, Character, CharacterRelationshipWithNames, CharacterRole, CreateCharacterInput,
+    CreateRelationshipInput, UpdateCharacterInput, UpdateRelationshipInput,
 };
 
 pub fn create_character(
@@ -13,7 +12,9 @@ pub fn create_character(
     input: CreateCharacterInput,
 ) -> Result<Character, AppError> {
     if input.name.trim().is_empty() {
-        return Err(AppError::Validation("Character name cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Character name cannot be empty".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();

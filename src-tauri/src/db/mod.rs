@@ -1,22 +1,22 @@
-pub mod migrations;
-pub mod project_repo;
-pub mod manuscript_repo;
-pub mod character_repo;
-pub mod location_repo;
-pub mod worldbuilding_repo;
-pub mod timeline_repo;
-pub mod note_repo;
-pub mod tag_repo;
-pub mod search_repo;
 pub mod attachment_repo;
+pub mod backup_repo;
+pub mod character_repo;
 pub mod cross_link_repo;
-pub mod version_repo;
+pub mod export_repo;
 pub mod goals_repo;
+pub mod location_repo;
+pub mod manuscript_repo;
+pub mod migrations;
+pub mod note_repo;
+pub mod project_repo;
+pub mod search_repo;
 pub mod session_repo;
 pub mod settings_repo;
-pub mod export_repo;
+pub mod tag_repo;
+pub mod timeline_repo;
 pub mod trash_repo;
-pub mod backup_repo;
+pub mod version_repo;
+pub mod worldbuilding_repo;
 
 use rusqlite::Connection;
 use std::fs;
@@ -81,9 +81,10 @@ impl DbManager {
     where
         F: FnOnce(&Connection) -> Result<R, AppError>,
     {
-        let conn = self.conn.lock().map_err(|e| {
-            AppError::Internal(format!("Database lock error: {}", e))
-        })?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Internal(format!("Database lock error: {}", e)))?;
         f(&conn)
     }
 
@@ -91,9 +92,10 @@ impl DbManager {
     where
         F: FnOnce(&mut Connection) -> Result<R, AppError>,
     {
-        let mut conn = self.conn.lock().map_err(|e| {
-            AppError::Internal(format!("Database lock error: {}", e))
-        })?;
+        let mut conn = self
+            .conn
+            .lock()
+            .map_err(|e| AppError::Internal(format!("Database lock error: {}", e)))?;
         f(&mut conn)
     }
 

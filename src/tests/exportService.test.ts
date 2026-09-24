@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { exportService } from '../services/exportService';
 import { importService } from '../services/importService';
 
@@ -39,5 +39,29 @@ describe('Export & Import Client Services', () => {
     expect(Array.isArray(created)).toBe(true);
     expect(created.length).toBeGreaterThanOrEqual(1);
     expect(created[0].title).toBe('Chapter 1: The New Horizon');
+  });
+
+  it('exports and saves file using exportAndSaveFile', async () => {
+    const createObjectURL = URL.createObjectURL;
+    URL.createObjectURL = vi.fn(() => 'blob:test');
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+    const textSave = await exportService.exportAndSaveFile({
+      fileName: 'test_manuscript.md',
+      contentText: '# Test Content',
+      mimeType: 'text/markdown',
+    });
+    expect(textSave.saved).toBe(true);
+
+    const docxSave = await exportService.exportAndSaveFile({
+      fileName: 'test_manuscript.docx',
+      contentBase64: 'UEsDBBQAAAAIAAAAAA==',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    expect(docxSave.saved).toBe(true);
+    } finally {
+      URL.createObjectURL = createObjectURL;
+      click.mockRestore();
+    }
   });
 });

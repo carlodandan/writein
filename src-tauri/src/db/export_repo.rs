@@ -267,6 +267,7 @@ pub fn compile_manuscript(
     let ext = match options.format.as_str() {
         "markdown" => "md",
         "html" => "html",
+        "docx" => "docx",
         _ => "txt",
     };
 
@@ -278,14 +279,16 @@ pub fn compile_manuscript(
         .collect();
     let file_name = format!("{safe_title}.{ext}");
 
-    // Save to exports directory
-    let exports_dir = base_dir.join("projects").join(project_id).join("exports");
-    let _ = fs::create_dir_all(&exports_dir);
-    let file_path = exports_dir.join(&file_name);
-    let path_str = if fs::write(&file_path, &output).is_ok() {
-        Some(file_path.to_string_lossy().to_string())
-    } else {
+    // DOCX is assembled in the renderer; this preview is text, not a DOCX file.
+    let path_str = if options.format == "docx" {
         None
+    } else {
+        let exports_dir = base_dir.join("projects").join(project_id).join("exports");
+        let _ = fs::create_dir_all(&exports_dir);
+        let file_path = exports_dir.join(&file_name);
+        fs::write(&file_path, &output)
+            .ok()
+            .map(|_| file_path.to_string_lossy().to_string())
     };
 
     Ok(CompileResult {
@@ -595,11 +598,41 @@ mod tests {
             .content
             .contains("The ship docked silently at the station."));
         assert_eq!(res_md.file_name, "compile_test_book.md");
+        assert!(res_md
+            .file_path
+            .as_ref()
+            .is_some_and(|path| Path::new(path).exists()));
         let part_position = res_md.content.find("# Nested Part").unwrap();
         let chapter_position = res_md.content.find("## Chapter 2: Nested Chapter").unwrap();
         let scene_position = res_md.content.find("Nested Scene").unwrap();
         assert!(part_position < chapter_position);
         assert!(chapter_position < scene_position);
+
+        // Export as DOCX format
+        let res_docx = compile_manuscript(
+            &conn,
+            &temp_dir,
+            &proj.id,
+            CompileOptions {
+                format: "docx".into(),
+                include_title_page: true,
+                include_toc: true,
+                chapter_header_format: "numbered_with_title".into(),
+                scene_separator: "* * *".into(),
+                selected_node_ids: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(res_docx.file_name, "compile_test_book.docx");
+        assert!(res_docx.file_path.is_none());
+        assert!(!temp_dir
+            .join("projects")
+            .join(&proj.id)
+            .join("exports")
+            .join(&res_docx.file_name)
+            .exists());
+        assert!(res_docx.content.contains("The ship docked silently"));
+        assert!(res_docx.word_count > 0);
 
         // Export Story Bible
         let res_bible = export_story_bible(&conn, &temp_dir, &proj.id, "markdown").unwrap();

@@ -119,7 +119,11 @@ pub fn delete_snapshot(conn: &Connection, id: &str) -> Result<bool, AppError> {
 }
 
 /// Delete snapshots beyond the keep_count newest per document.
-fn prune_old_snapshots(conn: &Connection, document_id: &str, keep_count: i64) -> Result<(), AppError> {
+fn prune_old_snapshots(
+    conn: &Connection,
+    document_id: &str,
+    keep_count: i64,
+) -> Result<(), AppError> {
     conn.execute(
         "DELETE FROM document_versions
          WHERE document_id = ?1
@@ -137,8 +141,8 @@ fn prune_old_snapshots(conn: &Connection, document_id: &str, keep_count: i64) ->
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::db::migrations::run_migrations;
     use crate::db::manuscript_repo;
+    use crate::db::migrations::run_migrations;
     use crate::db::project_repo::create_project;
     use crate::models::{CreateNodeInput, CreateProjectInput, NodeType, SaveDocumentInput};
 
@@ -192,12 +196,20 @@ pub mod tests {
         .unwrap();
 
         // Create first snapshot
-        let v1 = create_snapshot(&conn, &doc.id, &node.id, "The sea was calm and grey.", 6).unwrap();
+        let v1 =
+            create_snapshot(&conn, &doc.id, &node.id, "The sea was calm and grey.", 6).unwrap();
         assert_eq!(v1.version_num, 1);
         assert_eq!(v1.word_count, 6);
 
         // Create second snapshot
-        let v2 = create_snapshot(&conn, &doc.id, &node.id, "The sea was dark and stormy now.", 7).unwrap();
+        let v2 = create_snapshot(
+            &conn,
+            &doc.id,
+            &node.id,
+            "The sea was dark and stormy now.",
+            7,
+        )
+        .unwrap();
         assert_eq!(v2.version_num, 2);
 
         // List shows newest first

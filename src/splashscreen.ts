@@ -39,7 +39,26 @@ async function closeSplash(): Promise<void> {
   }
 }
 
+async function initAppVersion(): Promise<void> {
+  const versionBadge = document.getElementById('version-badge');
+  if (!versionBadge) return;
+
+  if (isTauri()) {
+    try {
+      const { getVersion } = await import('@tauri-apps/api/app');
+      const v = await getVersion();
+      if (v) {
+        const formatted = v.startsWith('v') ? v : `v${v}`;
+        versionBadge.innerHTML = `${formatted} &bull; Offline Novel &amp; Writing Manager`;
+      }
+    } catch (err) {
+      console.warn('Unable to detect version via Tauri app API in splashscreen:', err);
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initAppVersion();
   const subtitleEl = document.getElementById('subtitle-text');
   const statusEl = document.getElementById('loading-status');
   const percentEl = document.getElementById('loading-percent');

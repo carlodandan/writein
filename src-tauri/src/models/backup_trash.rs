@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::models::{
-    Character, CharacterRelationship, DocumentContent, Location, ManuscriptNode,
-    Note, Project, TimelineEvent, WorldbuildingEntry, WritingGoal, WritingSession,
+    Character, CharacterRelationship, DocumentContent, Location, ManuscriptNode, Note, Project,
+    TimelineEvent, WorldbuildingEntry, WritingGoal, WritingSession,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

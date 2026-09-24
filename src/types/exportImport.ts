@@ -1,4 +1,4 @@
-export type ExportFormat = 'markdown' | 'text' | 'html' | 'json';
+export type ExportFormat = 'markdown' | 'text' | 'html' | 'json' | 'docx';
 export type ChapterHeaderFormat = 'numbered_with_title' | 'numbered_only' | 'title_only';
 export type SceneSeparator = '* * *' | '###' | '---' | 'blank_line';
 

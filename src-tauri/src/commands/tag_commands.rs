@@ -19,11 +19,7 @@ pub fn create_tag(db: State<DbManager>, input: CreateTagInput) -> Result<Tag, Ap
 }
 
 #[tauri::command]
-pub fn rename_tag(
-    db: State<DbManager>,
-    id: String,
-    new_name: String,
-) -> Result<Tag, AppError> {
+pub fn rename_tag(db: State<DbManager>, id: String, new_name: String) -> Result<Tag, AppError> {
     db.with_conn(|conn| tag_repo::rename_tag(conn, &id, &new_name))
 }
 
@@ -42,11 +38,7 @@ pub fn get_entity_tags(
 }
 
 #[tauri::command]
-pub fn update_tag(
-    db: State<DbManager>,
-    id: String,
-    new_name: String,
-) -> Result<Tag, AppError> {
+pub fn update_tag(db: State<DbManager>, id: String, new_name: String) -> Result<Tag, AppError> {
     db.with_conn(|conn| tag_repo::rename_tag(conn, &id, &new_name))
 }
 
@@ -70,9 +62,7 @@ pub fn remove_tag(
     entity_id: String,
     tag_id: String,
 ) -> Result<bool, AppError> {
-    db.with_conn(|conn| {
-        tag_repo::remove_tag(conn, &entity_type, &entity_id, &tag_id)
-    })
+    db.with_conn(|conn| tag_repo::remove_tag(conn, &entity_type, &entity_id, &tag_id))
 }
 
 #[tauri::command]

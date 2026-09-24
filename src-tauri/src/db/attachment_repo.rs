@@ -4,15 +4,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-use crate::models::{
-    AppError, Attachment, CreateAttachmentInput, UpdateAttachmentInput,
-};
+use crate::models::{AppError, Attachment, CreateAttachmentInput, UpdateAttachmentInput};
 
 const ALLOWED_EXTENSIONS: &[&str] = &[
-    "png", "jpg", "jpeg", "webp", "gif", "svg",
-    "pdf", "docx", "doc", "txt", "md", "rtf", "csv", "json",
-    "mp3", "wav", "ogg", "m4a",
-    "zip", "tar", "gz",
+    "png", "jpg", "jpeg", "webp", "gif", "svg", "pdf", "docx", "doc", "txt", "md", "rtf", "csv",
+    "json", "mp3", "wav", "ogg", "m4a", "zip", "tar", "gz",
 ];
 
 const MAX_FILE_SIZE: usize = 50 * 1024 * 1024; // 50 MB
@@ -24,8 +20,14 @@ pub fn sanitize_filename(raw: &str) -> Result<String, AppError> {
     }
 
     // Check for dangerous patterns in the input to prevent path traversal
-    if trimmed.contains("..") || trimmed.contains('/') || trimmed.contains('\\') || trimmed.contains('\0') {
-        return Err(AppError::Validation("Filename contains illegal characters or path traversal elements".to_string()));
+    if trimmed.contains("..")
+        || trimmed.contains('/')
+        || trimmed.contains('\\')
+        || trimmed.contains('\0')
+    {
+        return Err(AppError::Validation(
+            "Filename contains illegal characters or path traversal elements".to_string(),
+        ));
     }
 
     // Extract file stem and extension
@@ -53,7 +55,14 @@ pub fn sanitize_filename(raw: &str) -> Result<String, AppError> {
     let safe: String = file_name
         .chars()
         .map(|c| {
-            if c.is_alphanumeric() || c == '.' || c == '-' || c == '_' || c == ' ' || c == '(' || c == ')' {
+            if c.is_alphanumeric()
+                || c == '.'
+                || c == '-'
+                || c == '_'
+                || c == ' '
+                || c == '('
+                || c == ')'
+            {
                 c
             } else {
                 '_'
@@ -132,10 +141,7 @@ pub fn save_attachment_file(
 
     fs::write(&target_file, bytes)?;
 
-    let relative_path = format!(
-        "attachments/{}/{}",
-        attachment_id, safe_filename
-    );
+    let relative_path = format!("attachments/{}/{}", attachment_id, safe_filename);
 
     Ok((target_file, relative_path))
 }
@@ -160,8 +166,12 @@ pub fn create_attachment(
         input.file_type.trim().to_string()
     };
 
-    let mime_type = input.mime_type.or_else(|| Some(detect_mime_type(ext).to_string()));
-    let relative_path = input.relative_path.unwrap_or_else(|| format!("attachments/{}/{}", id, safe_name));
+    let mime_type = input
+        .mime_type
+        .or_else(|| Some(detect_mime_type(ext).to_string()));
+    let relative_path = input
+        .relative_path
+        .unwrap_or_else(|| format!("attachments/{}/{}", id, safe_name));
 
     conn.execute(
         "INSERT INTO attachments (
@@ -225,10 +235,12 @@ pub fn list_attachments(
     entity_type: Option<&str>,
     entity_id: Option<&str>,
 ) -> Result<Vec<Attachment>, AppError> {
-    let mut query = "SELECT id, project_id, file_name, file_path, relative_path, file_type, mime_type,
+    let mut query =
+        "SELECT id, project_id, file_name, file_path, relative_path, file_type, mime_type,
                             file_size, entity_type, entity_id, description, created_at, updated_at
                      FROM attachments
-                     WHERE project_id = ?1".to_string();
+                     WHERE project_id = ?1"
+            .to_string();
 
     let mut param_values: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(project_id.to_string())];
 
@@ -241,7 +253,8 @@ pub fn list_attachments(
     query.push_str(" ORDER BY created_at DESC");
 
     let mut stmt = conn.prepare(&query)?;
-    let rusqlite_params: Vec<&dyn rusqlite::ToSql> = param_values.iter().map(|b| b.as_ref()).collect();
+    let rusqlite_params: Vec<&dyn rusqlite::ToSql> =
+        param_values.iter().map(|b| b.as_ref()).collect();
 
     let iter = stmt.query_map(rusqlite_params.as_slice(), |row| {
         Ok(Attachment {
@@ -359,14 +372,16 @@ mod tests {
                 entity_id: Some("loc-1".to_string()),
                 description: Some("Continental overview map".to_string()),
             },
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(att.file_name, "world_map.png");
         assert_eq!(att.file_type, "image");
         assert_eq!(att.entity_type.as_deref(), Some("location"));
 
         // List by entity
-        let entity_list = list_attachments(&conn, "proj-1", Some("location"), Some("loc-1")).unwrap();
+        let entity_list =
+            list_attachments(&conn, "proj-1", Some("location"), Some("loc-1")).unwrap();
         assert_eq!(entity_list.len(), 1);
 
         // Update
@@ -379,7 +394,8 @@ mod tests {
                 entity_type: None,
                 entity_id: None,
             },
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(updated.file_name, "continental_map.png");
 
         // Delete

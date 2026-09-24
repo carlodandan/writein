@@ -5,12 +5,9 @@ use std::collections::HashMap;
 use crate::models::{AppError, Setting};
 
 pub fn get_setting(conn: &Connection, key: &str) -> Result<Option<String>, AppError> {
-    let mut stmt =
-        conn.prepare("SELECT value FROM settings WHERE key = ?1")?;
+    let mut stmt = conn.prepare("SELECT value FROM settings WHERE key = ?1")?;
 
-    let val: Option<String> = stmt
-        .query_row(params![key], |row| row.get(0))
-        .ok();
+    let val: Option<String> = stmt.query_row(params![key], |row| row.get(0)).ok();
 
     Ok(val)
 }

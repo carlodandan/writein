@@ -83,6 +83,31 @@ Write-Utf8NoBom $TauriConfig $tauriContent
 
 Write-Host "  [OK] tauri.conf.json"
 
+# --------------------------------------------------
+# splashscreen.html
+# --------------------------------------------------
+
+$SplashHtml = Join-Path $Root "splashscreen.html"
+if (Test-Path $SplashHtml) {
+    $splashContent = Read-Utf8 $SplashHtml
+    $splashContent = $splashContent -replace 'v\d+\.\d+\.\d+[^<\s]*\s*&bull;', "v$Version &bull;"
+    Write-Utf8NoBom $SplashHtml $splashContent
+    Write-Host "  [OK] splashscreen.html"
+}
+
+# --------------------------------------------------
+# src/utils/appVersion.ts
+# --------------------------------------------------
+
+$AppVersionTs = Join-Path $Root "src\utils\appVersion.ts"
+if (Test-Path $AppVersionTs) {
+    $tsContent = Read-Utf8 $AppVersionTs
+    $tsContent = $tsContent -replace "cachedVersion = 'v[^']+';", "cachedVersion = 'v$Version';"
+    $tsContent = $tsContent -replace "fallback: string = 'v[^']+'", "fallback: string = 'v$Version'"
+    Write-Utf8NoBom $AppVersionTs $tsContent
+    Write-Host "  [OK] src/utils/appVersion.ts"
+}
+
 Write-Host ""
 Write-Host "Version successfully changed to $Version" -ForegroundColor Green
 Write-Host ""

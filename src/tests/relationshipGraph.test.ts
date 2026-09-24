@@ -3,6 +3,9 @@ import {
   calculateCircularLayout,
   mapRelationshipsToEdges,
   getRoleColor,
+  calculateBoundingBox,
+  calculateFitView,
+  GraphNode,
 } from '../utils/relationshipGraph';
 import { Character, CharacterRelationshipWithNames } from '../types/character';
 
@@ -107,5 +110,43 @@ describe('Relationship Graph Calculations & Styling', () => {
     expect(prot.nodeBg).not.toBe(ant.nodeBg);
     expect(ant.nodeBg).not.toBe(supp.nodeBg);
     expect(supp.nodeBg).not.toBe(min.nodeBg);
+  });
+
+  it('calculates bounding box correctly for arbitrary node positions', () => {
+    const nodes: GraphNode[] = [
+      { id: '1', name: 'A', role: 'protagonist', nickname: null, x: -500, y: -200 },
+      { id: '2', name: 'B', role: 'antagonist', nickname: null, x: 1500, y: 800 },
+    ];
+    const bbox = calculateBoundingBox(nodes, 50);
+    expect(bbox.minX).toBe(-550);
+    expect(bbox.maxX).toBe(1550);
+    expect(bbox.minY).toBe(-250);
+    expect(bbox.maxY).toBe(850);
+    expect(bbox.width).toBe(2100);
+    expect(bbox.height).toBe(1100);
+    expect(bbox.centerX).toBe(500);
+    expect(bbox.centerY).toBe(300);
+  });
+
+  it('handles empty nodes in bounding box and fit view', () => {
+    const emptyBbox = calculateBoundingBox([]);
+    expect(emptyBbox.width).toBe(0);
+
+    const emptyFit = calculateFitView([], 1000, 600);
+    expect(emptyFit.zoom).toBe(1);
+    expect(emptyFit.pan).toEqual({ x: 0, y: 0 });
+  });
+
+  it('calculates optimal fit view framing all nodes into viewport', () => {
+    const nodes: GraphNode[] = [
+      { id: '1', name: 'A', role: 'protagonist', nickname: null, x: 0, y: 0 },
+      { id: '2', name: 'B', role: 'antagonist', nickname: null, x: 1000, y: 600 },
+    ];
+    const fit = calculateFitView(nodes, 800, 600, 50);
+    expect(fit.zoom).toBeGreaterThan(0.2);
+    expect(fit.zoom).toBeLessThanOrEqual(1.8);
+    // Should center the canvas
+    expect(typeof fit.pan.x).toBe('number');
+    expect(typeof fit.pan.y).toBe('number');
   });
 });

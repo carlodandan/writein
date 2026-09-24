@@ -4,8 +4,8 @@ use uuid::Uuid;
 
 use crate::db::{attachment_repo, cross_link_repo, DbManager};
 use crate::models::{
-    AppError, Attachment, CreateAttachmentInput, RelatedContentResponse,
-    SaveAttachmentPayload, UpdateAttachmentInput,
+    AppError, Attachment, CreateAttachmentInput, RelatedContentResponse, SaveAttachmentPayload,
+    UpdateAttachmentInput,
 };
 
 fn decode_base64(input: &str) -> Result<Vec<u8>, AppError> {
@@ -77,7 +77,9 @@ pub fn save_attachment_file(
     } else if let Some(src_path) = payload.source_path {
         std::fs::read(&src_path)?
     } else {
-        return Err(AppError::Validation("Neither base64 data nor source path provided".to_string()));
+        return Err(AppError::Validation(
+            "Neither base64 data nor source path provided".to_string(),
+        ));
     };
 
     let (file_path, relative_path) = attachment_repo::save_attachment_file(
@@ -132,7 +134,10 @@ pub fn open_attachment(db: State<DbManager>, id: String) -> Result<bool, AppErro
     let path = PathBuf::from(&att.file_path);
 
     if !path.exists() {
-        return Err(AppError::NotFound(format!("File '{}' does not exist on disk", att.file_path)));
+        return Err(AppError::NotFound(format!(
+            "File '{}' does not exist on disk",
+            att.file_path
+        )));
     }
 
     #[cfg(target_os = "windows")]
@@ -160,7 +165,10 @@ pub fn reveal_attachment_folder(db: State<DbManager>, id: String) -> Result<bool
     let path = PathBuf::from(&att.file_path);
 
     if !path.exists() {
-        return Err(AppError::NotFound(format!("File '{}' does not exist on disk", att.file_path)));
+        return Err(AppError::NotFound(format!(
+            "File '{}' does not exist on disk",
+            att.file_path
+        )));
     }
 
     #[cfg(target_os = "windows")]

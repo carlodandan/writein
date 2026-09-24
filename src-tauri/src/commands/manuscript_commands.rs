@@ -1,9 +1,9 @@
-use tauri::State;
 use crate::db::{manuscript_repo, DbManager};
 use crate::models::{
     AppError, CreateNodeInput, DocumentContent, ManuscriptNode, MoveNodeInput, ReorderItem,
     SaveDocumentInput, UpdateNodeInput,
 };
+use tauri::State;
 
 #[tauri::command]
 pub fn get_manuscript_tree(
@@ -14,10 +14,7 @@ pub fn get_manuscript_tree(
 }
 
 #[tauri::command]
-pub fn get_manuscript_node(
-    db: State<DbManager>,
-    id: String,
-) -> Result<ManuscriptNode, AppError> {
+pub fn get_manuscript_node(db: State<DbManager>, id: String) -> Result<ManuscriptNode, AppError> {
     db.with_conn(|conn| manuscript_repo::get_node(conn, &id))
 }
 
@@ -68,10 +65,7 @@ pub fn reorder_manuscript_nodes(
 }
 
 #[tauri::command]
-pub fn get_document(
-    db: State<DbManager>,
-    node_id: String,
-) -> Result<DocumentContent, AppError> {
+pub fn get_document(db: State<DbManager>, node_id: String) -> Result<DocumentContent, AppError> {
     db.with_conn(|conn| manuscript_repo::get_document(conn, &node_id))
 }
 

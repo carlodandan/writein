@@ -50,12 +50,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   };
 
   const handleCommitImport = async () => {
-    if (!currentProject || !preview || preview.detectedNodes.length === 0) return;
+    const nodes = preview?.detectedNodes || (preview as any)?.detected_nodes;
+    if (!currentProject || !preview || !nodes || nodes.length === 0) return;
     setIsImporting(true);
     try {
       await importService.commitImport({
         projectId: currentProject.id,
-        items: preview.detectedNodes,
+        items: nodes,
       });
       await refreshTree();
       await refreshProjects();
@@ -153,18 +154,24 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                 Detected Structure
               </span>
-              {preview && (
-                <span className="text-xs font-mono text-[var(--amber-accent)] font-semibold">
-                  {preview.totalNodes} section(s) • {preview.totalWords.toLocaleString()} words
-                </span>
-              )}
+              {preview && (() => {
+                const totalNodes = preview.totalNodes ?? (preview as any).total_nodes ?? 0;
+                const totalWords = preview.totalWords ?? (preview as any).total_words ?? 0;
+                return (
+                  <span className="text-xs font-mono text-[var(--amber-accent)] font-semibold">
+                    {totalNodes} section(s) • {totalWords.toLocaleString()} words
+                  </span>
+                );
+              })()}
             </div>
 
-            {preview && preview.detectedNodes.length > 0 ? (
+            {preview && ((preview.detectedNodes || (preview as any).detected_nodes)?.length ?? 0) > 0 ? (
               <div className="space-y-2 flex-1">
-                {preview.detectedNodes.map((node, idx) => (
-                  <DetectedNodeCard key={idx} node={node} />
-                ))}
+                {(preview.detectedNodes || (preview as any).detected_nodes).map(
+                  (node: ImportDetectedNode, idx: number) => (
+                    <DetectedNodeCard key={idx} node={node} />
+                  )
+                )}
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-[var(--ink-muted)] space-y-2">
@@ -195,7 +202,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             <button
               type="button"
               onClick={handleCommitImport}
-              disabled={isImporting || !preview || preview.detectedNodes.length === 0}
+              disabled={
+                isImporting ||
+                !preview ||
+                ((preview.detectedNodes || (preview as any).detected_nodes)?.length ?? 0) === 0
+              }
               className="flex items-center space-x-2 px-5 py-2 rounded-lg bg-[var(--amber-accent)] text-white text-xs font-medium hover:opacity-90 transition-opacity shadow-xs disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -209,13 +220,17 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 };
 
 const DetectedNodeCard: React.FC<{ node: ImportDetectedNode }> = ({ node }) => {
+  const nodeType = node.nodeType || (node as any).node_type;
+  const wordCount = node.wordCount ?? (node as any).word_count ?? 0;
+  const children = node.children || (node as any).children;
+
   return (
     <div className="p-2.5 rounded-lg border border-[var(--paper-border-subtle)] bg-[var(--paper-surface)] text-xs space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {node.nodeType === 'part' ? (
+          {nodeType === 'part' ? (
             <Layers className="w-3.5 h-3.5 text-purple-500" />
-          ) : node.nodeType === 'chapter' ? (
+          ) : nodeType === 'chapter' ? (
             <BookOpen className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
           ) : (
             <FileText className="w-3.5 h-3.5 text-blue-500" />
@@ -225,13 +240,13 @@ const DetectedNodeCard: React.FC<{ node: ImportDetectedNode }> = ({ node }) => {
           </span>
         </div>
         <span className="text-[10px] font-mono text-[var(--ink-muted)]">
-          {node.wordCount.toLocaleString()} w
+          {wordCount.toLocaleString()} w
         </span>
       </div>
 
-      {node.children && node.children.length > 0 && (
+      {children && children.length > 0 && (
         <div className="pl-4 pt-1 border-l-2 border-[var(--paper-border)] space-y-1">
-          {node.children.map((ch, idx) => (
+          {children.map((ch: ImportDetectedNode, idx: number) => (
             <DetectedNodeCard key={idx} node={ch} />
           ))}
         </div>

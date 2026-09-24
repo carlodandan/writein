@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getAppVersion } from '../utils/appVersion';
+import pkg from '../../package.json';
 
 describe('appVersion Utility', () => {
   it('resolves a valid formatted version string starting with "v"', async () => {
@@ -11,7 +12,7 @@ describe('appVersion Utility', () => {
 
   it('handles fallback gracefully in non-Tauri environment', async () => {
     const version = await getAppVersion();
-    // Default fallback in web/test environment is v1.0.0
-    expect(version).toBe('v1.0.0');
+    // Default fallback in web/test environment aligns with package version
+    expect(version).toBe(`v${pkg.version}`);
   });
 });

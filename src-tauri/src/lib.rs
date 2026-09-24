@@ -6,8 +6,25 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init());
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_denylist(&["splashscreen"])
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all()
+                        & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
+                .build(),
+        );
+    }
+
+    builder
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -24,6 +41,7 @@ pub fn run() {
             let db_manager = db::DbManager::new(&app_data)
                 .expect("failed to initialize WriteIn database and migrations");
             app.manage(db_manager);
+            app.manage(commands::export_commands::ExportSelections::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -123,7 +141,11 @@ pub fn run() {
             commands::create_project_backup,
             commands::restore_project_backup,
             commands::list_backups,
-            commands::delete_backup_file
+            commands::delete_backup_file,
+            commands::save_exported_file,
+            commands::select_export_path,
+            commands::reveal_in_folder,
+            commands::get_default_export_dir
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -4,9 +4,14 @@ use uuid::Uuid;
 
 use crate::models::{AppError, CreateLocationInput, Location, UpdateLocationInput};
 
-pub fn create_location(conn: &Connection, input: CreateLocationInput) -> Result<Location, AppError> {
+pub fn create_location(
+    conn: &Connection,
+    input: CreateLocationInput,
+) -> Result<Location, AppError> {
     if input.name.trim().is_empty() {
-        return Err(AppError::Validation("Location name cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Location name cannot be empty".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();

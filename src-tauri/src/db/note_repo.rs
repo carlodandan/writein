@@ -6,12 +6,17 @@ use crate::models::{AppError, CreateNoteInput, Note, UpdateNoteInput};
 
 pub fn create_note(conn: &Connection, input: CreateNoteInput) -> Result<Note, AppError> {
     if input.title.trim().is_empty() {
-        return Err(AppError::Validation("Note title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Note title cannot be empty".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
-    let category = input.category.filter(|c| !c.trim().is_empty()).unwrap_or_else(|| "Ideas".to_string());
+    let category = input
+        .category
+        .filter(|c| !c.trim().is_empty())
+        .unwrap_or_else(|| "Ideas".to_string());
     let content = input.content.unwrap_or_default();
 
     conn.execute(
@@ -108,11 +113,7 @@ pub fn list_notes(
     Ok(result)
 }
 
-pub fn update_note(
-    conn: &Connection,
-    id: &str,
-    input: UpdateNoteInput,
-) -> Result<Note, AppError> {
+pub fn update_note(conn: &Connection, id: &str, input: UpdateNoteInput) -> Result<Note, AppError> {
     let existing = get_note(conn, id)?;
     let now = Utc::now().to_rfc3339();
 
@@ -210,7 +211,10 @@ pub mod tests {
                 project_id: proj.id.clone(),
                 category: Some("Dialogue".into()),
                 title: "Vance's Pier Monologue".into(),
-                content: Some("I never trusted the sea, and I never trusted men who smell of salt water.".into()),
+                content: Some(
+                    "I never trusted the sea, and I never trusted men who smell of salt water."
+                        .into(),
+                ),
                 tags: Some("vance,monologue".into()),
             },
         )

@@ -1,5 +1,7 @@
 pub mod attachment_commands;
+pub mod backup_trash_commands;
 pub mod character_commands;
+pub mod export_commands;
 pub mod goals_commands;
 pub mod location_commands;
 pub mod manuscript_commands;
@@ -13,11 +15,11 @@ pub mod tag_commands;
 pub mod timeline_commands;
 pub mod version_commands;
 pub mod worldbuilding_commands;
-pub mod export_commands;
-pub mod backup_trash_commands;
 
 pub use attachment_commands::*;
+pub use backup_trash_commands::*;
 pub use character_commands::*;
+pub use export_commands::*;
 pub use goals_commands::*;
 pub use location_commands::*;
 pub use manuscript_commands::*;
@@ -31,5 +33,3 @@ pub use tag_commands::*;
 pub use timeline_commands::*;
 pub use version_commands::*;
 pub use worldbuilding_commands::*;
-pub use export_commands::*;
-pub use backup_trash_commands::*;

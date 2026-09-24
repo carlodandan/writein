@@ -7,7 +7,7 @@ pub fn run_migrations(conn: &mut Connection) -> Result<()> {
             version INTEGER NOT NULL UNIQUE,
             name TEXT NOT NULL,
             applied_at TEXT NOT NULL
-        );"
+        );",
     )?;
 
     let applied_versions: Vec<i64> = {
@@ -400,7 +400,7 @@ mod tests {
     fn test_migrations_run_successfully() {
         let mut conn = Connection::open_in_memory().expect("failed to open in-memory db");
         conn.execute_batch("PRAGMA foreign_keys = ON;").unwrap();
-        
+
         let result = run_migrations(&mut conn);
         assert!(result.is_ok(), "migration should succeed");
 
@@ -416,14 +416,22 @@ mod tests {
         // Verify Migration 005: writing_sessions table
         {
             let mut stmt = conn
-                .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='writing_sessions'")
+                .prepare(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='writing_sessions'",
+                )
                 .unwrap();
             let mut rows = stmt.query([]).unwrap();
-            assert!(rows.next().unwrap().is_some(), "writing_sessions table should exist after migration 005");
+            assert!(
+                rows.next().unwrap().is_some(),
+                "writing_sessions table should exist after migration 005"
+            );
         }
 
         // Idempotency: Running it a second time should succeed without error
         let second_run = run_migrations(&mut conn);
-        assert!(second_run.is_ok(), "second migration run should be idempotent");
+        assert!(
+            second_run.is_ok(),
+            "second migration run should be idempotent"
+        );
     }
 }
