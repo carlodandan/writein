@@ -31,7 +31,7 @@ export const FAQ: React.FC = () => {
     },
     {
       q: 'Can I sync my projects between multiple computers?',
-      a: 'Because WriteIn uses local SQLite databases and offers one-click .writein portable backup archives, you can easily synchronize your project directory or backup archives across computers using your preferred local sync tools like Syncthing, OneDrive, or Dropbox.',
+      a: 'Because WriteIn uses local SQLite databases and offers one-click .writein project backup archives, you can easily synchronize your project directory or backup archives across computers using your preferred local sync tools like Syncthing, OneDrive, or Dropbox.',
     },
     {
       q: 'Does WriteIn send any data to external servers or AI providers?',

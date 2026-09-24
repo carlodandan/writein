@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Monitor, ShieldCheck, CheckCircle2, ExternalLink, Package, FolderArchive } from 'lucide-react';
+import { Download, Monitor, ShieldCheck, CheckCircle2, ExternalLink, Package } from 'lucide-react';
 
 export const DownloadSection: React.FC = () => {
   const windowsPackages = [
@@ -25,17 +25,6 @@ export const DownloadSection: React.FC = () => {
       recommended: false,
       href: 'https://github.com/carlodandan/writein/releases/latest/download/write-in_2.0.0_x64.msi',
     },
-    {
-      title: 'Standalone Portable Archive',
-      ext: '.zip',
-      icon: FolderArchive,
-      badge: 'Zero Install',
-      desc: 'Extract and run immediately from any folder or USB drive. Keep all project databases local and self-contained.',
-      file: 'write-in_2.0.0_portable.zip',
-      size: '~12 MB',
-      recommended: false,
-      href: 'https://github.com/carlodandan/writein/releases/latest/download/write-in_2.0.0_x64-setup.exe',
-    },
   ];
 
   return (
@@ -55,7 +44,7 @@ export const DownloadSection: React.FC = () => {
         </div>
 
         {/* Windows Download Packages */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {windowsPackages.map((pkg, i) => {
             const Icon = pkg.icon;
             return (

@@ -88,9 +88,9 @@ export const FeaturesShowcase: React.FC = () => {
     },
     {
       icon: FileArchive,
-      title: 'One-Click .writein Portable Backups',
-      category: 'Portability',
-      desc: 'Export your entire project—manuscript, story bible, relationship graph, and settings—into a single compressed portable archive. Move effortlessly between desktop machines.',
+      title: 'One-Click .writein Project Backups',
+      category: 'Backup & Restore',
+      desc: 'Export your entire project—manuscript, story bible, relationship graph, and settings—into a single compressed archive. Move effortlessly between desktop machines.',
       badge: 'Open Archives',
     },
     {
