@@ -51,7 +51,7 @@ describe('Export & Import Client Services', () => {
 
     const docxSave = await exportService.exportAndSaveFile({
       fileName: 'test_manuscript.docx',
-      contentBase64: 'UEsDBBQAAAAIAAA==',
+      contentBase64: 'UEsDBBQAAAAIAAAAAA==',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     });
     expect(docxSave.saved).toBe(true);

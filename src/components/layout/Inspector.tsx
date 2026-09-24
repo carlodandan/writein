@@ -24,7 +24,7 @@ interface InspectorProps {
 export const Inspector: React.FC<InspectorProps> = ({ isOpen, onToggle, onNavigate }) => {
   const { currentProject, summary } = useProject();
   const { activeNode, updateNodeSynopsis, updateNodeStatus } = useManuscript();
-  const appVersion = useAppVersion('v1.0.0');
+  const appVersion = useAppVersion();
 
   const [synopsisInput, setSynopsisInput] = useState('');
 

@@ -334,7 +334,9 @@ export const CharacterRelationshipMap: React.FC<CharacterRelationshipMapProps> =
   }, [draggingNodeId, isPanning, panStart, checkAutoPan, persistPositions]);
 
   // Wheel listener for smooth trackpad pan and pinch/Ctrl-zoom
+  const hasCanvas = characters.length >= 2;
   useEffect(() => {
+    if (!hasCanvas) return;
     const container = containerRef.current;
     if (!container) return;
 
@@ -362,9 +364,9 @@ export const CharacterRelationshipMap: React.FC<CharacterRelationshipMapProps> =
     return () => {
       container.removeEventListener('wheel', handleWheel);
     };
-  }, [zoomAroundPoint]);
+  }, [hasCanvas, zoomAroundPoint]);
 
-  if (characters.length < 2) {
+  if (!hasCanvas) {
     return (
       <div className="flex-1 flex items-center justify-center p-8 bg-[var(--paper-bg)]">
         <div className="max-w-md mx-auto text-center space-y-4 p-8 bg-[var(--paper-surface)] rounded-2xl border border-[var(--paper-border)] shadow-xs">
