@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "dev:web": "vite --config website/vite.config.ts",
+    "build:web": "vite build --config website/vite.config.ts",
+    "preview:web": "vite preview --config website/vite.config.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "tauri": "tauri",
@@ -14,6 +17,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-deep-link": "^2.4.10",
     "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-process": "^2.3.1",

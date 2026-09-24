@@ -16,19 +16,22 @@ import {
 } from 'lucide-react';
 import { useProject } from '../../context/ProjectContext';
 
-export type ActiveNavTab =
-  | 'overview'
-  | 'manuscript'
-  | 'characters'
-  | 'locations'
-  | 'worldbuilding'
-  | 'timeline'
-  | 'notes'
-  | 'references'
-  | 'goals'
-  | 'statistics'
-  | 'trash'
-  | 'settings';
+export const ACTIVE_NAV_TABS = [
+  'overview',
+  'manuscript',
+  'characters',
+  'locations',
+  'worldbuilding',
+  'timeline',
+  'notes',
+  'references',
+  'goals',
+  'statistics',
+  'trash',
+  'settings',
+] as const;
+
+export type ActiveNavTab = (typeof ACTIVE_NAV_TABS)[number];
 
 interface SidebarProps {
   activeTab: ActiveNavTab;

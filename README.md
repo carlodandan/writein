@@ -9,6 +9,8 @@
 
 > **Scrivener-lite + personal writing notebook + story database**
 
+![WriteIn Novelist Studio Workspace](images/projectpage.webp)
+
 ---
 
 ## Key Highlights
@@ -58,7 +60,7 @@ WriteIn includes a complete suite of documentation for authors and developers:
 ## Development & Build Commands
 
 ### Prerequisites
-- Node.js (v18+ or v20+) & `pnpm`
+- Node.js 20.19+ or 22.12+ (for the Vite 8 website build) & `pnpm`
 - Rust toolchain (`cargo`, `rustc`)
 - Windows 10/11 with WebView2 runtime
 

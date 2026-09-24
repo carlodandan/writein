@@ -21,7 +21,15 @@ pub fn run() {
                         & !tauri_plugin_window_state::StateFlags::VISIBLE,
                 )
                 .build(),
-        );
+        )
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(main_window) = app.get_webview_window("main") {
+                let _ = main_window.unminimize();
+                let _ = main_window.show();
+                let _ = main_window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init());
     }
 
     builder
