@@ -9,6 +9,8 @@
 
 > **Scrivener-lite + personal writing notebook + story database**
 
+![WriteIn Novelist Studio Workspace](images/projectpage.webp)
+
 ---
 
 ## Key Highlights
