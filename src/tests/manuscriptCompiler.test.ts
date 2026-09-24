@@ -138,4 +138,20 @@ describe('Manuscript Compiler Utility', () => {
     expect(res.content).not.toContain('# Part I: Departure');
     expect(res.content).toContain('## The Iron Docks');
   });
+
+  it('compiles manuscript preview for docx format with .docx filename', () => {
+    const res = compileManuscript(mockProject, mockNodes, mockDocuments, {
+      format: 'docx',
+      includeTitlePage: true,
+      includeTableOfContents: true,
+      chapterHeaderFormat: 'numbered_with_title',
+      sceneSeparator: '* * *',
+    });
+
+    expect(res.fileName).toBe('the_silent_compass.docx');
+    expect(res.content).toContain('THE SILENT COMPASS');
+    expect(res.content).toContain('By Eleanor Vance');
+    expect(res.content).toContain('CHAPTER 1: THE IRON DOCKS');
+    expect(res.wordCount).toBeGreaterThan(20);
+  });
 });

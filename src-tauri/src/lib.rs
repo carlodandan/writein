@@ -8,6 +8,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -128,7 +129,10 @@ pub fn run() {
             commands::create_project_backup,
             commands::restore_project_backup,
             commands::list_backups,
-            commands::delete_backup_file
+            commands::delete_backup_file,
+            commands::save_exported_file,
+            commands::reveal_in_folder,
+            commands::get_default_export_dir
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

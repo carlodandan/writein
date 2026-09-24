@@ -40,4 +40,20 @@ describe('Export & Import Client Services', () => {
     expect(created.length).toBeGreaterThanOrEqual(1);
     expect(created[0].title).toBe('Chapter 1: The New Horizon');
   });
+
+  it('exports and saves file using exportAndSaveFile', async () => {
+    const textSave = await exportService.exportAndSaveFile({
+      fileName: 'test_manuscript.md',
+      contentText: '# Test Content',
+      mimeType: 'text/markdown',
+    });
+    expect(textSave.saved).toBe(true);
+
+    const docxSave = await exportService.exportAndSaveFile({
+      fileName: 'test_manuscript.docx',
+      contentBase64: 'UEsDBBQAAAAIAAA==',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    expect(docxSave.saved).toBe(true);
+  });
 });

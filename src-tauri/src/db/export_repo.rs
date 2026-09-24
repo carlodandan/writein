@@ -267,6 +267,7 @@ pub fn compile_manuscript(
     let ext = match options.format.as_str() {
         "markdown" => "md",
         "html" => "html",
+        "docx" => "docx",
         _ => "txt",
     };
 
@@ -600,6 +601,25 @@ mod tests {
         let scene_position = res_md.content.find("Nested Scene").unwrap();
         assert!(part_position < chapter_position);
         assert!(chapter_position < scene_position);
+
+        // Export as DOCX format
+        let res_docx = compile_manuscript(
+            &conn,
+            &temp_dir,
+            &proj.id,
+            CompileOptions {
+                format: "docx".into(),
+                include_title_page: true,
+                include_toc: true,
+                chapter_header_format: "numbered_with_title".into(),
+                scene_separator: "* * *".into(),
+                selected_node_ids: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(res_docx.file_name, "compile_test_book.docx");
+        assert!(res_docx.content.contains("The ship docked silently"));
+        assert!(res_docx.word_count > 0);
 
         // Export Story Bible
         let res_bible = export_story_bible(&conn, &temp_dir, &proj.id, "markdown").unwrap();

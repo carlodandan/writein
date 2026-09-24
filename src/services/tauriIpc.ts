@@ -2320,6 +2320,18 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       return true as unknown as T;
     }
 
+    case 'save_exported_file': {
+      return (args?.file_path || 'saved') as unknown as T;
+    }
+
+    case 'reveal_in_folder': {
+      return true as unknown as T;
+    }
+
+    case 'get_default_export_dir': {
+      return 'C:\\Users\\MockUser\\Downloads' as unknown as T;
+    }
+
     default:
       throw new Error(`Command ${cmd} not mocked in fallback`);
     }

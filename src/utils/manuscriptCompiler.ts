@@ -169,8 +169,19 @@ export function compileManuscript(
   }
 
   const counts = countWordsAndCharacters(output);
-  const extension = options.format === 'markdown' ? 'md' : options.format === 'html' ? 'html' : 'txt';
-  const sanitizedTitle = project.title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'manuscript';
+  const sanitizedTitle =
+    project.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'manuscript';
+  const extension =
+    options.format === 'markdown'
+      ? 'md'
+      : options.format === 'html'
+      ? 'html'
+      : options.format === 'docx'
+      ? 'docx'
+      : 'txt';
 
   return {
     fileName: `${sanitizedTitle}.${extension}`,

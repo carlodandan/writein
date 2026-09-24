@@ -9,10 +9,15 @@ import {
   Sparkles,
   Eye,
   Sliders,
+  FileType,
+  FolderOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { useProject } from '../../context/ProjectContext';
 import { useManuscript } from '../../context/ManuscriptContext';
 import { exportService } from '../../services/exportService';
+import { manuscriptService } from '../../services/manuscriptService';
+import { compileManuscriptDocxBase64 } from '../../utils/docxCompiler';
 import type {
   CompileOptions,
   CompileResult,
@@ -40,9 +45,11 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileResult, setCompileResult] = useState<CompileResult | null>(null);
   const [isExportingBible, setIsExportingBible] = useState(false);
+  const [exportStatus, setExportStatus] = useState<{ path?: string | null; message: string; isError?: boolean } | null>(null);
 
   useEffect(() => {
     if (isOpen && currentProject) {
+      setExportStatus(null);
       handleGeneratePreview();
     }
   }, [
@@ -75,12 +82,86 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
   const handleExportManuscript = async () => {
     if (!currentProject || !compileResult) return;
     setIsCompiling(true);
+    setExportStatus(null);
     try {
-      const mimeType =
-        format === 'html' ? 'text/html' : format === 'markdown' ? 'text/markdown' : 'text/plain';
-      exportService.downloadFile(compileResult.content, compileResult.fileName, mimeType);
-    } catch (err) {
+      if (format === 'docx') {
+        const activeNodes = (nodes || []).filter((n) => !n.archived_at);
+        const docMap: Record<string, { content_text?: string }> = {};
+
+        await Promise.all(
+          activeNodes.map(async (n) => {
+            try {
+              const doc = await manuscriptService.getDocument(n.id);
+              docMap[n.id] = { content_text: doc.content_text };
+            } catch {
+              docMap[n.id] = { content_text: '' };
+            }
+          })
+        );
+
+        const options: CompileOptions = {
+          format,
+          includeTitlePage,
+          includeTableOfContents,
+          chapterHeaderFormat,
+          sceneSeparator,
+        };
+
+        const b64 = await compileManuscriptDocxBase64(currentProject, nodes, docMap, options);
+        const fileName =
+          compileResult.fileName ||
+          (compileResult as any).file_name ||
+          `${currentProject.title.toLowerCase().replace(/\s+/g, '_')}.docx`;
+
+        const res = await exportService.exportAndSaveFile({
+          fileName,
+          contentBase64: b64,
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          extensions: ['docx'],
+          filterName: 'Word Document',
+        });
+
+        if (res.saved) {
+          setExportStatus({
+            path: res.filePath,
+            message: res.filePath ? `Exported: ${fileName}` : `Downloaded: ${fileName}`,
+          });
+        }
+      } else {
+        const mimeType =
+          format === 'html' ? 'text/html' : format === 'markdown' ? 'text/markdown' : 'text/plain';
+        const ext = format === 'html' ? 'html' : format === 'markdown' ? 'md' : 'txt';
+        const fileName =
+          compileResult.fileName ||
+          (compileResult as any).file_name ||
+          `${currentProject.title.toLowerCase().replace(/\s+/g, '_')}.${ext}`;
+
+        const res = await exportService.exportAndSaveFile({
+          fileName,
+          contentText: compileResult.content,
+          mimeType,
+          extensions: [ext],
+          filterName:
+            format === 'html'
+              ? 'HTML Document'
+              : format === 'markdown'
+              ? 'Markdown Document'
+              : 'Text Document',
+        });
+
+        if (res.saved) {
+          setExportStatus({
+            path: res.filePath,
+            message: res.filePath ? `Exported: ${fileName}` : `Downloaded: ${fileName}`,
+          });
+        }
+      }
+    } catch (err: any) {
       console.warn('Export failed:', err);
+      setExportStatus({
+        message: `Export failed: ${err?.message || 'Unknown error'}`,
+        isError: true,
+      });
     } finally {
       setIsCompiling(false);
     }
@@ -89,11 +170,34 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
   const handleExportStoryBible = async () => {
     if (!currentProject) return;
     setIsExportingBible(true);
+    setExportStatus(null);
     try {
       const result = await exportService.exportStoryBible(currentProject.id, 'markdown');
-      exportService.downloadFile(result.content, result.fileName, 'text/markdown');
-    } catch (err) {
+      const fileName =
+        result.fileName ||
+        (result as any).file_name ||
+        `${currentProject.title.toLowerCase().replace(/\s+/g, '_')}_story_bible.md`;
+
+      const res = await exportService.exportAndSaveFile({
+        fileName,
+        contentText: result.content,
+        mimeType: 'text/markdown',
+        extensions: ['md'],
+        filterName: 'Markdown Document',
+      });
+
+      if (res.saved) {
+        setExportStatus({
+          path: res.filePath,
+          message: res.filePath ? `Exported: ${fileName}` : `Downloaded: ${fileName}`,
+        });
+      }
+    } catch (err: any) {
       console.warn('Story bible export failed:', err);
+      setExportStatus({
+        message: `Story bible export failed: ${err?.message || 'Unknown error'}`,
+        isError: true,
+      });
     } finally {
       setIsExportingBible(false);
     }
@@ -159,8 +263,9 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
                 <label className="text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)] block">
                   Export Format
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
+                    { id: 'docx', label: 'MS Word (.docx)', icon: FileType, desc: 'Office Open XML standard' },
                     { id: 'markdown', label: 'Markdown (.md)', icon: Code, desc: 'Preserves headings & styling' },
                     { id: 'text', label: 'Plain Text (.txt)', icon: FileText, desc: 'Standard submission format' },
                     { id: 'html', label: 'Printable HTML (.html)', icon: Globe, desc: 'Book layout for print to PDF' },
@@ -285,14 +390,19 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              {compileResult && (
-                <div className="h-9 border-b border-[var(--paper-border)] bg-[var(--paper-desk)] px-6 flex items-center justify-between text-xs text-[var(--ink-muted)] font-mono">
-                  <span>File: {compileResult.fileName}</span>
-                  <span>
-                    {compileResult.wordCount.toLocaleString()} words • {compileResult.characterCount.toLocaleString()} chars
-                  </span>
-                </div>
-              )}
+              {compileResult && (() => {
+                const fileName = compileResult.fileName || (compileResult as any).file_name || 'manuscript';
+                const wordCount = compileResult.wordCount ?? (compileResult as any).word_count ?? 0;
+                const charCount = compileResult.characterCount ?? (compileResult as any).character_count ?? 0;
+                return (
+                  <div className="h-9 border-b border-[var(--paper-border)] bg-[var(--paper-desk)] px-6 flex items-center justify-between text-xs text-[var(--ink-muted)] font-mono">
+                    <span>File: {fileName}</span>
+                    <span>
+                      {wordCount.toLocaleString()} words • {charCount.toLocaleString()} chars
+                    </span>
+                  </div>
+                );
+              })()}
               <div className="flex-1 p-6 overflow-y-auto font-mono text-xs text-[var(--ink-primary)] bg-[var(--paper-bg)] whitespace-pre-wrap selection:bg-[var(--amber-accent)]/20">
                 {compileResult?.content || 'Generating preview...'}
               </div>
@@ -302,8 +412,32 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
 
         {/* Footer */}
         <div className="p-4 border-t border-[var(--paper-border)] bg-[var(--paper-surface)] flex items-center justify-between">
-          <div className="text-xs text-[var(--ink-muted)] font-mono">
-            {nodes.filter((n) => !n.archived_at).length} sections selected
+          <div className="flex items-center space-x-3 text-xs">
+            <span className="text-[var(--ink-muted)] font-mono">
+              {nodes.filter((n) => !n.archived_at).length} sections selected
+            </span>
+            {exportStatus && (
+              <div
+                className={`flex items-center space-x-2 px-2.5 py-1 rounded-md border text-xs ${
+                  exportStatus.isError
+                    ? 'text-red-500 bg-red-500/10 border-red-500/20'
+                    : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                }`}
+              >
+                {!exportStatus.isError && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
+                <span className="truncate max-w-[240px]">{exportStatus.message}</span>
+                {exportStatus.path && (
+                  <button
+                    type="button"
+                    onClick={() => exportService.revealInFolder(exportStatus.path!)}
+                    className="ml-1.5 flex items-center space-x-1 underline hover:opacity-80 font-semibold shrink-0 cursor-pointer"
+                  >
+                    <FolderOpen className="w-3 h-3" />
+                    <span>Show in Folder</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-3">
