@@ -2321,7 +2321,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     }
 
     case 'save_exported_file': {
-      return (args?.file_path || 'saved') as unknown as T;
+      return 'saved' as unknown as T;
     }
 
     case 'reveal_in_folder': {

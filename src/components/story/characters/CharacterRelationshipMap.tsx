@@ -241,24 +241,22 @@ export const CharacterRelationshipMap: React.FC<CharacterRelationshipMapProps> =
       const activeId = draggingNodeIdRef.current;
       const currentZoom = zoomRef.current;
 
-      setPan((prevPan) => {
-        const nextPan = {
-          x: prevPan.x + deltaPanX,
-          y: prevPan.y + deltaPanY,
-        };
+      const currentPan = panRef.current;
+      const nextPan = {
+        x: currentPan.x + deltaPanX,
+        y: currentPan.y + deltaPanY,
+      };
+      panRef.current = nextPan;
+      setPan(nextPan);
 
-        // Also update dragged node position in canvas world coordinates
-        const canvasX = (mouseClientPosRef.current.x - rect.left - nextPan.x) / currentZoom;
-        const canvasY = (mouseClientPosRef.current.y - rect.top - nextPan.y) / currentZoom;
-
-        setNodes((prevNodes) =>
-          prevNodes.map((n) =>
-            n.id === activeId ? { ...n, x: canvasX, y: canvasY } : n,
-          ),
-        );
-
-        return nextPan;
-      });
+      // Keep the dragged node under the pointer in canvas world coordinates.
+      const canvasX = (mouseClientPosRef.current.x - rect.left - nextPan.x) / currentZoom;
+      const canvasY = (mouseClientPosRef.current.y - rect.top - nextPan.y) / currentZoom;
+      setNodes((prevNodes) =>
+        prevNodes.map((n) =>
+          n.id === activeId ? { ...n, x: canvasX, y: canvasY } : n,
+        ),
+      );
     }
 
     autoPanAnimationRef.current = requestAnimationFrame(checkAutoPan);

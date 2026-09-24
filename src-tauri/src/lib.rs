@@ -41,6 +41,7 @@ pub fn run() {
             let db_manager = db::DbManager::new(&app_data)
                 .expect("failed to initialize WriteIn database and migrations");
             app.manage(db_manager);
+            app.manage(commands::export_commands::ExportSelections::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -142,6 +143,7 @@ pub fn run() {
             commands::list_backups,
             commands::delete_backup_file,
             commands::save_exported_file,
+            commands::select_export_path,
             commands::reveal_in_folder,
             commands::get_default_export_dir
         ])

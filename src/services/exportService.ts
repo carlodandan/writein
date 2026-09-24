@@ -48,8 +48,9 @@ export const exportService = {
    */
   async exportAndSaveFile(options: SaveFileOptions): Promise<SaveFileResult> {
     if (isTauri()) {
+      let selection: { token: string; filePath: string } | null | undefined;
       try {
-        const { save } = await import('@tauri-apps/plugin-dialog');
+        const { join } = await import('@tauri-apps/api/path');
         let defaultDir = '';
         try {
           defaultDir = await invokeCommand<string>('get_default_export_dir');
@@ -58,26 +59,19 @@ export const exportService = {
         }
 
         const ext = options.fileName.split('.').pop() || '*';
-        const defaultPath = defaultDir ? `${defaultDir}\\${options.fileName}` : options.fileName;
+        const defaultPath = defaultDir ? await join(defaultDir, options.fileName) : options.fileName;
 
-        const chosenPath = await save({
+        selection = await invokeCommand<{ token: string; filePath: string } | null>('select_export_path', {
           defaultPath,
-          filters: [
-            {
-              name: options.filterName || `${ext.toUpperCase()} File`,
-              extensions: options.extensions || [ext],
-            },
-            {
-              name: 'All Files',
-              extensions: ['*'],
-            },
-          ],
+          filterName: options.filterName || `${ext.toUpperCase()} File`,
+          extensions: options.extensions || [ext],
         });
+      } catch (err) {
+        console.warn('Native save dialog failed, falling back to download:', err);
+        selection = undefined;
+      }
 
-        if (!chosenPath) {
-          return { saved: false, canceled: true };
-        }
-
+      if (selection) {
         let contentBase64 = options.contentBase64;
         if (!contentBase64 && options.blob) {
           const buffer = await options.blob.arrayBuffer();
@@ -89,40 +83,39 @@ export const exportService = {
           contentBase64 = btoa(binary);
         }
 
-        await invokeCommand<string>('save_exported_file', {
-          filePath: chosenPath,
+        const filePath = await invokeCommand<string>('save_exported_file', {
+          selectionToken: selection.token,
           contentText: options.contentText,
           contentBase64,
         });
 
-        return { saved: true, filePath: chosenPath };
-      } catch (err) {
-        console.warn('Native save dialog failed, falling back to download:', err);
+        return { saved: true, filePath };
       }
+      if (selection === null) return { saved: false, canceled: true };
     }
 
     // Fallback: browser download
+    let downloaded = false;
     if (options.blob) {
-      this.downloadBlob(options.blob, options.fileName);
+      downloaded = this.downloadBlob(options.blob, options.fileName);
     } else if (options.contentText !== undefined) {
-      this.downloadFile(options.contentText, options.fileName, options.mimeType);
+      downloaded = this.downloadFile(options.contentText, options.fileName, options.mimeType);
     } else if (options.contentBase64) {
       try {
-        const cleanB64 = options.contentBase64.replace(/[^A-Za-z0-9+/=]/g, '');
-        const byteCharacters = atob(cleanB64);
+        const byteCharacters = atob(options.contentBase64.trim());
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: options.mimeType || 'application/octet-stream' });
-        this.downloadBlob(blob, options.fileName);
+        downloaded = this.downloadBlob(blob, options.fileName);
       } catch (err) {
         console.warn('Failed to decode base64 for fallback download:', err);
       }
     }
 
-    return { saved: true, filePath: null };
+    return { saved: downloaded, filePath: null };
   },
 
   async revealInFolder(filePath: string): Promise<boolean> {
@@ -136,32 +129,40 @@ export const exportService = {
     return false;
   },
 
-  downloadFile(content: string | Blob, fileName: string, mimeType = 'text/plain') {
-    const blob =
-      content instanceof Blob
-        ? content
-        : new Blob([content], { type: `${mimeType};charset=utf-8` });
-    this.downloadBlob(blob, fileName);
+  downloadFile(content: string | Blob, fileName: string, mimeType = 'text/plain'): boolean {
+    try {
+      const blob =
+        content instanceof Blob
+          ? content
+          : new Blob([content], { type: `${mimeType};charset=utf-8` });
+      return this.downloadBlob(blob, fileName);
+    } catch (err) {
+      console.warn('Failed to prepare file download:', err);
+      return false;
+    }
   },
 
-  downloadBlob(blob: Blob, fileName: string) {
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  downloadBlob(blob: Blob, fileName: string): boolean {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return false;
     try {
-      const url =
-        typeof URL.createObjectURL === 'function'
-          ? URL.createObjectURL(blob)
-          : 'blob:mock-url';
+      if (typeof URL.createObjectURL !== 'function') return false;
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      if (typeof URL.revokeObjectURL === 'function' && url !== 'blob:mock-url') {
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      try {
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        if (typeof URL.revokeObjectURL === 'function') {
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+        }
       }
+      return true;
     } catch (e) {
       console.warn('downloadBlob fallback:', e);
+      return false;
     }
   },
 };

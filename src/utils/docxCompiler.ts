@@ -51,6 +51,13 @@ export function createDocxDocument(
   const sortNodes = (arr: ManuscriptNode[]) =>
     [...arr].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
+  const orderedNodes: ManuscriptNode[] = [];
+  const collectNodes = (node: ManuscriptNode) => {
+    orderedNodes.push(node);
+    sortNodes(childMap.get(node.id) || []).forEach(collectNodes);
+  };
+  sortNodes(rootNodes).forEach(collectNodes);
+
   const paragraphs: Paragraph[] = [];
 
   // 1. Title Page
@@ -129,7 +136,7 @@ export function createDocxDocument(
 
   // 2. Table of Contents
   if (options.includeTableOfContents) {
-    const chapters = selectedNodes.filter((n) => n.node_type === 'chapter');
+    const chapters = orderedNodes.filter((n) => n.node_type === 'chapter');
     if (chapters.length > 0) {
       paragraphs.push(
         new Paragraph({
@@ -282,13 +289,9 @@ export function createDocxDocument(
       }
     }
 
-    const children = childMap.get(node.id);
-    if (children && children.length > 0) {
-      sortNodes(children).forEach(renderNode);
-    }
   };
 
-  sortNodes(rootNodes).forEach(renderNode);
+  orderedNodes.forEach(renderNode);
 
   return new Document({
     styles: {

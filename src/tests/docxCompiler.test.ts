@@ -100,6 +100,32 @@ describe('DOCX Manuscript Compiler Utility', () => {
     expect(doc).toHaveProperty('documentWrapper');
   });
 
+  it('lists chapters in the same depth-first order as the body', () => {
+    const earlierChapter: ManuscriptNode = {
+      ...mockNodes[1],
+      id: 'chap-earlier',
+      title: 'Earlier Chapter',
+      sort_order: 0,
+    };
+    const doc = createDocxDocument(
+      mockProject,
+      [mockNodes[1], mockNodes[0], earlierChapter, ...mockNodes.slice(2)],
+      mockDocuments,
+      {
+        format: 'docx',
+        includeTitlePage: false,
+        includeTableOfContents: true,
+        chapterHeaderFormat: 'numbered_with_title',
+        sceneSeparator: '* * *',
+      },
+    );
+    const content = JSON.stringify(doc);
+    expect(content.indexOf('1.  Earlier Chapter')).toBeGreaterThan(-1);
+    expect(content.indexOf('1.  Earlier Chapter')).toBeLessThan(content.indexOf('2.  Ascent into the Fog'));
+    expect(content.indexOf('2.  Ascent into the Fog')).toBeLessThan(content.indexOf('Chapter 1: Earlier Chapter'));
+    expect(content.indexOf('Chapter 1: Earlier Chapter')).toBeLessThan(content.indexOf('Chapter 2: Ascent into the Fog'));
+  });
+
   it('compiles manuscript into a binary DOCX Blob with correct MIME type and valid size', async () => {
     const blob = await compileManuscriptDocx(mockProject, mockNodes, mockDocuments, {
       format: 'docx',
