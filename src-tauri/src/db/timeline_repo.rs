@@ -3,8 +3,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::models::{
-    AppError, CreateTimelineEventInput, TimelineEvent, TimelineFilter,
-    UpdateTimelineEventInput,
+    AppError, CreateTimelineEventInput, TimelineEvent, TimelineFilter, UpdateTimelineEventInput,
 };
 
 pub fn create_timeline_event(
@@ -12,7 +11,9 @@ pub fn create_timeline_event(
     input: CreateTimelineEventInput,
 ) -> Result<TimelineEvent, AppError> {
     if input.title.trim().is_empty() {
-        return Err(AppError::Validation("Event title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Event title cannot be empty".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();
@@ -213,7 +214,9 @@ pub fn list_timeline_events(
         }
         if let Some(ref q) = f.search_query {
             if !q.trim().is_empty() {
-                sql.push_str(" AND (te.title LIKE ? OR te.description LIKE ? OR te.date_label LIKE ?)");
+                sql.push_str(
+                    " AND (te.title LIKE ? OR te.description LIKE ? OR te.date_label LIKE ?)",
+                );
                 let pattern = format!("%{}%", q.trim());
                 params_vec.push(Box::new(pattern.clone()));
                 params_vec.push(Box::new(pattern.clone()));

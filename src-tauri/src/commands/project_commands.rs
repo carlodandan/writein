@@ -1,8 +1,6 @@
-use tauri::State;
 use crate::db::{project_repo, DbManager};
-use crate::models::{
-    AppError, CreateProjectInput, Project, ProjectSummary, UpdateProjectInput,
-};
+use crate::models::{AppError, CreateProjectInput, Project, ProjectSummary, UpdateProjectInput};
+use tauri::State;
 
 #[tauri::command]
 pub fn get_projects(db: State<DbManager>) -> Result<Vec<Project>, AppError> {
@@ -40,9 +38,6 @@ pub fn delete_project(db: State<DbManager>, id: String) -> Result<(), AppError> 
 }
 
 #[tauri::command]
-pub fn get_project_summary(
-    db: State<DbManager>,
-    id: String,
-) -> Result<ProjectSummary, AppError> {
+pub fn get_project_summary(db: State<DbManager>, id: String) -> Result<ProjectSummary, AppError> {
     db.with_conn(|conn| project_repo::get_project_summary(conn, &id))
 }

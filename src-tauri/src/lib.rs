@@ -15,6 +15,11 @@ pub fn run() {
             {
                 handle.plugin(tauri_plugin_updater::Builder::new().build())?;
                 handle.plugin(tauri_plugin_process::init())?;
+                handle.plugin(
+                    tauri_plugin_window_state::Builder::default()
+                        .with_denylist(&["splashscreen"])
+                        .build(),
+                )?;
             }
 
             let app_data = app

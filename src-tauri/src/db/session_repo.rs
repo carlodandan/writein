@@ -58,7 +58,10 @@ pub fn end_session(
     )?;
 
     if rows == 0 {
-        return Err(AppError::NotFound(format!("Writing session '{}' not found", session_id)));
+        return Err(AppError::NotFound(format!(
+            "Writing session '{}' not found",
+            session_id
+        )));
     }
 
     get_session(conn, session_id)

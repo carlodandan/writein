@@ -1,13 +1,10 @@
-use tauri::State;
 use crate::db::{backup_repo, trash_repo, DbManager};
 use crate::models::{AppError, BackupFileInfo, BackupResult, Project, TrashItem};
+use tauri::State;
 
 /// Lists the trashed items that belong to a project.
 #[tauri::command]
-pub fn list_trash(
-    db: State<DbManager>,
-    project_id: String,
-) -> Result<Vec<TrashItem>, AppError> {
+pub fn list_trash(db: State<DbManager>, project_id: String) -> Result<Vec<TrashItem>, AppError> {
     db.with_conn(|conn| trash_repo::list_trash(conn, &project_id))
 }
 
@@ -27,28 +24,19 @@ pub fn move_to_trash(
 
 /// Restores a trashed entity to its active state.
 #[tauri::command]
-pub fn restore_from_trash(
-    db: State<DbManager>,
-    trash_id: String,
-) -> Result<bool, AppError> {
+pub fn restore_from_trash(db: State<DbManager>, trash_id: String) -> Result<bool, AppError> {
     db.with_conn_mut(|conn| trash_repo::restore_from_trash(conn, &trash_id))
 }
 
 /// Permanently deletes a single trashed entity.
 #[tauri::command]
-pub fn delete_permanently(
-    db: State<DbManager>,
-    trash_id: String,
-) -> Result<bool, AppError> {
+pub fn delete_permanently(db: State<DbManager>, trash_id: String) -> Result<bool, AppError> {
     db.with_conn_mut(|conn| trash_repo::delete_permanently(conn, &trash_id))
 }
 
 /// Permanently deletes every trashed entity for a project.
 #[tauri::command]
-pub fn empty_trash(
-    db: State<DbManager>,
-    project_id: String,
-) -> Result<i64, AppError> {
+pub fn empty_trash(db: State<DbManager>, project_id: String) -> Result<i64, AppError> {
     db.with_conn_mut(|conn| trash_repo::empty_trash(conn, &project_id))
 }
 
@@ -83,10 +71,7 @@ pub fn list_backups(
 
 /// Deletes a saved backup file by name.
 #[tauri::command]
-pub fn delete_backup_file(
-    db: State<DbManager>,
-    file_name: String,
-) -> Result<bool, AppError> {
+pub fn delete_backup_file(db: State<DbManager>, file_name: String) -> Result<bool, AppError> {
     let base_dir = db.base_dir().to_path_buf();
     backup_repo::delete_backup_file(&base_dir, &file_name)
 }

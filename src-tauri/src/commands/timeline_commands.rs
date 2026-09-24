@@ -2,8 +2,7 @@ use tauri::State;
 
 use crate::db::{timeline_repo, DbManager};
 use crate::models::{
-    AppError, CreateTimelineEventInput, TimelineEvent, TimelineFilter,
-    UpdateTimelineEventInput,
+    AppError, CreateTimelineEventInput, TimelineEvent, TimelineFilter, UpdateTimelineEventInput,
 };
 
 #[tauri::command]

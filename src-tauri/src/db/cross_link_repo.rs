@@ -1,5 +1,5 @@
-use rusqlite::{params, Connection};
 use crate::models::{AppError, RelatedContentItem, RelatedContentResponse};
+use rusqlite::{params, Connection};
 
 pub fn get_related_content(
     conn: &Connection,
@@ -435,13 +435,20 @@ pub fn get_related_content(
                 |row| Ok((row.get(0)?, row.get(1)?)),
             ) {
                 let full_text = format!("{} {}", ntitle, ncontent).to_lowercase();
-                if let Ok(mut char_stmt) = conn.prepare("SELECT id, name, role FROM characters WHERE project_id = ?1") {
+                if let Ok(mut char_stmt) =
+                    conn.prepare("SELECT id, name, role FROM characters WHERE project_id = ?1")
+                {
                     if let Ok(char_rows) = char_stmt.query_map(params![project_id], |row| {
-                        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, String>(2)?,
+                        ))
                     }) {
                         for r in char_rows.flatten() {
                             let (cid, cname, crole) = r;
-                            if !cname.trim().is_empty() && full_text.contains(&cname.to_lowercase()) {
+                            if !cname.trim().is_empty() && full_text.contains(&cname.to_lowercase())
+                            {
                                 characters.push(RelatedContentItem {
                                     id: cid.clone(),
                                     entity_type: "character".to_string(),
@@ -524,7 +531,8 @@ mod tests {
             "INSERT INTO timeline_event_characters (id, event_id, character_id)
              VALUES ('tec-1', 'ev-1', 'char-1')",
             [],
-        ).unwrap();
+        )
+        .unwrap();
 
         // Link attachment to Maria
         conn.execute(

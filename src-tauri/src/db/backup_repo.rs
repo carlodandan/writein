@@ -154,13 +154,13 @@ pub fn restore_project_backup(
                 CreateNodeInput {
                     project_id: new_proj.id.clone(),
                     parent_id,
-                node_type: old_node.node_type,
-                title: old_node.title,
-                synopsis: old_node.synopsis,
-            },
-        )?;
+                    node_type: old_node.node_type,
+                    title: old_node.title,
+                    synopsis: old_node.synopsis,
+                },
+            )?;
 
-        node_id_map.insert(old_node.id.clone(), created_node.id.clone());
+            node_id_map.insert(old_node.id.clone(), created_node.id.clone());
 
             // Restore document content if exists
             if let Some(doc) = bundle.documents.get(&old_node.id) {
@@ -169,7 +169,7 @@ pub fn restore_project_backup(
                     SaveDocumentInput {
                         node_id: created_node.id.clone(),
                         content_json: doc.content_json.clone(),
-                    content_text: doc.content_text.clone(),
+                        content_text: doc.content_text.clone(),
                         word_count: doc.word_count,
                         character_count: doc.character_count,
                     },

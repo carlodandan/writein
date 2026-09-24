@@ -1,6 +1,6 @@
-use tauri::State;
 use crate::db::{goals_repo, DbManager};
 use crate::models::{AppError, CreateWritingGoalInput, UpdateWritingGoalInput, WritingGoal};
+use tauri::State;
 
 /// Lists the writing goals configured for a project.
 #[tauri::command]
@@ -32,9 +32,6 @@ pub fn update_writing_goal(
 
 /// Deletes a writing goal by identifier.
 #[tauri::command]
-pub fn delete_writing_goal(
-    db: State<DbManager>,
-    id: String,
-) -> Result<bool, AppError> {
+pub fn delete_writing_goal(db: State<DbManager>, id: String) -> Result<bool, AppError> {
     db.with_conn(|conn| goals_repo::delete_goal(conn, &id))
 }

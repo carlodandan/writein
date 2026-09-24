@@ -4,9 +4,14 @@ use uuid::Uuid;
 
 use crate::models::{AppError, CreateWritingGoalInput, UpdateWritingGoalInput, WritingGoal};
 
-pub fn create_goal(conn: &Connection, input: CreateWritingGoalInput) -> Result<WritingGoal, AppError> {
+pub fn create_goal(
+    conn: &Connection,
+    input: CreateWritingGoalInput,
+) -> Result<WritingGoal, AppError> {
     if input.target_words <= 0 {
-        return Err(AppError::Validation("Target words must be greater than zero".to_string()));
+        return Err(AppError::Validation(
+            "Target words must be greater than zero".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();
@@ -110,7 +115,14 @@ pub fn update_goal(
             start_date = ?4,
             end_date = ?5
          WHERE id = ?6",
-        params![target_words, current_words, is_active as i64, start_date, end_date, id],
+        params![
+            target_words,
+            current_words,
+            is_active as i64,
+            start_date,
+            end_date,
+            id
+        ],
     )?;
 
     get_goal(conn, id)

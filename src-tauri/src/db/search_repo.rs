@@ -121,7 +121,10 @@ pub fn global_search(
                 id: id.clone(),
                 entity_type: "location".to_string(),
                 title: name,
-                subtitle: Some(format!("Location • {}", loc_type.unwrap_or_else(|| "Setting".into()))),
+                subtitle: Some(format!(
+                    "Location • {}",
+                    loc_type.unwrap_or_else(|| "Setting".into())
+                )),
                 snippet,
                 target_tab: "locations".to_string(),
                 target_id: id,
@@ -192,7 +195,11 @@ pub fn global_search(
                 id: id.clone(),
                 entity_type: "timeline".to_string(),
                 title,
-                subtitle: Some(format!("Timeline • {} ({})", date_label.unwrap_or_default(), importance)),
+                subtitle: Some(format!(
+                    "Timeline • {} ({})",
+                    date_label.unwrap_or_default(),
+                    importance
+                )),
                 snippet: desc,
                 target_tab: "timeline".to_string(),
                 target_id: id,
@@ -421,10 +428,22 @@ pub mod tests {
         // A. Search "Maria" - should find across characters, timeline events, and notes
         let maria_results = global_search(&conn, &proj.id, "Maria").unwrap();
         assert!(maria_results.total_count >= 4);
-        assert!(maria_results.items.iter().any(|i| i.entity_type == "character" && i.title.contains("Maria")));
-        assert!(maria_results.items.iter().any(|i| i.entity_type == "timeline" && i.title.contains("Maria meets Carlo")));
-        assert!(maria_results.items.iter().any(|i| i.entity_type == "timeline" && i.title.contains("Maria leaves the city")));
-        assert!(maria_results.items.iter().any(|i| i.entity_type == "note" && i.title.contains("Maria's Secret Diary")));
+        assert!(maria_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "character" && i.title.contains("Maria")));
+        assert!(maria_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "timeline" && i.title.contains("Maria meets Carlo")));
+        assert!(maria_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "timeline" && i.title.contains("Maria leaves the city")));
+        assert!(maria_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "note" && i.title.contains("Maria's Secret Diary")));
 
         // B. Case-insensitivity: "maria" vs "MARIA"
         let lower_results = global_search(&conn, &proj.id, "maria").unwrap();
@@ -435,8 +454,14 @@ pub mod tests {
         // C. Partial matching: "Accid" matches "The Accident"
         let accid_results = global_search(&conn, &proj.id, "Accid").unwrap();
         assert!(accid_results.total_count >= 2);
-        assert!(accid_results.items.iter().any(|i| i.entity_type == "manuscript" && i.title == "The Accident"));
-        assert!(accid_results.items.iter().any(|i| i.entity_type == "timeline" && i.title == "The Accident"));
+        assert!(accid_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "manuscript" && i.title == "The Accident"));
+        assert!(accid_results
+            .items
+            .iter()
+            .any(|i| i.entity_type == "timeline" && i.title == "The Accident"));
 
         // D. Non-existent query
         let empty_results = global_search(&conn, &proj.id, "xyzabc999nonexistent").unwrap();
@@ -509,7 +534,8 @@ pub mod tests {
             conn.execute(
                 "INSERT INTO tags (id, project_id, name) VALUES (?1, ?2, ?3)",
                 params![format!("tag-{}", i), proj.id, format!("tag-marker-{}", i)],
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         conn.execute_batch("COMMIT;").unwrap();
@@ -522,13 +548,21 @@ pub mod tests {
         assert_eq!(search_res.total_count, 1);
         assert_eq!(search_res.items[0].title, "Hero Character Number 150");
         // Verify fast SQLite search performance (< 50ms)
-        assert!(duration.as_millis() < 50, "Search took too long: {:?}", duration);
+        assert!(
+            duration.as_millis() < 50,
+            "Search took too long: {:?}",
+            duration
+        );
 
         // Search for partial chapter query across 500 chapters
         let start2 = std::time::Instant::now();
         let ch_res = global_search(&conn, &proj.id, "Realm 42").unwrap();
         let duration2 = start2.elapsed();
         assert!(ch_res.total_count >= 1);
-        assert!(duration2.as_millis() < 50, "Chapter search took too long: {:?}", duration2);
+        assert!(
+            duration2.as_millis() < 50,
+            "Chapter search took too long: {:?}",
+            duration2
+        );
     }
 }

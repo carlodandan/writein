@@ -4,10 +4,7 @@ use crate::db::{location_repo, DbManager};
 use crate::models::{AppError, CreateLocationInput, Location, UpdateLocationInput};
 
 #[tauri::command]
-pub fn get_locations(
-    db: State<DbManager>,
-    project_id: String,
-) -> Result<Vec<Location>, AppError> {
+pub fn get_locations(db: State<DbManager>, project_id: String) -> Result<Vec<Location>, AppError> {
     db.with_conn(|conn| location_repo::list_locations(conn, &project_id))
 }
 

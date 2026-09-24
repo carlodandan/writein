@@ -1,6 +1,6 @@
-use tauri::State;
 use crate::db::{session_repo, DbManager};
 use crate::models::{AppError, SessionStats, WritingSession};
+use tauri::State;
 
 /// Starts a writing session for a project and optional manuscript node.
 #[tauri::command]

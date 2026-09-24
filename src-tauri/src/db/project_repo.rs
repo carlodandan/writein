@@ -1,6 +1,6 @@
+use chrono::Utc;
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
-use chrono::Utc;
 
 use crate::models::{
     AppError, CreateProjectInput, Project, ProjectStatus, ProjectSummary, UpdateProjectInput,
@@ -8,7 +8,9 @@ use crate::models::{
 
 pub fn create_project(conn: &Connection, input: CreateProjectInput) -> Result<Project, AppError> {
     if input.title.trim().is_empty() {
-        return Err(AppError::Validation("Project title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Project title cannot be empty".to_string(),
+        ));
     }
 
     let id = Uuid::new_v4().to_string();
@@ -127,11 +129,15 @@ pub fn update_project(
     let description = input.description.or(existing.description);
     let genre = input.genre.or(existing.genre);
     let status = input.status.unwrap_or(existing.status);
-    let target_word_count = input.target_word_count.unwrap_or(existing.target_word_count);
+    let target_word_count = input
+        .target_word_count
+        .unwrap_or(existing.target_word_count);
     let project_notes = input.project_notes.or(existing.project_notes);
 
     if title.trim().is_empty() {
-        return Err(AppError::Validation("Project title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Project title cannot be empty".to_string(),
+        ));
     }
 
     conn.execute(
@@ -166,7 +172,10 @@ pub fn update_project(
 pub fn delete_project(conn: &Connection, id: &str) -> Result<(), AppError> {
     let rows_affected = conn.execute("DELETE FROM projects WHERE id = ?1", params![id])?;
     if rows_affected == 0 {
-        return Err(AppError::NotFound(format!("Project with ID {} not found", id)));
+        return Err(AppError::NotFound(format!(
+            "Project with ID {} not found",
+            id
+        )));
     }
     Ok(())
 }

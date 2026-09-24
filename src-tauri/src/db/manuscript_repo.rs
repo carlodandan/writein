@@ -1,6 +1,6 @@
+use chrono::Utc;
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
-use chrono::Utc;
 
 use crate::models::{
     AppError, CreateNodeInput, DocumentContent, ManuscriptNode, MoveNodeInput, NodeType,
@@ -77,7 +77,9 @@ pub fn get_node(conn: &Connection, id: &str) -> Result<ManuscriptNode, AppError>
 
 pub fn create_node(conn: &Connection, input: CreateNodeInput) -> Result<ManuscriptNode, AppError> {
     if input.title.trim().is_empty() {
-        return Err(AppError::Validation("Node title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Node title cannot be empty".to_string(),
+        ));
     }
 
     validate_hierarchy_rules(conn, &input.node_type, input.parent_id.as_deref())?;
@@ -149,7 +151,9 @@ pub fn update_node(
     let sort_order = input.sort_order.unwrap_or(existing.sort_order);
 
     if title.trim().is_empty() {
-        return Err(AppError::Validation("Node title cannot be empty".to_string()));
+        return Err(AppError::Validation(
+            "Node title cannot be empty".to_string(),
+        ));
     }
 
     if let Some(ref new_parent) = input.parent_id {
@@ -168,7 +172,15 @@ pub fn update_node(
             parent_id = ?5,
             updated_at = ?6
          WHERE id = ?7",
-        params![title.trim(), synopsis, status, sort_order, parent_id, now, id],
+        params![
+            title.trim(),
+            synopsis,
+            status,
+            sort_order,
+            parent_id,
+            now,
+            id
+        ],
     )?;
 
     get_node(conn, id)

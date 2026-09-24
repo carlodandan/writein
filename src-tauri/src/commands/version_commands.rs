@@ -1,6 +1,6 @@
-use tauri::State;
 use crate::db::{manuscript_repo, version_repo, DbManager};
 use crate::models::{AppError, DocumentContent, DocumentVersion, SaveDocumentInput};
+use tauri::State;
 
 /// Lists the saved document snapshots for a manuscript node.
 #[tauri::command]
@@ -74,9 +74,6 @@ pub fn restore_document_version(
 
 /// Deletes a saved document snapshot by identifier.
 #[tauri::command]
-pub fn delete_document_version(
-    db: State<DbManager>,
-    version_id: String,
-) -> Result<bool, AppError> {
+pub fn delete_document_version(db: State<DbManager>, version_id: String) -> Result<bool, AppError> {
     db.with_conn(|conn| version_repo::delete_snapshot(conn, &version_id))
 }

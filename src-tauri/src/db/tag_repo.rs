@@ -48,10 +48,7 @@ pub fn get_or_create_tag(
     })
 }
 
-pub fn list_tags(
-    conn: &Connection,
-    project_id: &str,
-) -> Result<Vec<TagWithUsageCount>, AppError> {
+pub fn list_tags(conn: &Connection, project_id: &str) -> Result<Vec<TagWithUsageCount>, AppError> {
     let mut stmt = conn.prepare(
         "SELECT t.id, t.project_id, t.name, t.color, COUNT(et.id) as usage_count
          FROM tags t
@@ -138,10 +135,7 @@ pub fn get_entity_tags(
     Ok(result)
 }
 
-pub fn set_entity_tags(
-    conn: &Connection,
-    input: SetEntityTagsInput,
-) -> Result<Vec<Tag>, AppError> {
+pub fn set_entity_tags(conn: &Connection, input: SetEntityTagsInput) -> Result<Vec<Tag>, AppError> {
     // Remove existing links
     conn.execute(
         "DELETE FROM entity_tags WHERE entity_type = ?1 AND entity_id = ?2",
