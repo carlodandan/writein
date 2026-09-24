@@ -90,12 +90,8 @@ export const CompileModal: React.FC<CompileModalProps> = ({ isOpen, onClose }) =
 
         await Promise.all(
           activeNodes.map(async (n) => {
-            try {
-              const doc = await manuscriptService.getDocument(n.id);
-              docMap[n.id] = { content_text: doc.content_text };
-            } catch {
-              docMap[n.id] = { content_text: '' };
-            }
+            const doc = await manuscriptService.getDocument(n.id);
+            docMap[n.id] = { content_text: doc.content_text };
           })
         );
 
