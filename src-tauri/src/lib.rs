@@ -21,7 +21,8 @@ pub fn run() {
                         & !tauri_plugin_window_state::StateFlags::VISIBLE,
                 )
                 .build(),
-        );
+        )
+        .plugin(tauri_plugin_deep_link::init());
     }
 
     builder

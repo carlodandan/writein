@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { deepLinkService } from './services/deepLinkService';
 import { ProjectProvider } from './context/ProjectContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ManuscriptProvider } from './context/ManuscriptContext';
@@ -144,6 +145,15 @@ function App() {
     },
     []
   );
+
+  useEffect(() => {
+    deepLinkService.initialize({
+      onNewProject: () => setIsCreateModalOpen(true),
+      onNavigateTab: (tab: string) => {
+        handleNavigate(tab as ActiveNavTab);
+      },
+    });
+  }, []);
 
   return (
     <ThemeProvider>
