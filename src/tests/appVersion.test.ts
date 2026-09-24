@@ -11,7 +11,7 @@ describe('appVersion Utility', () => {
 
   it('handles fallback gracefully in non-Tauri environment', async () => {
     const version = await getAppVersion();
-    // Default fallback in web/test environment is v1.0.0
-    expect(version).toBe('v1.0.0');
+    // Default fallback in web/test environment is v2.0.0
+    expect(version).toBe('v2.0.0');
   });
 });
