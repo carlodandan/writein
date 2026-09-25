@@ -126,4 +126,3 @@ mod tests {
         assert!(!json.contains("\"character_count\""));
     }
 }
-

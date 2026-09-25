@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Download, AlertCircle } from 'lucide-react';
+import { X, Download, AlertCircle } from 'lucide-react';
 import { useUpdater } from '../../hooks/useUpdater';
+import { logger } from '../../utils/logger';
 
 interface UpdateNotificationDialogProps {
   isOpen: boolean;
@@ -31,13 +32,23 @@ const OpenUpdateNotificationDialog: React.FC<
   const { state, install } = useUpdater();
   const [showNotes, setShowNotes] = useState(false);
 
+  React.useEffect(() => {
+    logger.info(`[UpdateNotificationDialog] Dialog displayed for update v${version}`);
+  }, [version]);
+
   const isDownloading = state.stage === 'downloading';
   const percentLabel =
     state.percent === null ? null : `${Math.round(state.percent * 100)}%`;
 
   /** Starts installation of the update retained by the shared updater hook. */
   const handleInstall = async () => {
+    logger.info(`[UpdateNotificationDialog] User initiated install for v${version}`);
     await install();
+  };
+
+  const handleClose = () => {
+    logger.info(`[UpdateNotificationDialog] User dismissed update notification for v${version}`);
+    onClose();
   };
 
   return (
@@ -46,9 +57,6 @@ const OpenUpdateNotificationDialog: React.FC<
         {/* Header */}
         <div className="px-5 py-4 border-b border-[var(--paper-border)] flex items-center justify-between bg-[var(--paper-desk)]">
           <div className="flex items-center space-x-2.5">
-            <div className="p-1.5 rounded-lg bg-[var(--amber-soft)] border border-[var(--amber-soft-border)] text-[var(--amber-accent)]">
-              <Sparkles className="w-4 h-4" />
-            </div>
             <div>
               <h3 className="font-serif-novel text-base font-bold text-[var(--ink-primary)]">
                 Update Available
@@ -60,7 +68,7 @@ const OpenUpdateNotificationDialog: React.FC<
           </div>
           {!isDownloading && (
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1.5 rounded-md text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--paper-surface)] transition-colors"
               title="Dismiss"
             >

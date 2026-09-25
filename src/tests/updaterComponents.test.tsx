@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ import { UpdateNotificationDialog } from '../components/updater/UpdateNotificati
 describe('updater controls', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.check.mockResolvedValue({ stage: 'current', error: null });
     mocks.useUpdater.mockReturnValue({
       state: {
         stage: 'available',
@@ -49,5 +50,47 @@ describe('updater controls', () => {
 
     const checkButton = screen.getByRole('button', { name: /check for updates/i });
     expect((checkButton as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('triggers manual check with animated icon and logs the action', () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    render(<UpdateCheck />);
+
+    const checkButton = screen.getByRole('button', { name: /check for updates/i });
+    fireEvent.click(checkButton);
+
+    expect(mocks.check).toHaveBeenCalledWith(true);
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[UpdateCheck] "Check for updates" clicked by user.')
+    );
+
+    // Verify icon displays animate-spin class while manual check is running
+    const icon = checkButton.querySelector('svg');
+    expect(icon).not.toBeNull();
+    expect(icon?.classList.contains('animate-spin')).toBe(true);
+
+    consoleInfoSpy.mockRestore();
+  });
+
+  it('logs a failed manual check with its returned error', async () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.check.mockResolvedValue({ stage: 'failed', error: 'Network unavailable' });
+    render(<UpdateCheck />);
+
+    fireEvent.click(screen.getByRole('button', { name: /check for updates/i }));
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[UpdateCheck] Manual check failed:',
+        'Network unavailable'
+      );
+    });
+    expect(consoleInfoSpy).not.toHaveBeenCalledWith(
+      '[UpdateCheck] Manual check finished successfully.'
+    );
+
+    consoleInfoSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });

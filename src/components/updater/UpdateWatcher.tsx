@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { checkForUpdate } from '../../lib/updater';
+import { logger } from '../../utils/logger';
 
 /** One announcement per process even when StrictMode mounts twice in dev. */
 let announced = false;
@@ -16,14 +17,23 @@ export function UpdateWatcher({ onAvailable }: UpdateWatcherProps) {
   useEffect(() => {
     if (announced) return;
 
+    logger.info(`[UpdateWatcher] Startup check scheduled in ${DELAY}ms`);
+
     const timer = window.setTimeout(() => {
+      logger.info('[UpdateWatcher] Executing scheduled startup check...');
       void checkForUpdate()
         .then((update) => {
-          if (!update || announced) return;
+          if (!update || announced) {
+            logger.info('[UpdateWatcher] Startup check complete: No unannounced update.');
+            return;
+          }
           announced = true;
+          logger.info(`[UpdateWatcher] Discovered update v${update.version}. Triggering notification dialog.`);
           onAvailable(update.version, update.body?.trim() || null);
         })
-        .catch(() => {}); // silent on error — user did not ask
+        .catch((err) => {
+          logger.warn('[UpdateWatcher] Background startup check failed silently:', err);
+        });
     }, DELAY);
 
     return () => window.clearTimeout(timer);

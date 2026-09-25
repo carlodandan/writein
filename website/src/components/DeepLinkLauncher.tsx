@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, X, Check, Copy, Sparkles } from 'lucide-react';
+import { ExternalLink, X, Check, Copy } from 'lucide-react';
 
 interface DeepLinkModalProps {
   isOpen: boolean;
@@ -75,7 +75,6 @@ export const DeepLinkModal: React.FC<DeepLinkModalProps> = ({ isOpen, onClose })
         {/* Info box */}
         <div className="p-3.5 rounded-xl border border-[var(--paper-border-subtle)] bg-[var(--paper-desk)]/60 text-xs text-[var(--ink-secondary)] space-y-1">
           <p className="font-semibold text-[var(--ink-primary)] flex items-center space-x-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
             <span>Tauri Deep-Link Plugin Integration</span>
           </p>
           <p className="text-[11px] leading-relaxed">

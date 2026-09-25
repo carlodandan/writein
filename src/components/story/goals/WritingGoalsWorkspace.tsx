@@ -4,7 +4,6 @@ import {
   Flame,
   Clock,
   CheckCircle2,
-  Sparkles,
   Edit2,
   Trophy,
 } from 'lucide-react';
@@ -296,7 +295,6 @@ export const WritingGoalsWorkspace: React.FC = () => {
         {/* Milestone Projections */}
         <div className="bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 text-sm font-semibold text-[var(--ink-primary)]">
-            <Sparkles className="w-4 h-4 text-[var(--amber-accent)]" />
             <span>Milestone Projections</span>
           </div>
 
