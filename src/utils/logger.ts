@@ -1,6 +1,22 @@
 import { isDesktopTauri } from '../services/tauriIpc';
 import { info as tauriInfo, warn as tauriWarn, error as tauriError } from '@tauri-apps/plugin-log';
 
+function formatLogMessage(message: string, context?: unknown): string {
+  if (context === undefined) return message;
+
+  try {
+    const formatted =
+      context instanceof Error
+        ? context.stack || `${context.name}: ${context.message}`
+        : typeof context === 'object'
+          ? JSON.stringify(context)
+          : String(context);
+    return `${message} ${formatted || '[unserializable context]'}`;
+  } catch {
+    return `${message} [unserializable context]`;
+  }
+}
+
 /**
  * Unified application logger that outputs to both browser/WebView console
  * and persistent Tauri application log files (on desktop).
@@ -14,11 +30,7 @@ export const logger = {
     }
 
     if (isDesktopTauri()) {
-      const formatted =
-        context !== undefined
-          ? `${message} ${typeof context === 'object' ? JSON.stringify(context) : String(context)}`
-          : message;
-      void tauriInfo(formatted).catch(() => {});
+      void tauriInfo(formatLogMessage(message, context)).catch(() => {});
     }
   },
 
@@ -30,11 +42,7 @@ export const logger = {
     }
 
     if (isDesktopTauri()) {
-      const formatted =
-        context !== undefined
-          ? `${message} ${typeof context === 'object' ? JSON.stringify(context) : String(context)}`
-          : message;
-      void tauriWarn(formatted).catch(() => {});
+      void tauriWarn(formatLogMessage(message, context)).catch(() => {});
     }
   },
 
@@ -46,11 +54,7 @@ export const logger = {
     }
 
     if (isDesktopTauri()) {
-      const formatted =
-        context !== undefined
-          ? `${message} ${typeof context === 'object' ? JSON.stringify(context) : String(context)}`
-          : message;
-      void tauriError(formatted).catch(() => {});
+      void tauriError(formatLogMessage(message, context)).catch(() => {});
     }
   },
 };

@@ -28,8 +28,12 @@ export const UpdateCheck: React.FC = () => {
     setIsManualChecking(true);
     const startTime = Date.now();
     try {
-      await check(true);
-      logger.info('[UpdateCheck] Manual check finished successfully.');
+      const result = await check(true);
+      if (result.stage === 'failed') {
+        logger.error('[UpdateCheck] Manual check failed:', result.error);
+      } else {
+        logger.info('[UpdateCheck] Manual check finished successfully.');
+      }
     } catch (err) {
       logger.error('[UpdateCheck] Manual check encountered error:', err);
     } finally {

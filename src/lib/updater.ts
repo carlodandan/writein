@@ -83,7 +83,7 @@ export async function installUpdate(
         received += event.data.chunkLength;
         if (total && total > 0) {
           const percent = Math.round((received / total) * 100);
-          if (percent >= lastLoggedPercent + 10 || percent === 100) {
+          if (percent >= lastLoggedPercent + 10) {
             lastLoggedPercent = Math.floor(percent / 10) * 10;
             logger.info(`[Updater] Download progress: ${percent}% (${received}/${total} bytes)`);
           }
