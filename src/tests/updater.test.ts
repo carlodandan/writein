@@ -52,4 +52,24 @@ describe('updater desktop guards', () => {
     expect(update.downloadAndInstall).toHaveBeenCalledOnce();
     expect(mocks.relaunch).toHaveBeenCalledOnce();
   });
+
+  it('logs rounded 100% progress only once', async () => {
+    mocks.isDesktopTauri.mockReturnValue(true);
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const update = makeUpdate();
+    vi.mocked(update.downloadAndInstall).mockImplementation(async (onEvent) => {
+      onEvent?.({ event: 'Started', data: { contentLength: 1000 } });
+      onEvent?.({ event: 'Progress', data: { chunkLength: 995 } });
+      onEvent?.({ event: 'Progress', data: { chunkLength: 1 } });
+      onEvent?.({ event: 'Progress', data: { chunkLength: 1 } });
+    });
+
+    await installUpdate(update, vi.fn());
+
+    const completedProgressLogs = infoSpy.mock.calls.filter(
+      ([message]) => typeof message === 'string' && message.includes('[Updater] Download progress: 100%')
+    );
+    expect(completedProgressLogs).toHaveLength(1);
+    infoSpy.mockRestore();
+  });
 });

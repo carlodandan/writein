@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ import { UpdateNotificationDialog } from '../components/updater/UpdateNotificati
 describe('updater controls', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.check.mockResolvedValue({ stage: 'current', error: null });
     mocks.useUpdater.mockReturnValue({
       state: {
         stage: 'available',
@@ -69,5 +70,27 @@ describe('updater controls', () => {
     expect(icon?.classList.contains('animate-spin')).toBe(true);
 
     consoleInfoSpy.mockRestore();
+  });
+
+  it('logs a failed manual check with its returned error', async () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.check.mockResolvedValue({ stage: 'failed', error: 'Network unavailable' });
+    render(<UpdateCheck />);
+
+    fireEvent.click(screen.getByRole('button', { name: /check for updates/i }));
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[UpdateCheck] Manual check failed:',
+        'Network unavailable'
+      );
+    });
+    expect(consoleInfoSpy).not.toHaveBeenCalledWith(
+      '[UpdateCheck] Manual check finished successfully.'
+    );
+
+    consoleInfoSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });
