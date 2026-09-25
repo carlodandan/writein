@@ -216,5 +216,118 @@ describe('React Component Tests — Manuscript & Editor', () => {
 
       expect(mockRename).toHaveBeenCalledWith('node-ch-1', 'The Journey Begins');
     });
+
+    it('renders distinct word count badges for each node without bleeding', () => {
+      const nodeA = {
+        ...mockTreeNode.node,
+        id: 'node-a',
+        title: 'Chapter 01: The Beginning',
+        word_count: 1500,
+      };
+      const nodeB = {
+        ...mockTreeNode.node,
+        id: 'node-b',
+        title: 'Chapter 02: The Middle',
+        word_count: 320,
+      };
+
+      const treeA = { node: nodeA, children: [] };
+      const treeB = { node: nodeB, children: [] };
+
+      const { rerender } = render(
+        <ManuscriptContext.Provider
+          value={{
+            nodes: [nodeA, nodeB],
+            selectedNodeId: 'node-a',
+            activeNode: nodeA,
+            activeDocument: null,
+            saveStatus: 'saved',
+            lastSavedTime: null,
+            isLoading: false,
+            error: null,
+            selectNode: vi.fn(),
+            createNode: vi.fn(),
+            renameNode: vi.fn(),
+            updateNodeSynopsis: vi.fn(),
+            updateNodeStatus: vi.fn(),
+            deleteNode: vi.fn(),
+            duplicateNode: vi.fn(),
+            moveNode: vi.fn(),
+            reorderNodes: vi.fn(),
+            saveCurrentDocument: vi.fn(),
+            refreshTree: vi.fn(),
+          }}
+        >
+          <ManuscriptTreeNode
+            treeNode={treeA}
+            onSelect={vi.fn()}
+            selectedId="node-a"
+            onDragStart={vi.fn()}
+            onDragOver={vi.fn()}
+            onDrop={vi.fn()}
+          />
+          <ManuscriptTreeNode
+            treeNode={treeB}
+            onSelect={vi.fn()}
+            selectedId="node-a"
+            onDragStart={vi.fn()}
+            onDragOver={vi.fn()}
+            onDrop={vi.fn()}
+          />
+        </ManuscriptContext.Provider>
+      );
+
+      // Node A shows 1,500w and Node B shows 320w
+      expect(screen.getByText('1,500w')).toBeDefined();
+      expect(screen.getByText('320w')).toBeDefined();
+
+      // Rerender selecting Node B
+      rerender(
+        <ManuscriptContext.Provider
+          value={{
+            nodes: [nodeA, nodeB],
+            selectedNodeId: 'node-b',
+            activeNode: nodeB,
+            activeDocument: null,
+            saveStatus: 'saved',
+            lastSavedTime: null,
+            isLoading: false,
+            error: null,
+            selectNode: vi.fn(),
+            createNode: vi.fn(),
+            renameNode: vi.fn(),
+            updateNodeSynopsis: vi.fn(),
+            updateNodeStatus: vi.fn(),
+            deleteNode: vi.fn(),
+            duplicateNode: vi.fn(),
+            moveNode: vi.fn(),
+            reorderNodes: vi.fn(),
+            saveCurrentDocument: vi.fn(),
+            refreshTree: vi.fn(),
+          }}
+        >
+          <ManuscriptTreeNode
+            treeNode={treeA}
+            onSelect={vi.fn()}
+            selectedId="node-b"
+            onDragStart={vi.fn()}
+            onDragOver={vi.fn()}
+            onDrop={vi.fn()}
+          />
+          <ManuscriptTreeNode
+            treeNode={treeB}
+            onSelect={vi.fn()}
+            selectedId="node-b"
+            onDragStart={vi.fn()}
+            onDragOver={vi.fn()}
+            onDrop={vi.fn()}
+          />
+        </ManuscriptContext.Provider>
+      );
+
+      // Word counts remain 1,500w and 320w even when selectedNodeId changes to node-b
+      expect(screen.getByText('1,500w')).toBeDefined();
+      expect(screen.getByText('320w')).toBeDefined();
+    });
   });
 });

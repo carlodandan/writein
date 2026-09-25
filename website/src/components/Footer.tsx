@@ -24,7 +24,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDeepLinkModal }) => {
               The private, offline-first desktop studio for long-form fiction writers and novelists. Built with Tauri, Rust, and SQLite.
             </p>
             <div className="flex items-center space-x-2 text-[11px] font-mono text-[var(--ink-muted)]">
-              <span>Version 4.0.0</span>
+              <span>Version 4.1.0</span>
               <span>•</span>
               <span className="text-emerald-600 font-semibold flex items-center space-x-1">
                 <Shield className="w-3 h-3" />

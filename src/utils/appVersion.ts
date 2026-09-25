@@ -26,14 +26,14 @@ export async function getAppVersion(): Promise<string> {
     }
   }
 
-  cachedVersion = 'v4.0.0';
+  cachedVersion = 'v4.1.0';
   return cachedVersion;
 }
 
 /**
  * React hook to dynamically detect and subscribe to the application version.
  */
-export function useAppVersion(fallback: string = 'v4.0.0'): string {
+export function useAppVersion(fallback: string = 'v4.1.0'): string {
   const [version, setVersion] = useState<string>(cachedVersion || fallback);
 
   useEffect(() => {

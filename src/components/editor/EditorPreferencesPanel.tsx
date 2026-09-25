@@ -4,7 +4,8 @@ import {
   X,
   RotateCcw,
   Type,
-  AlignJustify
+  AlignJustify,
+  ClipboardPaste,
 } from 'lucide-react';
 import type { EditorPreferences } from '../../types/phase5';
 
@@ -204,6 +205,72 @@ export const EditorPreferencesPanel: React.FC<EditorPreferencesPanelProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Clipboard & Paste Section */}
+          <div className="space-y-3 pt-3 border-t border-[var(--paper-border-subtle)]">
+            <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
+              <ClipboardPaste className="w-4 h-4 text-[var(--amber-accent)]" />
+              <span>Clipboard & Paste</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[var(--ink-secondary)]">
+                Default Paste Format
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {[
+                  {
+                    id: 'match-style',
+                    label: 'Match Style',
+                    desc: 'Inherits font & size, keeps bold/italics',
+                  },
+                  {
+                    id: 'keep-format',
+                    label: 'Keep Format',
+                    desc: 'Preserves source styling & headers',
+                  },
+                  {
+                    id: 'plain-text',
+                    label: 'Plain Text',
+                    desc: 'Strips all formatting into text',
+                  },
+                ].map((p) => {
+                  const isSelected = (preferences.pasteBehavior || 'match-style') === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() =>
+                        onUpdatePreference(
+                          'pasteBehavior',
+                          p.id as EditorPreferences['pasteBehavior']
+                        )
+                      }
+                      className={`p-2.5 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-[var(--amber-accent)] bg-[var(--paper-desk)] text-[var(--amber-accent)] shadow-xs'
+                          : 'border-[var(--paper-border-subtle)] text-[var(--ink-secondary)] hover:bg-[var(--paper-desk-hover)]'
+                      }`}
+                    >
+                      <span
+                        className={`text-xs font-semibold ${
+                          isSelected ? 'text-[var(--amber-accent)]' : 'text-[var(--ink-primary)]'
+                        }`}
+                      >
+                        {p.label}
+                      </span>
+                      <span className="text-[10px] text-[var(--ink-muted)] mt-1 leading-tight">
+                        {p.desc}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-[var(--ink-muted)] pt-1">
+                Tip: Press <kbd className="px-1 py-0.5 rounded bg-[var(--paper-desk)] border border-[var(--paper-border-subtle)] font-mono text-[10px]">Ctrl+Shift+V</kbd> anytime to paste as plain text.
+              </p>
             </div>
           </div>
 

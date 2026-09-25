@@ -37,7 +37,13 @@ interface ManuscriptContextType {
   duplicateNode: (id: string) => Promise<ManuscriptNode>;
   moveNode: (nodeId: string, targetParentId: string | null, targetSortOrder: number) => Promise<void>;
   reorderNodes: (items: ReorderItem[]) => Promise<void>;
-  saveCurrentDocument: (contentJson: string, contentText: string, wordCount: number, characterCount: number) => Promise<void>;
+  saveCurrentDocument: (
+    contentJson: string,
+    contentText: string,
+    wordCount: number,
+    characterCount: number,
+    targetNodeId?: string
+  ) => Promise<void>;
   refreshTree: (nodeIdToSelect?: string) => Promise<void>;
 }
 
@@ -232,14 +238,16 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       contentJson: string,
       contentText: string,
       wordCount: number,
-      characterCount: number
+      characterCount: number,
+      targetNodeId?: string
     ) => {
-      if (!selectedNodeId) return;
+      const nodeToSave = targetNodeId || selectedNodeId;
+      if (!nodeToSave) return;
 
       // Avoid unnecessary database writes if no changes exist
       if (
         activeDocument &&
-        activeDocument.node_id === selectedNodeId &&
+        activeDocument.node_id === nodeToSave &&
         activeDocument.content_json === contentJson &&
         activeDocument.content_text === contentText
       ) {
@@ -251,7 +259,7 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       try {
         const payload: SaveDocumentInput = {
-          node_id: selectedNodeId,
+          node_id: nodeToSave,
           content_json: contentJson,
           content_text: contentText,
           word_count: wordCount,
@@ -259,13 +267,15 @@ export const ManuscriptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         };
 
         const savedDoc = await manuscriptService.saveDocument(payload);
-        setActiveDocument(savedDoc);
+        if (nodeToSave === selectedNodeId) {
+          setActiveDocument(savedDoc);
+        }
         setSaveStatus('saved');
         setLastSavedTime(new Date());
 
-        // Update local node word count
+        // Update local node word count for target node ONLY
         setNodes((prev) =>
-          prev.map((n) => (n.id === selectedNodeId ? { ...n, word_count: wordCount } : n))
+          prev.map((n) => (n.id === nodeToSave ? { ...n, word_count: wordCount } : n))
         );
 
         // Periodically refresh project total words
