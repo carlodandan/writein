@@ -9,6 +9,7 @@ describe('Editor Preferences & Settings Client Operations', () => {
     expect(DEFAULT_EDITOR_PREFERENCES.lineHeight).toBe('relaxed');
     expect(DEFAULT_EDITOR_PREFERENCES.editorWidth).toBe('medium');
     expect(DEFAULT_EDITOR_PREFERENCES.typewriterMode).toBe(false);
+    expect(DEFAULT_EDITOR_PREFERENCES.pasteBehavior).toBe('match-style');
   });
 
   it('persists and retrieves custom preferences via settings service', async () => {
@@ -17,6 +18,7 @@ describe('Editor Preferences & Settings Client Operations', () => {
       fontSize: 20,
       fontFamily: 'mono' as const,
       lineHeight: 'loose' as const,
+      pasteBehavior: 'keep-format' as const,
     };
 
     const serialized = JSON.stringify(customPrefs);
@@ -30,6 +32,7 @@ describe('Editor Preferences & Settings Client Operations', () => {
       const parsed = JSON.parse(retrieved);
       expect(parsed.fontSize).toBe(20);
       expect(parsed.fontFamily).toBe('mono');
+      expect(parsed.pasteBehavior).toBe('keep-format');
     }
   });
 

@@ -14,6 +14,7 @@ import { useEditorPreferences } from '../../hooks/useEditorPreferences';
 import { useWritingSession } from '../../hooks/useWritingSession';
 import { versionService } from '../../services/versionService';
 import { countWordsAndCharacters } from '../../utils/wordCount';
+import { sanitizePastedHTML } from '../../utils/pasteSanitizer';
 import { PenTool } from 'lucide-react';
 
 interface EditorProps {
@@ -66,12 +67,24 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
     }
   }, [activeNode?.id, activeNode?.title]);
 
+  const preferencesRef = useRef(preferences);
+  preferencesRef.current = preferences;
+  const isShiftPasteRef = useRef(false);
+  const isDirtyRef = useRef(false);
+  const loadedDocumentNodeIdRef = useRef<string | null>(null);
+
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<any>(null);
 
   const performSave = useCallback(
-    (editorInstance: any) => {
+    (editorInstance: any, explicitNodeId?: string) => {
       if (!editorInstance) return;
+      const targetNodeId = explicitNodeId || loadedDocumentNodeIdRef.current;
+      if (!targetNodeId) return;
+
+      // Only perform save if there are actual unsaved modifications
+      if (!isDirtyRef.current) return;
+
       const json = JSON.stringify(editorInstance.getJSON());
       const text = editorInstance.getText();
       const counts = countWordsAndCharacters(text);
@@ -79,8 +92,9 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
       setLiveWordCount(counts.words);
       setLiveCharCount(counts.characters);
       setLiveCharNoSpaces(counts.charactersNoSpaces);
+      isDirtyRef.current = false;
 
-      saveCurrentDocument(json, text, counts.words, counts.characters);
+      saveCurrentDocument(json, text, counts.words, counts.characters, targetNodeId);
     },
     [saveCurrentDocument]
   );
@@ -102,10 +116,19 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
     editorProps: {
       attributes: {
         class:
-          'font-serif-novel prose dark:prose-invert max-w-none focus:outline-hidden text-base leading-relaxed text-[var(--ink-primary)] min-h-[500px]',
+          'font-serif-novel prose dark:prose-invert max-w-none focus:outline-hidden text-base leading-relaxed text-[var(--ink-primary)] flex-1 min-h-[500px]',
+      },
+      transformPastedHTML(html) {
+        if (isShiftPasteRef.current) {
+          isShiftPasteRef.current = false;
+          return sanitizePastedHTML(html, 'plain-text');
+        }
+        const behavior = preferencesRef.current.pasteBehavior || 'match-style';
+        return sanitizePastedHTML(html, behavior);
       },
     },
     onUpdate: ({ editor: ed }) => {
+      isDirtyRef.current = true;
       const text = ed.getText();
       const counts = countWordsAndCharacters(text);
       setLiveWordCount(counts.words);
@@ -115,65 +138,87 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      const currentNodeId = loadedDocumentNodeIdRef.current;
       debounceTimerRef.current = setTimeout(() => {
-        performSave(ed);
+        performSave(ed, currentNodeId || undefined);
       }, 1000);
     },
   });
 
   editorRef.current = editor;
 
-  // Sync content when active document changes
+  // Sync content when switching to a different document/chapter
   useEffect(() => {
     if (!editor || !activeDocument) return;
 
-    // Check if content differs to prevent resetting cursor
-    if (activeDocument.content_json) {
-      try {
-        const parsed = JSON.parse(activeDocument.content_json);
-        editor.commands.setContent(parsed);
-      } catch {
-        editor.commands.setContent(activeDocument.content_text || '');
+    // Only load content when opening a different chapter or on initial mount
+    if (loadedDocumentNodeId !== activeDocument.node_id) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
-    } else {
-      editor.commands.setContent(activeDocument.content_text || '');
-    }
+      isDirtyRef.current = false;
 
-    const counts = countWordsAndCharacters(activeDocument.content_text);
-    setLiveWordCount(counts.words);
-    setLiveCharCount(counts.characters);
-    setLiveCharNoSpaces(counts.charactersNoSpaces);
-    setLoadedDocumentNodeId(activeDocument.node_id);
-  }, [editor, activeDocument]);
+      if (activeDocument.content_json) {
+        try {
+          const parsed = JSON.parse(activeDocument.content_json);
+          editor.commands.setContent(parsed, { emitUpdate: false });
+        } catch {
+          editor.commands.setContent(activeDocument.content_text || '', { emitUpdate: false });
+        }
+      } else {
+        editor.commands.setContent(activeDocument.content_text || '', { emitUpdate: false });
+      }
+
+      isDirtyRef.current = false;
+      const counts = countWordsAndCharacters(activeDocument.content_text);
+      setLiveWordCount(counts.words);
+      setLiveCharCount(counts.characters);
+      setLiveCharNoSpaces(counts.charactersNoSpaces);
+      setLoadedDocumentNodeId(activeDocument.node_id);
+      loadedDocumentNodeIdRef.current = activeDocument.node_id;
+    }
+  }, [editor, activeDocument, loadedDocumentNodeId]);
 
   // Unsaved content protection: flush pending save when switching chapters or on page unload
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current && editorRef.current) {
+      if (debounceTimerRef.current && editorRef.current && isDirtyRef.current) {
         clearTimeout(debounceTimerRef.current);
-        performSave(editorRef.current);
+        debounceTimerRef.current = null;
+        performSave(editorRef.current, loadedDocumentNodeIdRef.current || undefined);
       }
     };
   }, [activeNode?.id, performSave]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (debounceTimerRef.current && editorRef.current) {
+      if (debounceTimerRef.current && editorRef.current && isDirtyRef.current) {
         clearTimeout(debounceTimerRef.current);
-        performSave(editorRef.current);
+        debounceTimerRef.current = null;
+        performSave(editorRef.current, loadedDocumentNodeIdRef.current || undefined);
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [performSave]);
 
-  // Keyboard shortcuts listener: Ctrl+S and Ctrl+F
+  // Keyboard shortcuts listener: Ctrl+S, Ctrl+F, and Ctrl+Shift+V
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') {
+        isShiftPasteRef.current = true;
+        setTimeout(() => {
+          isShiftPasteRef.current = false;
+        }, 300);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        performSave(editorRef.current);
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
+        isDirtyRef.current = true;
+        performSave(editorRef.current, loadedDocumentNodeIdRef.current || undefined);
 
         if (activeDocument && editorRef.current && activeNode) {
           const txt = editorRef.current.getText();
@@ -225,14 +270,20 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
       />
 
       {/* Writing Surface */}
-      <div className="flex-1 overflow-y-auto px-6 py-10 flex justify-center">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-8 sm:py-10">
         <div
-          className={`w-full bg-[var(--paper-surface)] border border-[var(--paper-border)] shadow-xs rounded-xl transition-all duration-200 ${containerMaxWidth} ${fontFamilyClass} ${lineHeightClass} ${
+          className={`mx-auto w-full bg-[var(--paper-surface)] border border-[var(--paper-border)] shadow-xs rounded-xl transition-all duration-200 min-h-full h-fit flex flex-col ${containerMaxWidth} ${fontFamilyClass} ${lineHeightClass} ${
             isDistractionFree
-              ? 'p-14 sm:p-20 my-2'
-              : 'p-10 sm:p-14 my-4'
+              ? 'p-12 sm:p-16 md:p-20 mb-8 sm:mb-12'
+              : 'p-8 sm:p-12 md:p-14 mb-8 sm:mb-12'
           }`}
           style={{ fontSize: `${preferences.fontSize}px` }}
+          onClick={(e) => {
+            // Focus editor if user clicks on the blank paper area below text
+            if (e.target === e.currentTarget && editor && !editor.isFocused) {
+              editor.commands.focus();
+            }
+          }}
         >
           {/* Chapter / Scene Header */}
           <div className="mb-8 pb-4 border-b border-[var(--paper-border-subtle)]">
@@ -285,7 +336,7 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
           </div>
 
           {/* TipTap Rich Text Editor Surface */}
-          <EditorContent editor={editor} />
+          <EditorContent editor={editor} className="flex-1 flex flex-col cursor-text" />
         </div>
       </div>
 
@@ -309,12 +360,13 @@ export const Editor: React.FC<EditorProps> = ({ isDistractionFree = false }) => 
         currentWordCount={liveWordCount}
         onRestore={(text) => {
           if (editor) {
-            editor.commands.setContent(text);
+            isDirtyRef.current = true;
+            editor.commands.setContent(text, { emitUpdate: false });
             const counts = countWordsAndCharacters(text);
             setLiveWordCount(counts.words);
             setLiveCharCount(counts.characters);
             setLiveCharNoSpaces(counts.charactersNoSpaces);
-            performSave(editor);
+            performSave(editor, loadedDocumentNodeIdRef.current || activeNode?.id);
           }
         }}
       />

@@ -48,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDeepLinkModal }) => {
                   WriteIn
                 </span>
                 <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-full bg-[var(--paper-desk)] border border-[var(--paper-border)] text-[var(--ink-secondary)]">
-                  v4.0.0
+                  v4.1.0
                 </span>
               </div>
               <span className="text-[11px] text-[var(--ink-muted)] -mt-1 hidden sm:block">

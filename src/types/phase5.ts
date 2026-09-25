@@ -54,6 +54,8 @@ export interface SessionStats {
   avg_session_words: number;
 }
 
+export type PasteBehavior = 'match-style' | 'keep-format' | 'plain-text';
+
 export interface EditorPreferences {
   fontSize: number; // 14 - 24
   fontFamily: 'serif' | 'sans' | 'mono';
@@ -62,6 +64,7 @@ export interface EditorPreferences {
   editorWidth: 'narrow' | 'medium' | 'wide';
   focusModeEnabled: boolean;
   typewriterMode: boolean;
+  pasteBehavior?: PasteBehavior;
 }
 
 export const DEFAULT_EDITOR_PREFERENCES: EditorPreferences = {
@@ -72,4 +75,5 @@ export const DEFAULT_EDITOR_PREFERENCES: EditorPreferences = {
   editorWidth: 'medium',
   focusModeEnabled: false,
   typewriterMode: false,
+  pasteBehavior: 'match-style',
 };

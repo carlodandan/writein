@@ -32,7 +32,12 @@ export function useEditorPreferences() {
         if (isMounted && val) {
           try {
             const parsed = JSON.parse(val);
-            setPreferences((prev) => ({ ...prev, ...parsed }));
+            setPreferences((prev) => ({
+              ...DEFAULT_EDITOR_PREFERENCES,
+              ...prev,
+              ...parsed,
+              pasteBehavior: parsed.pasteBehavior || prev.pasteBehavior || DEFAULT_EDITOR_PREFERENCES.pasteBehavior,
+            }));
             localStorage.setItem(STORAGE_KEY, val);
           } catch {
             // ignore

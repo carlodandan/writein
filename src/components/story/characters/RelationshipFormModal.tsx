@@ -22,7 +22,7 @@ interface RelationshipFormModalProps {
 
 const RELATION_PRESETS = [
   'Nemesis / Rival',
-  'Ally / Partner',
+  'Ally / Friend',
   'Mentor / Student',
   'Family / Sibling',
   'Parent / Child',
@@ -30,6 +30,7 @@ const RELATION_PRESETS = [
   'Former Friend',
   'Employer / Employee',
   'Distrustful Truce',
+  'Ex-Lover / Ex-Partner',
 ];
 
 export const RelationshipFormModal: React.FC<RelationshipFormModalProps> = ({
@@ -60,7 +61,7 @@ export const RelationshipFormModal: React.FC<RelationshipFormModalProps> = ({
       const initialB = defaultCharBId || (otherChar ? otherChar.id : (characters[1]?.id ?? ''));
       setCharA(initialA);
       setCharB(initialB);
-      setRelationType('Ally / Partner');
+      setRelationType('Ally / Friend');
       setDescription('');
     }
     setError(null);
