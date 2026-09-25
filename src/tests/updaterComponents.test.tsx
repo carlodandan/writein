@@ -50,4 +50,24 @@ describe('updater controls', () => {
     const checkButton = screen.getByRole('button', { name: /check for updates/i });
     expect((checkButton as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it('triggers manual check with animated icon and logs the action', () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    render(<UpdateCheck />);
+
+    const checkButton = screen.getByRole('button', { name: /check for updates/i });
+    fireEvent.click(checkButton);
+
+    expect(mocks.check).toHaveBeenCalledWith(true);
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[UpdateCheck] "Check for updates" clicked by user.')
+    );
+
+    // Verify icon displays animate-spin class while manual check is running
+    const icon = checkButton.querySelector('svg');
+    expect(icon).not.toBeNull();
+    expect(icon?.classList.contains('animate-spin')).toBe(true);
+
+    consoleInfoSpy.mockRestore();
+  });
 });
