@@ -9,10 +9,10 @@ export const DownloadSection: React.FC = () => {
       icon: Monitor,
       badge: 'Recommended',
       desc: 'Standard setup executable with auto-updater, desktop shortcut, and registry deep-link integration.',
-      file: 'write-in_2.0.0_x64-setup.exe',
+      file: 'write-in_3.0.0_x64-setup.exe',
       size: '~12 MB',
       recommended: true,
-      href: 'https://github.com/carlodandan/writein/releases/download/v2.0.0/write-in_2.0.0_x64-setup.exe',
+      href: 'https://github.com/carlodandan/writein/releases/download/v3.0.0/write-in_3.0.0_x64-setup.exe',
     },
     {
       title: 'Windows MSI Package',
@@ -20,10 +20,10 @@ export const DownloadSection: React.FC = () => {
       icon: Package,
       badge: 'Standard Installer',
       desc: 'Native Microsoft Windows Installer package with passive installation support for clean setups.',
-      file: 'write-in_2.0.0_x64_en-US.msi',
+      file: 'write-in_3.0.0_x64_en-US.msi',
       size: '~14 MB',
       recommended: false,
-      href: 'https://github.com/carlodandan/writein/releases/download/v2.0.0/write-in_2.0.0_x64_en-US.msi',
+      href: 'https://github.com/carlodandan/writein/releases/download/v3.0.0/write-in_3.0.0_x64_en-US.msi',
     },
   ];
 

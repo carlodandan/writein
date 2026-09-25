@@ -108,6 +108,69 @@ if (Test-Path $AppVersionTs) {
     Write-Host "  [OK] src/utils/appVersion.ts"
 }
 
+# --------------------------------------------------
+# website/package.json
+# --------------------------------------------------
+
+$WebPackageJson = Join-Path $Root "website\package.json"
+if (Test-Path $WebPackageJson) {
+    $webPkgContent = Read-Utf8 $WebPackageJson
+    $webPkgContent = $webPkgContent -replace '"version"\s*:\s*"[^"]+"', "`"version`": `"$Version`""
+    Write-Utf8NoBom $WebPackageJson $webPkgContent
+    Write-Host "  [OK] website/package.json"
+}
+
+# --------------------------------------------------
+# website/src/components/DownloadSection.tsx
+# --------------------------------------------------
+
+$WebDownloadSection = Join-Path $Root "website\src\components\DownloadSection.tsx"
+if (Test-Path $WebDownloadSection) {
+    $downloadContent = Read-Utf8 $WebDownloadSection
+    $downloadContent = $downloadContent -replace '(/releases/download/)v[^/]+/', "`$1v$Version/"
+    $downloadContent = $downloadContent -replace 'write-in_\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?_', "write-in_${Version}_"
+    Write-Utf8NoBom $WebDownloadSection $downloadContent
+    Write-Host "  [OK] website/src/components/DownloadSection.tsx (download links)"
+}
+
+# --------------------------------------------------
+# website/src/components/Navbar.tsx
+# --------------------------------------------------
+
+$WebNavbar = Join-Path $Root "website\src\components\Navbar.tsx"
+if (Test-Path $WebNavbar) {
+    $navbarContent = Read-Utf8 $WebNavbar
+    $navbarContent = $navbarContent -replace 'v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?', "v$Version"
+    Write-Utf8NoBom $WebNavbar $navbarContent
+    Write-Host "  [OK] website/src/components/Navbar.tsx"
+}
+
+# --------------------------------------------------
+# website/src/components/Footer.tsx
+# --------------------------------------------------
+
+$WebFooter = Join-Path $Root "website\src\components\Footer.tsx"
+if (Test-Path $WebFooter) {
+    $footerContent = Read-Utf8 $WebFooter
+    $footerContent = $footerContent -replace 'Version\s+\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?', "Version $Version"
+    Write-Utf8NoBom $WebFooter $footerContent
+    Write-Host "  [OK] website/src/components/Footer.tsx"
+}
+
+# --------------------------------------------------
+# website/src/components/Hero.tsx
+# --------------------------------------------------
+
+$WebHero = Join-Path $Root "website\src\components\Hero.tsx"
+if (Test-Path $WebHero) {
+    $heroContent = Read-Utf8 $WebHero
+    $MajorMinor = if ($Version -match '^(\d+\.\d+)') { $Matches[1] } else { $Version }
+    $heroContent = $heroContent -replace 'WriteIn\s+v\d+(?:\.\d+)*\s+Released', "WriteIn v$MajorMinor Released"
+    $heroContent = $heroContent -replace '\(v\d+(?:\.\d+)*\s*•', "(v$MajorMinor •"
+    Write-Utf8NoBom $WebHero $heroContent
+    Write-Host "  [OK] website/src/components/Hero.tsx"
+}
+
 Write-Host ""
 Write-Host "Version successfully changed to $Version" -ForegroundColor Green
 Write-Host ""

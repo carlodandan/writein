@@ -16,7 +16,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
         {/* Release Pill Badge */}
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-[var(--paper-border)] bg-[var(--paper-surface)]/80 backdrop-blur-xs text-xs shadow-2xs">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-semibold text-[var(--ink-primary)]">WriteIn v2.0 Released</span>
+          <span className="font-semibold text-[var(--ink-primary)]">WriteIn v3.0 Released</span>
           <span className="text-[var(--paper-border)]">|</span>
           <span className="text-[var(--ink-muted)] flex items-center space-x-1">
             <span>Now with MS Word (.docx) Manuscript Compile</span>
