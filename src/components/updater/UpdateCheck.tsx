@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Download,
-  Sparkles,
   Info,
 } from 'lucide-react';
 
@@ -24,7 +23,6 @@ export const UpdateCheck: React.FC = () => {
     <div className="bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
-          <Sparkles className="w-5 h-5 text-[var(--amber-accent)]" />
           <div>
             <h3 className="font-serif-novel text-base font-semibold text-[var(--ink-primary)]">
               Application Updates
@@ -76,7 +74,6 @@ export const UpdateCheck: React.FC = () => {
           <div className="space-y-3 bg-[var(--amber-soft)] border border-[var(--amber-soft-border)] p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-[var(--amber-accent)]" />
                 <span className="text-xs font-semibold text-[var(--ink-primary)]">
                   Version v{state.version} is available
                 </span>

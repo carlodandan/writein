@@ -5,7 +5,6 @@ import {
   FileText,
   BookOpen,
   Layers,
-  Sparkles,
   CheckCircle2,
 } from 'lucide-react';
 import { useProject } from '../../context/ProjectContext';
@@ -175,7 +174,6 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-[var(--ink-muted)] space-y-2">
-                <Sparkles className="w-8 h-8 opacity-30 mx-auto" />
                 <p className="text-xs">Paste text or upload a file to preview recognized chapters and scenes.</p>
                 <p className="text-[10px] max-w-xs">
                   WriteIn recognizes Markdown headers (#, ##, ###) and conventional titles like "Chapter 1", "CHAPTER TWO", or "PROLOGUE".

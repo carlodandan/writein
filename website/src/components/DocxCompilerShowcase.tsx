@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileType, CheckCircle2, Sparkles } from 'lucide-react';
+import { FileType, CheckCircle2 } from 'lucide-react';
 
 export const DocxCompilerShowcase: React.FC = () => {
   return (
@@ -72,7 +72,6 @@ export const DocxCompilerShowcase: React.FC = () => {
           <div className="lg:col-span-6">
             <div className="rounded-2xl border border-[var(--paper-border)] bg-[var(--paper-surface)] p-6 sm:p-8 shadow-xl space-y-6 relative overflow-hidden">
               <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-[var(--amber-soft)] border border-[var(--amber-soft-border)] text-[10px] font-mono font-bold text-[var(--amber-accent)] flex items-center space-x-1">
-                <Sparkles className="w-3 h-3" />
                 <span>Word (.docx) Live Output</span>
               </div>
 

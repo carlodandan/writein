@@ -4,8 +4,7 @@ import {
   X,
   RotateCcw,
   Type,
-  AlignJustify,
-  Sparkles,
+  AlignJustify
 } from 'lucide-react';
 import type { EditorPreferences } from '../../types/phase5';
 
@@ -211,7 +210,6 @@ export const EditorPreferencesPanel: React.FC<EditorPreferencesPanelProps> = ({
           {/* Focus & Immersion Section */}
           <div className="space-y-3 pt-3 border-t border-[var(--paper-border-subtle)]">
             <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
-              <Sparkles className="w-4 h-4 text-[var(--amber-accent)]" />
               <span>Immersion</span>
             </div>
 

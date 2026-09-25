@@ -20,7 +20,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
           <span className="text-[var(--paper-border)]">|</span>
           <span className="text-[var(--ink-muted)] flex items-center space-x-1">
             <span>Now with MS Word (.docx) Manuscript Compile</span>
-            <Sparkles className="w-3 h-3 text-[var(--amber-accent)]" />
           </span>
         </div>
 
@@ -28,7 +27,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
         <div className="space-y-4 max-w-4xl mx-auto">
           <h1 className="font-serif-novel text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--ink-primary)] leading-[1.12]">
             The private desktop studio for{' '}
-            <span className="italic underline decoration-[var(--amber-accent)]/50 decoration-wavy decoration-2">
+            <span className="italic decoration-[var(--amber-accent)]/50 decoration-wavy decoration-2">
               long-form fiction
             </span>{' '}
             & novelists.
