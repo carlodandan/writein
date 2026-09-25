@@ -1,6 +1,6 @@
 [package]
 name = "write-in"
-version = "3.0.0"
+version = "4.0.0"
 description = "WriteIn — Offline Novel & Writing Manager"
 authors = ["Carlo Dandan"]
 edition = "2021"
