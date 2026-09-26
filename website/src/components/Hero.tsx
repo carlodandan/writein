@@ -44,8 +44,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
             className="w-full sm:w-auto flex items-center justify-center space-x-2.5 px-7 py-3.5 rounded-xl bg-[var(--amber-accent)] hover:bg-[var(--amber-accent-hover)] text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all cursor-pointer group"
           >
             <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-            <span>Download for Windows</span>
-            <span className="text-[11px] opacity-75 font-normal">(v2.0 • 64-bit .exe)</span>
+            <span>Download for Windows 10/11</span>
+            <span className="text-[11px] opacity-75 font-normal">(v4.1.0 • 64-bit .exe/.msi)</span>
           </a>
 
           <button
