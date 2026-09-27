@@ -165,8 +165,14 @@ $WebHero = Join-Path $Root "website\src\components\Hero.tsx"
 if (Test-Path $WebHero) {
     $heroContent = Read-Utf8 $WebHero
     $MajorMinor = if ($Version -match '^(\d+\.\d+)') { $Matches[1] } else { $Version }
+    $bullet = [char]0x2022
     $heroContent = $heroContent -replace 'WriteIn\s+v\d+(?:\.\d+)*\s+Released', "WriteIn v$MajorMinor Released"
-    $heroContent = $heroContent -replace '\(v\d+(?:\.\d+)*\s*•', "(v$MajorMinor •"
+    $heroContent = $heroContent -replace `
+        '<span className="text-\[11px\] opacity-75 font-normal">\([^<]+?\)</span>', `
+        "<span className=`"text-[11px] opacity-75 font-normal`">(v$Version $bullet 64-bit .exe/.msi)</span>"
+    $heroContent = $heroContent -replace `
+        '\(v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?\s*[\u2022•]\s*64-bit\s+\.exe/\.msi\)', `
+        "(v$Version $bullet 64-bit .exe/.msi)"
     Write-Utf8NoBom $WebHero $heroContent
     Write-Host "  [OK] website/src/components/Hero.tsx"
 }
