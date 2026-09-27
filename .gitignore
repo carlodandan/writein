@@ -43,3 +43,7 @@ signkey/
 .github/prompts/
 .cursor/
 .opencode/
+
+# Context Files
+context.md
+sync.md 
