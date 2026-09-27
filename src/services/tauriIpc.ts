@@ -68,6 +68,7 @@ const defaultMockStore: {
   document_versions: any[];
   trash_items: any[];
   settings: Record<string, string>;
+  transfer_logs: any[];
 } = {
   projects: [
     {
@@ -462,6 +463,7 @@ const defaultMockStore: {
   ],
   trash_items: [],
   settings: {},
+  transfer_logs: [],
 };
 
 const loadedStore = loadMockStore();
@@ -2332,6 +2334,89 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       return 'C:\\Users\\MockUser\\Downloads' as unknown as T;
     }
 
+    case 'get_device_id': {
+      if (!mockStore.settings['device_id']) {
+        mockStore.settings['device_id'] = 'mock-device-' + Math.random().toString(36).substring(2, 10);
+      }
+      return mockStore.settings['device_id'] as unknown as T;
+    }
+
+    case 'export_library_transfer_package': {
+      const devId = mockStore.settings['device_id'] || 'mock-device-id';
+      const stats = {
+        projectsCount: mockStore.projects.length,
+        documentsCount: Object.keys(mockStore.documents).length,
+        chaptersCount: mockStore.nodes.filter((n: any) => n.node_type === 'chapter').length,
+        charactersCount: mockStore.characters.length,
+        locationsCount: mockStore.locations.length,
+        timelineCount: mockStore.timeline.length,
+        notesCount: mockStore.notes.length,
+        worldbuildingCount: mockStore.worldbuilding.length,
+        attachmentsCount: mockStore.attachments.length,
+      };
+      return {
+        manifest: {
+          formatVersion: '1.0.0',
+          writeinVersion: '4.1.0',
+          sourceDeviceId: devId,
+          createdAt: new Date().toISOString(),
+          stats,
+          checksumSha256: null,
+        },
+        data: {
+          projects: [...mockStore.projects],
+          nodes: [...mockStore.nodes],
+          documents: { ...mockStore.documents },
+          characters: [...mockStore.characters],
+          relationships: [...mockStore.relationships],
+          locations: [...mockStore.locations],
+          worldbuilding: [...mockStore.worldbuilding],
+          timeline: [...mockStore.timeline],
+          notes: [...mockStore.notes],
+          tags: [...mockStore.tags],
+          writingGoals: [...mockStore.writing_goals],
+          attachments: mockStore.attachments.map((att: any) => ({
+            attachment: att,
+            base64Data: null,
+          })),
+        },
+      } as unknown as T;
+    }
+
+    case 'import_library_transfer_package': {
+      const packageJson = args?.package_json || args?.packageJson;
+      const parsed = typeof packageJson === 'string' ? JSON.parse(packageJson) : packageJson;
+      if (!parsed || !parsed.manifest || !parsed.data) {
+        throw new Error('Invalid transfer package');
+      }
+
+      if (parsed.data.projects && Array.isArray(parsed.data.projects)) {
+        for (const p of parsed.data.projects) {
+          const exists = mockStore.projects.some((x: any) => x.id === p.id || x.title === p.title);
+          const newTitle = exists ? `${p.title} (Transferred)` : p.title;
+          const newId = exists ? 'proj-' + Math.random().toString(36).substring(2, 9) : p.id;
+          mockStore.projects.push({ ...p, id: newId, title: newTitle });
+        }
+      }
+
+      const log = {
+        id: 'log-' + Math.random().toString(36).substring(2, 9),
+        session_id: 'session-mock',
+        direction: 'incoming',
+        peer_device_id: parsed.manifest.sourceDeviceId,
+        stats_json: JSON.stringify(parsed.manifest.stats),
+        created_at: new Date().toISOString(),
+      };
+      if (!mockStore.transfer_logs) mockStore.transfer_logs = [];
+      mockStore.transfer_logs.unshift(log);
+
+      return parsed.manifest.stats as unknown as T;
+    }
+
+    case 'list_transfer_logs': {
+      return (mockStore.transfer_logs || []) as unknown as T;
+    }
+
     default:
       throw new Error(`Command ${cmd} not mocked in fallback`);
     }
@@ -2349,7 +2434,8 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     cmd.startsWith('reorder_') ||
     cmd.startsWith('empty_') ||
     cmd.startsWith('commit_') ||
-    cmd.startsWith('add_')
+    cmd.startsWith('add_') ||
+    cmd.startsWith('import_')
   ) {
     persistMockStore();
   }

@@ -103,8 +103,11 @@ export const GenericPlaceholder: React.FC<{
 };
 
 import { UpdateCheck } from '../updater/UpdateCheck';
+import { DeviceTransferView } from '../settings/DeviceTransferView';
 
-export const SettingsView: React.FC = () => {
+export const SettingsView: React.FC<{ onOpenBackupModal?: () => void }> = ({
+  onOpenBackupModal,
+}) => {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -114,11 +117,14 @@ export const SettingsView: React.FC = () => {
           Preferences & Settings
         </h2>
         <p className="text-xs text-[var(--ink-muted)]">
-          Configure your local writing environment and desktop preferences
+          Configure your local writing environment, device transfers, and desktop preferences
         </p>
       </div>
 
       <div className="space-y-6 text-sm">
+        {/* Device Transfer (End-to-End Encrypted) */}
+        <DeviceTransferView onOpenBackupModal={onOpenBackupModal} />
+
         {/* Application Updates */}
         <UpdateCheck />
 
