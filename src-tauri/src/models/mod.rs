@@ -12,6 +12,7 @@ pub mod project;
 pub mod search;
 pub mod tag;
 pub mod timeline;
+pub mod transfer;
 pub mod worldbuilding;
 
 pub use attachment::*;
@@ -28,4 +29,5 @@ pub use project::*;
 pub use search::*;
 pub use tag::*;
 pub use timeline::*;
+pub use transfer::*;
 pub use worldbuilding::*;

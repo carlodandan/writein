@@ -159,7 +159,11 @@ pub fn run() {
             commands::save_exported_file,
             commands::select_export_path,
             commands::reveal_in_folder,
-            commands::get_default_export_dir
+            commands::get_default_export_dir,
+            commands::get_device_id,
+            commands::export_library_transfer_package,
+            commands::import_library_transfer_package,
+            commands::list_transfer_logs
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

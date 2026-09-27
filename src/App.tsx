@@ -33,12 +33,14 @@ function MainContent({
   activeTab,
   onSelectTab,
   onOpenNewProject,
+  onOpenBackupModal,
   isDistractionFree,
   selectedEntityId,
 }: {
   activeTab: ActiveNavTab;
   onSelectTab: (tab: ActiveNavTab, entityId?: string) => void;
   onOpenNewProject: () => void;
+  onOpenBackupModal?: () => void;
   isDistractionFree: boolean;
   selectedEntityId?: string | null;
 }) {
@@ -102,7 +104,7 @@ function MainContent({
       return <TrashWorkspace />;
 
     case 'settings':
-      return <SettingsView />;
+      return <SettingsView onOpenBackupModal={onOpenBackupModal} />;
 
     default:
       return (
@@ -178,6 +180,7 @@ function App() {
               activeTab={activeTab}
               onSelectTab={handleNavigate}
               onOpenNewProject={() => setIsCreateModalOpen(true)}
+              onOpenBackupModal={() => setIsBackupOpen(true)}
               isDistractionFree={isDistractionFree}
               selectedEntityId={selectedEntityId}
             />

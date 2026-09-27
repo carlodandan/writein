@@ -14,6 +14,7 @@ pub mod session_repo;
 pub mod settings_repo;
 pub mod tag_repo;
 pub mod timeline_repo;
+pub mod transfer_repo;
 pub mod trash_repo;
 pub mod version_repo;
 pub mod worldbuilding_repo;

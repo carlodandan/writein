@@ -69,8 +69,31 @@ pub fn run_migrations(conn: &mut Connection) -> Result<()> {
         tx.commit()?;
     }
 
+    if !applied_versions.contains(&6) {
+        let tx = conn.transaction()?;
+        tx.execute_batch(MIGRATION_006)?;
+        tx.execute(
+            "INSERT INTO _migrations (version, name, applied_at) VALUES (?1, ?2, datetime('now'))",
+            params![6, "006_device_and_transfer_support"],
+        )?;
+        tx.commit()?;
+    }
+
     Ok(())
 }
+
+const MIGRATION_006: &str = r#"
+-- Transfer Logs: track incoming and outgoing transfer sessions
+CREATE TABLE IF NOT EXISTS transfer_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    session_id TEXT NOT NULL,
+    direction TEXT NOT NULL, -- 'outgoing' | 'incoming'
+    peer_device_id TEXT,
+    stats_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_transfer_logs_created ON transfer_logs(created_at DESC);
+"#;
 
 const MIGRATION_005: &str = r#"
 -- Writing Sessions: track per-session word counts and durations
@@ -424,6 +447,20 @@ mod tests {
             assert!(
                 rows.next().unwrap().is_some(),
                 "writing_sessions table should exist after migration 005"
+            );
+        }
+
+        // Verify Migration 006: transfer_logs table
+        {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='transfer_logs'",
+                )
+                .unwrap();
+            let mut rows = stmt.query([]).unwrap();
+            assert!(
+                rows.next().unwrap().is_some(),
+                "transfer_logs table should exist after migration 006"
             );
         }
 

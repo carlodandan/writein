@@ -13,6 +13,7 @@ pub mod settings_commands;
 pub mod splash_commands;
 pub mod tag_commands;
 pub mod timeline_commands;
+pub mod transfer_commands;
 pub mod version_commands;
 pub mod worldbuilding_commands;
 
@@ -31,5 +32,6 @@ pub use settings_commands::*;
 pub use splash_commands::*;
 pub use tag_commands::*;
 pub use timeline_commands::*;
+pub use transfer_commands::*;
 pub use version_commands::*;
 pub use worldbuilding_commands::*;
