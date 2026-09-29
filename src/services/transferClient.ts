@@ -6,7 +6,24 @@ import type {
   TransferStats,
 } from '../types/transfer';
 
-export const DEFAULT_RELAY_URL = 'https://transfer.writein.app';
+export const DEFAULT_RELAY_URL = 'https://writein-transfer-worker.webbase.workers.dev';
+
+export function getRelayUrl(): string {
+  // In development, allow local worker testing and custom overrides
+  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+    if (typeof window !== 'undefined') {
+      const custom = localStorage.getItem('writein_transfer_relay_url');
+      if (custom) return custom;
+    }
+    if (import.meta.env?.VITE_TRANSFER_RELAY_URL) {
+      return import.meta.env.VITE_TRANSFER_RELAY_URL;
+    }
+    return 'http://127.0.0.1:8787';
+  }
+
+  // In production, always strictly use production Cloudflare Worker relay
+  return DEFAULT_RELAY_URL;
+}
 
 export class TransferApiError extends Error {
   constructor(
@@ -56,7 +73,7 @@ export const transferClient = {
    */
   async createSession(
     sourcePublicKey: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<RelayCreateResponse> {
     return requestJson<RelayCreateResponse>(relayUrl, '/api/transfer/create', {
       method: 'POST',
@@ -70,7 +87,7 @@ export const transferClient = {
   async claimSession(
     code: string,
     destinationPublicKey: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<RelayClaimResponse> {
     return requestJson<RelayClaimResponse>(relayUrl, '/api/transfer/claim', {
       method: 'POST',
@@ -83,7 +100,7 @@ export const transferClient = {
    */
   async getStatus(
     sessionId: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<RelayStatusResponse> {
     return requestJson<RelayStatusResponse>(
       relayUrl,
@@ -100,7 +117,7 @@ export const transferClient = {
     iv: string,
     ciphertext: string,
     manifestPreview?: TransferStats,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<void> {
     await requestJson(relayUrl, '/api/transfer/payload', {
       method: 'POST',
@@ -113,7 +130,7 @@ export const transferClient = {
    */
   async downloadPayload(
     sessionId: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<RelayPayloadResponse> {
     return requestJson<RelayPayloadResponse>(
       relayUrl,
@@ -127,7 +144,7 @@ export const transferClient = {
    */
   async completeTransfer(
     sessionId: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<void> {
     await requestJson(relayUrl, '/api/transfer/complete', {
       method: 'POST',
@@ -140,7 +157,7 @@ export const transferClient = {
    */
   async cancelTransfer(
     sessionId: string,
-    relayUrl = DEFAULT_RELAY_URL
+    relayUrl = getRelayUrl()
   ): Promise<void> {
     await requestJson(relayUrl, '/api/transfer/cancel', {
       method: 'POST',
