@@ -15,6 +15,7 @@ import {
   Laptop,
   CheckCircle2,
 } from 'lucide-react';
+import type { ActiveSenderSession, ActiveReceiverSession } from '../../services/transferService';
 import { transferService } from '../../services/transferService';
 import { getRelayUrl, DEFAULT_RELAY_URL } from '../../services/transferClient';
 import type { TransferLogItem, TransferStats } from '../../types/transfer';
@@ -44,12 +45,9 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
 
   // Sender state
   const [isStartingSender, setIsStartingSender] = useState(false);
-  const [senderSession, setSenderSession] = useState<{
-    sessionId: string;
-    code: string;
-    expiresAt: number;
-    cancel: () => Promise<void>;
-  } | null>(null);
+  const [senderSession, setSenderSession] = useState<ActiveSenderSession | null>(null);
+  const [senderSas, setSenderSas] = useState<string | null>(null);
+  const [senderConfirmed, setSenderConfirmed] = useState(false);
   const [senderStatus, setSenderStatus] = useState<string>('IDLE');
   const [senderStats, setSenderStats] = useState<TransferStats | null>(null);
   const [senderError, setSenderError] = useState<string | null>(null);
@@ -59,7 +57,9 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
   // Receiver state
   const [receiveCode, setReceiveCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [receiverSession, setReceiverSession] = useState<any | null>(null);
+  const [receiverSession, setReceiverSession] = useState<ActiveReceiverSession | null>(null);
+  const receiverAttempt = useRef(0);
+  const [receiverConfirmed, setReceiverConfirmed] = useState(false);
   const [previewStats, setPreviewStats] = useState<TransferStats | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
@@ -100,7 +100,9 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
       const diff = senderSession.expiresAt - Date.now();
       if (diff <= 0) {
         setSenderTimeLeft('Expired');
-        setSenderStatus('EXPIRED');
+        setSenderStatus((current) =>
+          ['COMPLETED', 'CANCELLED', 'ERROR'].includes(current) ? current : 'EXPIRED'
+        );
         clearInterval(interval);
       } else {
         const m = Math.floor(diff / 60000);
@@ -113,12 +115,15 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
   }, [senderSession]);
 
   const handleStartSender = async () => {
+    setSenderSas(null);
+    setSenderConfirmed(false);
     setIsStartingSender(true);
     setSenderError(null);
     setSenderStatus('INITIALIZING');
     try {
       const session = await transferService.startSenderSession((status, details) => {
         setSenderStatus(status);
+        if (status === 'VERIFYING') setSenderSas(details);
         if (status === 'READY' && details) {
           setSenderStats(details);
         }
@@ -130,7 +135,7 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
         }
       }, relayUrl);
       setSenderSession(session);
-      setSenderStatus('CREATED');
+      setSenderStatus((current) => current === 'INITIALIZING' ? 'CREATED' : current);
     } catch (err: any) {
       setSenderError(err?.message || 'Failed to initialize transfer session');
       setSenderStatus('ERROR');
@@ -159,6 +164,9 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
     e.preventDefault();
     if (!receiveCode.trim()) return;
 
+    const attempt = ++receiverAttempt.current;
+    setReceiverConfirmed(false);
+    executeImportRef.current = null;
     setIsConnecting(true);
     setReceiverError(null);
     setPreviewStats(null);
@@ -166,17 +174,23 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
 
     try {
       const session = await transferService.claimAndConnect(receiveCode.trim(), relayUrl);
+      if (attempt !== receiverAttempt.current) {
+        await session.cancel();
+        return;
+      }
       setReceiverSession(session);
 
       // Await payload from sender
       const { stats, executeImport } = await session.fetchPayloadAndPreview();
+      if (attempt !== receiverAttempt.current) return;
       setPreviewStats(stats);
       executeImportRef.current = executeImport;
     } catch (err: any) {
+      if (attempt !== receiverAttempt.current) return;
       setReceiverError(err?.message || 'Failed to connect to transfer session');
       setReceiverSession(null);
     } finally {
-      setIsConnecting(false);
+      if (attempt === receiverAttempt.current) setIsConnecting(false);
     }
   };
 
@@ -201,15 +215,17 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
   };
 
   const handleResetReceiver = async () => {
-    if (receiverSession) {
-      await receiverSession.cancel().catch(() => {});
-    }
+    ++receiverAttempt.current;
+    const pendingCancel = receiverSession?.cancel();
+    setIsConnecting(false);
+    setReceiverConfirmed(false);
     setReceiverSession(null);
     setReceiveCode('');
     setPreviewStats(null);
     setImportSuccess(false);
     setReceiverError(null);
     executeImportRef.current = null;
+    await pendingCancel?.catch(() => {});
   };
 
   return (
@@ -424,6 +440,20 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
                 </div>
               </div>
 
+              {senderSas && (
+                <div className="space-y-2 text-xs">
+                  <p>Compare this verification code on both devices. Cancel if the codes differ.</p>
+                  <p className="font-mono text-2xl tracking-widest">{senderSas}</p>
+                  <button
+                    onClick={() => { senderSession.confirmSas(); setSenderConfirmed(true); }}
+                    disabled={senderConfirmed || senderStatus !== 'VERIFYING'}
+                    className="px-3 py-2 rounded bg-[var(--amber-accent)] text-white disabled:opacity-50"
+                  >
+                    {senderConfirmed ? 'Code confirmed' : 'Codes match — send library'}
+                  </button>
+                </div>
+              )}
+
               {/* Status Indicator */}
               <div className="p-3 rounded-lg bg-[var(--paper-surface)] border border-[var(--paper-border)] flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-2">
@@ -435,6 +465,7 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
                       </span>
                     </>
                   )}
+                  {senderStatus === 'VERIFYING' && <span>Confirm the matching code on both devices.</span>}
                   {senderStatus === 'ENCRYPTING' && (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 text-[var(--amber-accent)] animate-spin" />
@@ -524,6 +555,22 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
       {/* Tab 2: Receiver */}
       {activeTab === 'receive' && (
         <div className="space-y-4">
+          {receiverSession && !importSuccess && (
+            <div className="space-y-2 text-xs">
+              <p>Compare this verification code on both devices. Cancel if the codes differ.</p>
+              <p className="font-mono text-2xl tracking-widest">{receiverSession.sas}</p>
+              <button
+                onClick={() => { receiverSession.confirmSas(); setReceiverConfirmed(true); }}
+                disabled={receiverConfirmed || isImporting}
+                className="px-3 py-2 rounded bg-[var(--amber-accent)] text-white disabled:opacity-50"
+              >
+                {receiverConfirmed ? 'Code confirmed' : 'Codes match — allow import'}
+              </button>
+              {!previewStats && (
+                <button type="button" onClick={handleResetReceiver} className="px-3 py-2">Cancel</button>
+              )}
+            </div>
+          )}
           {!previewStats ? (
             <form
               onSubmit={handleConnectReceiver}
@@ -643,7 +690,7 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={handleExecuteImport}
-                    disabled={isImporting}
+                    disabled={isImporting || !receiverConfirmed}
                     className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-lg bg-[var(--amber-accent)] hover:opacity-90 text-white text-xs font-semibold shadow transition-all disabled:opacity-50"
                   >
                     {isImporting ? (

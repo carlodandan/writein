@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { transferCrypto } from '../services/transferCrypto';
 
 describe('transferCrypto: client-side Web Crypto', () => {
@@ -80,4 +80,26 @@ describe('transferCrypto: client-side Web Crypto', () => {
     expect(hash1.length).toBe(64);
     expect(hash1).not.toBe(hashOther);
   });
+
+  it('binds the six-digit verification code to the session and both ordered SPKI keys', async () => {
+    const source = await transferCrypto.generateEphemeralKeypair();
+    const destination = await transferCrypto.generateEphemeralKeypair();
+    const substitute = await transferCrypto.generateEphemeralKeypair();
+    const a = await transferCrypto.exportPublicKey(source.publicKey);
+    const b = await transferCrypto.exportPublicKey(destination.publicKey);
+    const c = await transferCrypto.exportPublicKey(substitute.publicKey);
+    const digest = vi.spyOn(transferCrypto, 'computeSha256');
+    const sas = await transferCrypto.computeSas('session', a, b);
+    expect(sas).toMatch(/^\d{6}$/);
+    expect(sas).toBe(await transferCrypto.computeSas('session', a, b));
+    await transferCrypto.computeSas('other-session', a, b);
+    await transferCrypto.computeSas('session', c, b);
+    await transferCrypto.computeSas('session', a, c);
+    expect(digest.mock.calls.map(([input]) => JSON.parse(input))).toEqual([
+      ['session', a, b], ['session', a, b], ['other-session', a, b],
+      ['session', c, b], ['session', a, c],
+    ]);
+    digest.mockRestore();
+  });
+
 });

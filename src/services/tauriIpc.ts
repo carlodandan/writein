@@ -1,4 +1,6 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/core';
+import { APP_VERSION } from '../utils/version';
+import type { TransferLogItem } from '../types/transfer';
 import { compileManuscript } from '../utils/manuscriptCompiler';
 
 /**
@@ -2357,7 +2359,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       return {
         manifest: {
           formatVersion: '1.0.0',
-          writeinVersion: '4.1.0',
+          writeinVersion: APP_VERSION,
           sourceDeviceId: devId,
           createdAt: new Date().toISOString(),
           stats,
@@ -2399,13 +2401,13 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         }
       }
 
-      const log = {
+      const log: TransferLogItem = {
         id: 'log-' + Math.random().toString(36).substring(2, 9),
-        session_id: 'session-mock',
+        sessionId: 'session-mock',
         direction: 'incoming',
-        peer_device_id: parsed.manifest.sourceDeviceId,
-        stats_json: JSON.stringify(parsed.manifest.stats),
-        created_at: new Date().toISOString(),
+        peerDeviceId: parsed.manifest.sourceDeviceId,
+        statsJson: JSON.stringify(parsed.manifest.stats),
+        createdAt: new Date().toISOString(),
       };
       if (!mockStore.transfer_logs) mockStore.transfer_logs = [];
       mockStore.transfer_logs.unshift(log);

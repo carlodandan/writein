@@ -160,6 +160,18 @@ export const transferCrypto = {
     return new TextDecoder().decode(decryptedBuffer);
   },
 
+  /** Six-digit verification code, with keys ordered by role on both devices. */
+  async computeSas(sessionId: string, sourceSpki: string, destinationSpki: string): Promise<string> {
+    // Canonical base64 and an unambiguous tuple bind both keys to this session.
+    const transcript = JSON.stringify([
+      sessionId,
+      arrayBufferToBase64(base64ToArrayBuffer(sourceSpki)),
+      arrayBufferToBase64(base64ToArrayBuffer(destinationSpki)),
+    ]);
+    const hash = await transferCrypto.computeSha256(transcript);
+    return (Number.parseInt(hash.slice(0, 8), 16) % 1_000_000).toString().padStart(6, '0');
+  },
+
   /**
    * Computes a SHA-256 hexadecimal hash string for integrity checks.
    */

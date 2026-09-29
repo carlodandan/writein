@@ -11,8 +11,8 @@ pub fn get_device_id(db: State<DbManager>) -> Result<String, AppError> {
 /// Packages the entire WriteIn novel library (all projects, nodes, documents,
 /// worldbuilding, timeline, and attachments) for encrypted device transfer.
 #[tauri::command]
-pub fn export_library_transfer_package(
-    db: State<DbManager>,
+pub async fn export_library_transfer_package(
+    db: State<'_, DbManager>,
 ) -> Result<LibraryTransferPackage, AppError> {
     let base_dir = db.base_dir().to_path_buf();
     db.with_conn(|conn| transfer_repo::export_library_transfer_package(conn, &base_dir))
@@ -21,8 +21,8 @@ pub fn export_library_transfer_package(
 /// Validates, unpacks, and safely imports an incoming library package into local SQLite.
 /// Conflicting project titles or IDs are safely renamed to prevent data loss.
 #[tauri::command]
-pub fn import_library_transfer_package(
-    db: State<DbManager>,
+pub async fn import_library_transfer_package(
+    db: State<'_, DbManager>,
     package_json: String,
 ) -> Result<TransferStats, AppError> {
     let base_dir = db.base_dir().to_path_buf();
