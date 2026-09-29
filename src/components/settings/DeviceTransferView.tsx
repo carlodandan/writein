@@ -16,6 +16,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { transferService } from '../../services/transferService';
+import { getRelayUrl, DEFAULT_RELAY_URL } from '../../services/transferClient';
 import type { TransferLogItem, TransferStats } from '../../types/transfer';
 import { useProject } from '../../context/ProjectContext';
 
@@ -29,6 +30,17 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
   const { refreshProjects } = useProject();
   const [activeTab, setActiveTab] = useState<'send' | 'receive' | 'logs'>('send');
   const [deviceId, setDeviceId] = useState<string>('');
+  const [relayUrl, setRelayUrl] = useState<string>(() => getRelayUrl());
+  const [isEditingRelay, setIsEditingRelay] = useState(false);
+  const [customRelayInput, setCustomRelayInput] = useState('');
+
+  const handleUpdateRelayUrl = (newUrl: string) => {
+    const trimmed = newUrl.trim();
+    if (!trimmed) return;
+    setRelayUrl(trimmed);
+    localStorage.setItem('writein_transfer_relay_url', trimmed);
+    setIsEditingRelay(false);
+  };
 
   // Sender state
   const [isStartingSender, setIsStartingSender] = useState(false);
@@ -116,7 +128,7 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
         if (status === 'COMPLETED') {
           loadLogs();
         }
-      });
+      }, relayUrl);
       setSenderSession(session);
       setSenderStatus('CREATED');
     } catch (err: any) {
@@ -153,7 +165,7 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
     setImportSuccess(false);
 
     try {
-      const session = await transferService.claimAndConnect(receiveCode.trim());
+      const session = await transferService.claimAndConnect(receiveCode.trim(), relayUrl);
       setReceiverSession(session);
 
       // Await payload from sender
@@ -237,6 +249,82 @@ export const DeviceTransferView: React.FC<DeviceTransferViewProps> = ({
           <strong className="text-[var(--ink-primary)]">ECDH + AES-256-GCM</strong>. Plaintext never touches the cloud and sessions are deleted upon completion or after 10 minutes.
         </p>
       </div>
+
+      {/* Relay Server Status & Configuration (Only visible in local development mode) */}
+      {import.meta.env?.DEV && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[11px] px-3 py-1.5 rounded-lg bg-[var(--paper-desk)] border border-[var(--paper-border-subtle)] text-[var(--ink-muted)]">
+            <div className="flex items-center space-x-2 truncate">
+              <span className="font-semibold text-[var(--ink-secondary)]">Relay:</span>
+              <span className="font-mono text-[var(--ink-primary)] truncate">{relayUrl}</span>
+              {relayUrl.includes('127.0.0.1') || relayUrl.includes('localhost') ? (
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-600 font-medium">
+                  Local Dev (1-Device Test)
+                </span>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEditingRelay(!isEditingRelay)}
+              className="text-[var(--amber-accent)] hover:underline ml-2 shrink-0 font-medium cursor-pointer"
+            >
+              {isEditingRelay ? 'Done' : 'Change Relay'}
+            </button>
+          </div>
+
+          {isEditingRelay && (
+            <div className="p-3 rounded-lg bg-[var(--paper-desk)] border border-[var(--paper-border)] space-y-2 text-xs">
+              <div className="font-medium text-[var(--ink-primary)]">Select Relay Server</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateRelayUrl('http://127.0.0.1:8787')}
+                  className={`px-2.5 py-1 rounded text-xs border font-medium transition-colors ${
+                    relayUrl === 'http://127.0.0.1:8787'
+                      ? 'border-[var(--amber-accent)] bg-[var(--amber-soft)] text-[var(--amber-accent)]'
+                      : 'border-[var(--paper-border)] bg-[var(--paper-surface)] text-[var(--ink-secondary)] hover:border-[var(--paper-border-subtle)]'
+                  }`}
+                >
+                  Local Dev Worker (http://127.0.0.1:8787)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateRelayUrl(DEFAULT_RELAY_URL)}
+                  className={`px-2.5 py-1 rounded text-xs border font-medium transition-colors ${
+                    relayUrl === DEFAULT_RELAY_URL
+                      ? 'border-[var(--amber-accent)] bg-[var(--amber-soft)] text-[var(--amber-accent)]'
+                      : 'border-[var(--paper-border)] bg-[var(--paper-surface)] text-[var(--ink-secondary)] hover:border-[var(--paper-border-subtle)]'
+                  }`}
+                >
+                  Cloudflare Worker Relay (Production)
+                </button>
+              </div>
+              <div className="flex items-center space-x-2 pt-1">
+                <input
+                  type="url"
+                  value={customRelayInput}
+                  onChange={(e) => setCustomRelayInput(e.target.value)}
+                  placeholder="Or custom URL: https://..."
+                  className="flex-1 px-2.5 py-1 text-xs rounded border border-[var(--paper-border)] bg-[var(--paper-surface)] text-[var(--ink-primary)]"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customRelayInput.trim()) {
+                      handleUpdateRelayUrl(customRelayInput.trim());
+                      setCustomRelayInput('');
+                    }
+                  }}
+                  disabled={!customRelayInput.trim()}
+                  className="px-3 py-1 rounded bg-[var(--amber-accent)] text-white text-xs font-medium disabled:opacity-40"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex space-x-2 border-b border-[var(--paper-border)] pb-2 text-xs">
