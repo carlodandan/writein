@@ -507,6 +507,10 @@ function secureRandomIdSuffix(lengthBytes: number = 8): string {
   return Array.from(randomBytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+function secureRandomId(prefix: string, lengthBytes: number = 6): string {
+  return `${prefix}${secureRandomIdSuffix(lengthBytes)}`;
+}
+
 export async function invokeCommand<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (isTauri()) {
     try {
@@ -538,7 +542,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     case 'create_project': {
       const input = args?.input as any;
       const newProj = {
-        id: 'proj-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('proj-'),
         title: input.title,
         subtitle: input.subtitle || null,
         author: input.author || null,
@@ -616,7 +620,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       );
       const maxSort = siblings.reduce((max, n) => Math.max(max, n.sort_order || 0), 0);
       const newNode = {
-        id: 'node-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('node-'),
         project_id: input.project_id,
         parent_id: input.parent_id || null,
         node_type: input.node_type,
@@ -668,7 +672,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       if (!orig) throw new Error(`Node ${id} not found`);
       const copyNode = {
         ...orig,
-        id: 'node-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('node-'),
         title: `${orig.title} (Copy)`,
         sort_order: orig.sort_order + 1,
         created_at: new Date().toISOString(),
@@ -780,7 +784,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const input = args?.input as any;
       const now = new Date().toISOString();
       const newChar = {
-        id: 'char-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('char-'),
         project_id: input.project_id,
         name: input.name.trim(),
         nickname: input.nickname || null,
@@ -850,7 +854,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const input = args?.input as any;
       const now = new Date().toISOString();
       const newRel = {
-        id: 'rel-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('rel-'),
         project_id: input.project_id,
         character_a_id: input.character_a_id,
         character_b_id: input.character_b_id,
@@ -911,7 +915,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const input = args?.input as any;
       const now = new Date().toISOString();
       const newLoc = {
-        id: 'loc-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('loc-'),
         project_id: input.project_id,
         name: input.name.trim(),
         location_type: input.location_type || null,
@@ -972,7 +976,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const input = args?.input as any;
       const now = new Date().toISOString();
       const newEntry = {
-        id: 'wb-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('wb-'),
         project_id: input.project_id,
         category: input.category || 'General',
         title: input.title.trim(),
@@ -1067,7 +1071,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       );
 
       const newEvent = {
-        id: 'tl-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('tl-'),
         project_id: input.project_id,
         title: input.title.trim(),
         event_date: input.event_date || null,
@@ -1156,7 +1160,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const input = args?.input as any;
       const now = new Date().toISOString();
       const newNote = {
-        id: 'note-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('note-'),
         project_id: input.project_id,
         category: input.category || 'Ideas',
         title: input.title.trim(),
@@ -1228,7 +1232,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       );
       if (!tag) {
         tag = {
-          id: 'tag-' + Math.random().toString(36).substring(2, 9),
+          id: secureRandomId('tag-'),
           project_id: input.project_id,
           name: cleanName,
           color: input.color || '#D97706',
@@ -1257,7 +1261,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       let tag = mockStore.tags.find((t) => t.project_id === projId && t.name.toLowerCase() === tagName);
       if (!tag) {
         tag = {
-          id: 'tag-' + Math.random().toString(36).substring(2, 9),
+          id: secureRandomId('tag-'),
           project_id: projId,
           name: tagName,
           color: '#D97706',
@@ -1271,7 +1275,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       if (!existingLink) {
         tag.usage_count = (tag.usage_count || 0) + 1;
         mockStore.entity_tags.push({
-          id: 'et-' + Math.random().toString(36).substring(2, 9),
+          id: secureRandomId('et-'),
           tag_id: tag.id,
           entity_type: etype,
           entity_id: eid,
@@ -1323,7 +1327,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         );
         if (!tag) {
           tag = {
-            id: 'tag-' + Math.random().toString(36).substring(2, 9),
+            id: secureRandomId('tag-'),
             project_id: input.project_id,
             name: clean,
             color: '#D97706',
@@ -1333,7 +1337,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         }
         tag.usage_count = (tag.usage_count || 0) + 1;
         mockStore.entity_tags.push({
-          id: 'et-' + Math.random().toString(36).substring(2, 9),
+          id: secureRandomId('et-'),
           tag_id: tag.id,
           entity_type: input.entity_type,
           entity_id: input.entity_id,
@@ -1488,7 +1492,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     case 'create_attachment': {
       const input = args?.input as any;
       const now = new Date().toISOString();
-      const id = 'att-' + Math.random().toString(36).substring(2, 9);
+      const id = secureRandomId('att-');
       const newAtt = {
         id,
         project_id: input.project_id,
@@ -1512,7 +1516,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     case 'save_attachment_file': {
       const payload = args?.payload as any;
       const now = new Date().toISOString();
-      const id = 'att-' + Math.random().toString(36).substring(2, 9);
+      const id = secureRandomId('att-');
       const rawName = ((payload.file_name || 'unnamed') as string).trim().replace(/\\/g, '/');
       const baseName = rawName.split('/').pop() || 'unnamed';
       const safeName = baseName.replace(/[^a-zA-Z0-9._ -]/g, '').replace(/^\.+/, '') || 'attachment.bin';
@@ -1828,7 +1832,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         }
       });
       const newGoal = {
-        id: `goal-${Math.random().toString(36).substring(2, 9)}`,
+        id: secureRandomId('goal-'),
         project_id: input.project_id,
         goal_type: input.goal_type,
         target_words: input.target_words,
@@ -1868,7 +1872,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const projId = args?.project_id as string;
       const nodeId = args?.node_id as string | undefined;
       const newSession = {
-        id: `sess-${Math.random().toString(36).substring(2, 9)}`,
+        id: secureRandomId('sess-'),
         project_id: projId,
         node_id: nodeId || null,
         started_at: new Date().toISOString(),
@@ -1965,7 +1969,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       const existing = mockStore.document_versions.filter((v) => v.document_id === docId);
       const nextNum = existing.length > 0 ? Math.max(...existing.map((v) => v.version_num)) + 1 : 1;
       const newVersion = {
-        id: `ver-${Math.random().toString(36).substring(2, 9)}`,
+        id: secureRandomId('ver-'),
         document_id: docId,
         node_id: nodeId,
         version_num: nextNum,
@@ -1988,7 +1992,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         const nextNum =
           mockStore.document_versions.filter((v) => v.node_id === nodeId).length + 1;
         mockStore.document_versions.unshift({
-          id: `ver-${Math.random().toString(36).substring(2, 9)}`,
+          id: secureRandomId('ver-'),
           document_id: currentDoc.id || `doc-${nodeId}`,
           node_id: nodeId,
           version_num: nextNum,
@@ -2077,7 +2081,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
       let order = mockStore.nodes.length + 1;
 
       function insertRecursive(item: any, parentId: string | null) {
-        const nodeId = `node-imp-${Math.random().toString(36).substring(2, 9)}`;
+        const nodeId = secureRandomId('node-imp-');
         const node = {
           id: nodeId,
           project_id: input.project_id,
@@ -2125,7 +2129,7 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
     case 'move_to_trash': {
       const { project_id, entity_type, entity_id, title } = args as any;
       const item = {
-        id: `trash-${Math.random().toString(36).substring(2, 9)}`,
+        id: secureRandomId('trash-'),
         project_id,
         entity_type,
         entity_id,
@@ -2338,7 +2342,9 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
 
     case 'get_device_id': {
       if (!mockStore.settings['device_id']) {
-        mockStore.settings['device_id'] = 'mock-device-' + Math.random().toString(36).substring(2, 10);
+        mockStore.settings['device_id'] = typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : secureRandomId('device-');
       }
       return mockStore.settings['device_id'] as unknown as T;
     }
@@ -2396,13 +2402,13 @@ export async function invokeCommand<T>(cmd: string, args?: Record<string, unknow
         for (const p of parsed.data.projects) {
           const exists = mockStore.projects.some((x: any) => x.id === p.id || x.title === p.title);
           const newTitle = exists ? `${p.title} (Transferred)` : p.title;
-          const newId = exists ? 'proj-' + Math.random().toString(36).substring(2, 9) : p.id;
+          const newId = exists ? secureRandomId('proj-') : p.id;
           mockStore.projects.push({ ...p, id: newId, title: newTitle });
         }
       }
 
       const log: TransferLogItem = {
-        id: 'log-' + Math.random().toString(36).substring(2, 9),
+        id: secureRandomId('log-'),
         sessionId: 'session-mock',
         direction: 'incoming',
         peerDeviceId: parsed.manifest.sourceDeviceId,
