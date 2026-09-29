@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { APP_VERSION } from './version';
 import { isTauri } from '../services/tauriIpc';
 
 let cachedVersion: string | null = null;
@@ -26,14 +27,14 @@ export async function getAppVersion(): Promise<string> {
     }
   }
 
-  cachedVersion = 'v4.2.0';
+  cachedVersion = `v${APP_VERSION}`;
   return cachedVersion;
 }
 
 /**
  * React hook to dynamically detect and subscribe to the application version.
  */
-export function useAppVersion(fallback: string = 'v4.2.0'): string {
+export function useAppVersion(fallback: string = `v${APP_VERSION}`): string {
   const [version, setVersion] = useState<string>(cachedVersion || fallback);
 
   useEffect(() => {

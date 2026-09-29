@@ -11,16 +11,19 @@ export interface ActiveSenderSession {
   sessionId: string;
   code: string;
   expiresAt: number;
+  confirmSas: () => void;
   cancel: () => Promise<void>;
 }
 
 export interface ActiveReceiverSession {
+  sas: string;
   sessionId: string;
   expiresAt: number;
   fetchPayloadAndPreview: () => Promise<{
     stats: TransferStats;
     executeImport: () => Promise<TransferStats>;
   }>;
+  confirmSas: () => void;
   cancel: () => Promise<void>;
 }
 
@@ -60,6 +63,12 @@ export const transferService = {
 
     let isCancelled = false;
     let isFinished = false;
+    let peerPublicKey: string | null = null;
+    let sas: string | null = null;
+    let sasConfirmed = false;
+    const confirmSas = () => {
+      if (sas && !isCancelled && !isFinished && Date.now() < expiresAt) sasConfirmed = true;
+    };
 
     const cancel = async () => {
       isCancelled = true;
@@ -78,16 +87,30 @@ export const transferService = {
         while (!isCancelled && !isFinished && Date.now() < expiresAt) {
           const status = await transferClient.getStatus(sessionId, relayUrl);
 
+          if (isCancelled) break;
+
           if (status.status === 'CANCELLED') {
+            isFinished = true;
             onStatusChange('CANCELLED');
             break;
           }
 
           if (status.status === 'CLAIMED' && !hasUploaded && status.destinationPublicKey) {
+            if (!peerPublicKey) {
+              peerPublicKey = status.destinationPublicKey;
+              sas = await transferCrypto.computeSas(sessionId, sourcePubBase64, peerPublicKey);
+              if (isCancelled) break;
+              onStatusChange('VERIFYING', sas);
+            }
+            if (!sasConfirmed) {
+              await new Promise((r) => setTimeout(r, 1500));
+              continue;
+            }
+            if (Date.now() >= expiresAt) break;
             onStatusChange('ENCRYPTING');
 
             // Derive shared key
-            const destPubKey = await transferCrypto.importPublicKey(status.destinationPublicKey);
+            const destPubKey = await transferCrypto.importPublicKey(peerPublicKey);
             const aesKey = await transferCrypto.deriveSharedKey(
               keyPair.privateKey,
               destPubKey,
@@ -107,6 +130,7 @@ export const transferService = {
             const finalJson = JSON.stringify(libraryPackage);
             const { iv, ciphertext } = await transferCrypto.encryptPayload(aesKey, finalJson);
 
+            if (isCancelled || Date.now() >= expiresAt) break;
             onStatusChange('UPLOADING');
             await transferClient.uploadPayload(
               sessionId,
@@ -116,6 +140,7 @@ export const transferService = {
               relayUrl
             );
 
+            if (isCancelled) break;
             hasUploaded = true;
             onStatusChange('READY', libraryPackage.manifest.stats);
           }
@@ -129,7 +154,7 @@ export const transferService = {
           await new Promise((r) => setTimeout(r, 1500));
         }
 
-        if (Date.now() >= expiresAt && !isFinished) {
+        if (Date.now() >= expiresAt && !isFinished && !isCancelled) {
           onStatusChange('EXPIRED');
         }
       } catch (err: any) {
@@ -139,7 +164,7 @@ export const transferService = {
       }
     })();
 
-    return { sessionId, code, expiresAt, cancel };
+    return { sessionId, code, expiresAt, confirmSas, cancel };
   },
 
   /**
@@ -159,6 +184,7 @@ export const transferService = {
     const claimResp = await transferClient.claimSession(code, destPubBase64, relayUrl);
     const { sessionId, sourcePublicKey, expiresAt } = claimResp;
 
+    const sas = await transferCrypto.computeSas(sessionId, sourcePublicKey, destPubBase64);
     const sourcePubKey = await transferCrypto.importPublicKey(sourcePublicKey);
     const aesKey = await transferCrypto.deriveSharedKey(
       keyPair.privateKey,
@@ -167,6 +193,14 @@ export const transferService = {
     );
 
     let isCancelled = false;
+    let sasConfirmed = false;
+    const confirmSas = () => {
+      if (!isCancelled && Date.now() < expiresAt) sasConfirmed = true;
+    };
+    const assertActive = () => {
+      if (isCancelled) throw new Error('Transfer was cancelled');
+      if (Date.now() >= expiresAt) throw new Error('Transfer session expired');
+    };
     const cancel = async () => {
       isCancelled = true;
       try {
@@ -188,6 +222,8 @@ export const transferService = {
         }
         await new Promise((r) => setTimeout(r, 1200));
       }
+
+      if (isCancelled) throw new Error('Transfer was cancelled');
 
       if (Date.now() >= expiresAt) {
         throw new Error('Transfer session expired before payload was uploaded');
@@ -215,22 +251,29 @@ export const transferService = {
         }
       }
 
+      assertActive();
       const stats = parsedPackage.manifest.stats;
 
       const executeImport = async (): Promise<TransferStats> => {
+        assertActive();
+        if (!sasConfirmed) throw new Error('Confirm the matching verification code before importing');
         const importedStats = await invokeCommand<TransferStats>(
           'import_library_transfer_package',
           { packageJson: decryptedJson }
         );
 
-        // Notify relay of successful import
-        await transferClient.completeTransfer(sessionId, relayUrl);
+        // The local import is committed even if relay notification fails.
+        try {
+          await transferClient.completeTransfer(sessionId, relayUrl);
+        } catch {
+          // Best-effort notification must not turn a committed import into a failure.
+        }
         return importedStats;
       };
 
       return { stats, executeImport };
     };
 
-    return { sessionId, expiresAt, fetchPayloadAndPreview, cancel };
+    return { sessionId, expiresAt, sas, confirmSas, fetchPayloadAndPreview, cancel };
   },
 };

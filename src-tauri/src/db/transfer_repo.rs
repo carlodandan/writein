@@ -201,7 +201,7 @@ pub fn export_library_transfer_package(
 
     let manifest = TransferManifest {
         format_version: "1.0.0".to_string(),
-        writein_version: "4.1.0".to_string(),
+        writein_version: env!("CARGO_PKG_VERSION").to_string(),
         source_device_id,
         created_at: Utc::now().to_rfc3339(),
         stats: stats.clone(),
@@ -541,7 +541,8 @@ pub fn import_library_transfer_package(
                 Some("manuscript") | Some("chapter") => {
                     att.entity_id.and_then(|id| node_id_map.get(&id).cloned())
                 }
-                _ => att.entity_id,
+                Some("project") => att.entity_id.and_then(|id| project_id_map.get(&id).cloned()),
+                _ => None,
             };
 
             let project_attachment_dir = base_dir
@@ -686,7 +687,36 @@ mod tests {
         )
         .unwrap();
 
-        let package = export_library_transfer_package(&conn_a, &temp_dir_a).unwrap();
+        let mut package = export_library_transfer_package(&conn_a, &temp_dir_a).unwrap();
+        assert_eq!(package.manifest.writein_version, env!("CARGO_PKG_VERSION"));
+        // Source IDs must never survive without an import mapping.
+        for (entity_type, entity_id) in [
+            (Some("project"), proj.id.as_str()),
+            (Some("chapter"), ch.id.as_str()),
+            (Some("manuscript"), ch.id.as_str()),
+            (Some("worldbuilding"), "unmapped-source-id"),
+            (Some("project"), "missing-project-id"),
+            (None, "untyped-source-id"),
+        ] {
+            package.data.attachments.push(AttachmentTransferItem {
+                attachment: crate::models::Attachment {
+                    id: Uuid::new_v4().to_string(),
+                    project_id: proj.id.clone(),
+                    file_name: "reference.txt".into(),
+                    file_path: "reference.txt".into(),
+                    relative_path: None,
+                    file_type: "document".into(),
+                    mime_type: Some("text/plain".into()),
+                    file_size: 0,
+                    entity_type: entity_type.map(str::to_string),
+                    entity_id: Some(entity_id.into()),
+                    description: Some(entity_id.into()),
+                    created_at: Utc::now().to_rfc3339(),
+                    updated_at: Utc::now().to_rfc3339(),
+                },
+                base64_data: None,
+            });
+        }
         assert_eq!(package.manifest.stats.projects_count, 1);
         assert_eq!(package.manifest.stats.chapters_count, 1);
         assert_eq!(package.manifest.stats.documents_count, 1);
@@ -706,6 +736,22 @@ mod tests {
         let nodes_b = get_manuscript_tree(&conn_b, &projs_b[0].id).unwrap();
         assert_eq!(nodes_b.len(), 1);
         assert_eq!(nodes_b[0].title, "Chapter 1: The Launch");
+
+        let attachments_b = crate::db::attachment_repo::list_attachments(
+            &conn_b, &projs_b[0].id, None, None,
+        ).unwrap();
+        assert_eq!(attachments_b.len(), 6);
+        for att in attachments_b {
+            let expected_id = match att.entity_type.as_deref() {
+                Some("project") if att.description.as_deref() == Some(proj.id.as_str()) => {
+                    Some(projs_b[0].id.clone())
+                }
+                Some("chapter") | Some("manuscript") => Some(nodes_b[0].id.clone()),
+                _ => None,
+            };
+            assert_eq!(att.entity_id, expected_id);
+            assert_ne!(att.entity_id, att.description);
+        }
 
         let doc_b = get_document(&conn_b, &nodes_b[0].id).unwrap();
         assert_eq!(doc_b.content_text, "The engines ignited with deafening roar.");
