@@ -1,5 +1,6 @@
 {
   "name": "write-in",
+  "productName": "WriteIn",
   "private": true,
   "version": "4.2.1",
   "type": "module",
