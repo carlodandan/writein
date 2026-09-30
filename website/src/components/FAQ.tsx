@@ -31,7 +31,11 @@ export const FAQ: React.FC = () => {
     },
     {
       q: 'Can I sync my projects between multiple computers?',
-      a: 'Sync only completed .writein project backup archives between computers using a tool like Syncthing, OneDrive, or Dropbox. Restore an archive on the other computer before editing; do not sync the live SQLite project directory.',
+      a: 'You can use WriteIn’s built-in Device Transfer feature in Settings to securely move your complete library between Windows PCs. For manual backups, you can also export .writein project archives and transfer them via external drive or cloud storage. Always restore archives before editing rather than directly syncing active SQLite databases.',
+    },
+    {
+      q: 'How does the device-to-device transfer feature work? Does it require an internet connection?',
+      a: 'Yes, the device transfer feature uses the internet as a temporary, zero-knowledge relay to connect two Windows PCs. When you initiate a transfer, WriteIn generates a 10-minute pairing code and establishes an end-to-end encrypted channel (AES-256-GCM with ephemeral ECDH key agreement). Your library is encrypted entirely on your computer before transmission and decrypted only on the receiving device. No plaintext content or private keys are ever stored on or accessible to the relay server, and the session is automatically destroyed once completed or expired.',
     },
     {
       q: 'Does WriteIn send any data to external servers or AI providers?',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FolderTree,
   Network,
@@ -11,7 +11,9 @@ import {
   Lock,
   Search,
   History,
-  FileArchive
+  FileArchive,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 export const FeaturesShowcase: React.FC = () => {
@@ -102,9 +104,12 @@ export const FeaturesShowcase: React.FC = () => {
     },
   ];
 
+  const [showAll, setShowAll] = useState(false);
+  const displayedFeatures = showAll ? features : features.slice(0, 3);
+
   return (
     <section id="features" className="py-20 md:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="space-y-16">
+      <div className="space-y-12">
         {/* Section Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-[var(--amber-accent)]">
@@ -120,7 +125,7 @@ export const FeaturesShowcase: React.FC = () => {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, idx) => {
+          {displayedFeatures.map((feature, idx) => {
             const Icon = feature.icon;
             return (
               <div
@@ -153,6 +158,25 @@ export const FeaturesShowcase: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Show More / Show Less Button */}
+        {features.length > 3 && (
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAll((prev) => !prev)}
+              className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-xl border border-[var(--paper-border)] hover:border-[var(--amber-accent)] bg-[var(--paper-surface)] hover:bg-[var(--paper-desk-hover)] text-[var(--ink-primary)] text-sm font-semibold transition-all cursor-pointer shadow-2xs group"
+              aria-expanded={showAll}
+            >
+              <span>{showAll ? 'Show Less' : 'Show More'}</span>
+              {showAll ? (
+                <ChevronUp className="w-4 h-4 text-[var(--amber-accent)] transition-transform group-hover:-translate-y-0.5" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[var(--amber-accent)] transition-transform group-hover:translate-y-0.5" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
