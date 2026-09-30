@@ -15,11 +15,16 @@ export function isTauri(): boolean {
 
 /** Checks whether the current environment is a desktop Tauri WebView. */
 export function isDesktopTauri(): boolean {
+  if (!isTauri()) return false;
   const platform = import.meta.env.TAURI_ENV_PLATFORM;
-  return (
-    isTauri() &&
-    (platform === 'windows' || platform === 'macos' || platform === 'linux')
-  );
+  if (platform) {
+    return platform === 'windows' || platform === 'macos' || platform === 'linux';
+  }
+  if (typeof navigator !== 'undefined') {
+    const ua = navigator.userAgent.toLowerCase();
+    return !ua.includes('android') && !ua.includes('iphone') && !ua.includes('ipad');
+  }
+  return true;
 }
 
 const STORAGE_KEY = 'writein_mock_store_v1';
