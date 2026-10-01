@@ -6,7 +6,7 @@ WriteIn is an offline-first, local-first Windows desktop application tailored fo
 
 ## 1. High-Level Architecture (C4 Component Model)
 
-WriteIn strictly isolates responsibilities across four clean architectural tiers:
+WriteIn strictly isolates responsibilities across clean architectural tiers:
 
 ```mermaid
 graph TD
@@ -17,23 +17,32 @@ graph TD
         Bible["Story Bible (Cast, Settings, Lore)"]
         Org["Organization (Timeline, Notes, Attachments)"]
         Palette["Global Search & Command Palette (Ctrl+K)"]
+        TransferUI["Device Transfer View (Settings > Devices)"]
+        UpdaterUI["Updater Dialog & Preferences Check"]
     end
 
     subgraph Service ["Tier 2: Client Services & State Management"]
         Contexts["Context Providers (ManuscriptContext, ProjectContext)"]
-        Services["Domain Services (manuscriptService, searchService, etc.)"]
+        Services["Domain Services (manuscriptService, exportService, etc.)"]
+        Crypto["Zero-Knowledge Crypto (ECDH P-256 + AES-GCM)"]
+        UpdaterLib["Updater Single-Flight Cache (updater.ts)"]
         IPC["Typed Tauri IPC Bridge (tauriIpc.ts)"]
     end
 
     subgraph Backend ["Tier 3: Rust Core & IPC Handlers (Tauri 2.0)"]
-        Commands["Tauri Command Handlers (11 Domain Modules)"]
+        Commands["Tauri Command Handlers (18 Domain Modules)"]
         Validation["Security & Hierarchy Validation Layer"]
         Repos["Rust Repositories (rusqlite)"]
+        DeepLink["Deep Link Registry Handler (writein://)"]
     end
 
     subgraph Storage ["Tier 4: Local Storage & Sovereignty"]
         SQLite["SQLite 3 Database (WAL Mode, Foreign Keys ON)"]
         Filesystem["Local Filesystem Sandbox (%APPDATA%/WriteIn/)"]
+    end
+
+    subgraph Relay ["Tier 5: Ephemeral Coordination (Optional)"]
+        Worker["Cloudflare Worker Relay (Stateless, 10-min TTL)"]
     end
 
     Desk --> Contexts
@@ -42,9 +51,13 @@ graph TD
     Bible --> Services
     Org --> Services
     Palette --> Services
+    TransferUI --> Services
+    UpdaterUI --> UpdaterLib
 
     Contexts --> Services
+    Services --> Crypto
     Services --> IPC
+    TransferUI --> Worker
     IPC --> Commands
     Commands --> Validation
     Validation --> Repos
@@ -80,34 +93,64 @@ All user data lives strictly on the local machine under the OS application data 
 
 ## 3. Technology Stack
 
-- **Tauri 2.0**: Native desktop runtime with lightweight OS webview.
-- **Rust**: Memory-safe, high-performance backend managing SQLite operations, filesystem access, path sanitization, and data migrations.
-- **SQLite 3 (`rusqlite` bundled)**: Embedded transactional database running in WAL mode with foreign keys enabled.
-- **React 19 & TypeScript**: Strict type-safe reactive UI.
-- **Tailwind CSS v4**: High-speed utility styling configured with "A modern writer's desk" paper and ink design tokens.
-- **TipTap / ProseMirror**: Robust, extensible rich-text editing engine.
-- **Vitest & React Testing Library**: Unit and integration test suite.
-- **Lucide React**: Crisp, accessible iconography.
+- **Desktop Shell**: [Tauri 2.0](https://v2.tauri.app/)
+- **Backend Core**: Rust (memory-safe, high-performance)
+- **Local Database**: SQLite 3 (`rusqlite` bundled) running in WAL mode with foreign keys enabled.
+- **Frontend**: React 19 + TypeScript (strict mode)
+- **Editor Engine**: TipTap / ProseMirror
+- **Styling**: Tailwind CSS v4 ("A modern writer's desk" paper and ink design tokens)
+- **Cryptography**: Web Crypto API (ECDH P-256, HKDF-SHA256, AES-256-GCM)
+- **Icons**: Lucide React
+- **Test Runners**: Vitest (frontend) & Cargo Test (backend)
 
 ---
 
 ## 4. Subsystem Architectures
 
-### A. Manuscript & Document Subsystem (Phase 2)
+### A. Manuscript & Document Subsystem
 - **Hierarchy Structure**: Directed acyclic tree: `Folder (Part) -> Chapter -> Scene`.
 - **Validation Engine**: Rust validates moves to prevent circular hierarchies ($O(N)$ cycle detection using recursive ancestor queries).
 - **Word Count Rollup**: When scene documents are saved, the backend updates the scene word count and recursively rolls up total word counts to parent chapters and parts in a single transaction.
 - **Autosave Engine**: 1,000ms debounced auto-persist with unmount/window beforeunload flushes to ensure zero lost words.
 
-### B. Story Bible & Cast Graph (Phase 3)
+### B. Story Bible & Cast Graph
 - **Character Dossiers**: Stores narrative roles, personality profiles, and dynamic JSON custom fields.
 - **Visual Relationship Map**: Interactive SVG network with draggable nodes, zoom/pan transform controls, and relational edge labels.
 - **Lore Encyclopedia**: Two-column categorized lore manager covering 9 domains with real-time tag filtering.
 
-### C. Knowledge Management & Timeline (Phase 4)
+### C. Knowledge Management & Timeline
 - **Fictional Dates Engine**: Distinguishes between sortable collation keys (`date_value`) and rich fantasy date labels (`date_label` e.g., *"3rd Year of the Red Moon"*).
 - **Categorized Notebook**: Multi-category notes with quick capture, search, tag association, pinning, and soft archiving.
 - **Project-wide Global Search**: Fast SQLite queries with indexed substring matching, multi-entity categorization, and `<mark>` text highlighting.
+
+### D. Writing Tools, Goals & Session Velocity
+- **Writing Goals**: Tracks daily, chapter, and overall project target word counts with progress streaks and percentage completion.
+- **Writing Sessions**: Measures duration in seconds and net words added during continuous writing intervals, computing writing velocity (words-per-minute).
+- **Manuscript Snapshots & Version History**: Captures full document snapshots before major rewrites, providing side-by-side diff comparison and one-click restoration.
+- **Paste Sanitization**: Smart clipboard processing (`pasteSanitizer.ts`) with user-configurable behavior (`match-style`, `keep-format`, `plain-text`), stripping external font declarations and CSS while preserving semantic formatting.
+
+### E. Manuscript Compilation & Importer Engine
+- **MS Word (.docx) Compilation**: Generates native Office Open XML packages formatted to industry publishing standards (1-inch margins, 12pt Times New Roman, 1.5 line spacing, 0.5-inch paragraph indents, front-matter title page, and scene breaks).
+- **Markdown & Plain Text Export**: Full manuscript export with configurable scene dividers and front-matter inclusion.
+- **Intelligent Importer**: Splits uploaded text or pasted manuscripts into binder nodes automatically by matching chapter and act headings via regular expressions.
+
+### F. Trash Can & Data Recovery
+- **Non-Destructive Deletion**: Deleted entities (nodes, characters, locations, lore, notes) are serialized into JSON payloads in `trash_items`.
+- **Atomic Restoration**: Trashed items can be previewed, permanently purged, or restored into the live SQLite database in an atomic transaction.
+
+### G. Zero-Knowledge Device-to-Device Transfer
+- **Ephemeral Pairing Sessions**: Devices pair using short-lived 10-minute pairing codes (`XXXX-XXXX`).
+- **Client-Side Cryptography**:
+  - Ephemeral ECDH (P-256) key agreement with HKDF-SHA256 key derivation.
+  - Authenticated payload encryption and decryption via AES-256-GCM (96-bit random IV).
+  - SHA-256 checksum verification detects tampering in transit.
+- **Stateless Cloudflare Relay**: Relays blind ciphertext chunks without decrypting, storing, or inspecting manuscripts.
+- **Collision-Safe Import**: Resolves name clashes by appending `(Transferred)` during atomic SQLite transactions.
+
+### H. Tauri v2 Auto-Updater Architecture
+- **Cryptographic Verification**: Updates are signed with a minisign private key; the desktop client validates artifacts against the public key declared in `tauri.conf.json`.
+- **Single-Flight Shared Promise**: Prevents concurrent duplicate download attempts across the background watcher and preferences check.
+- **Windows MSI/NSIS Integration**: Uses passive installer execution to perform clean updates with process relaunch.
 
 ---
 
@@ -163,4 +206,4 @@ When any entity is selected, `get_related_content` queries the graph to present 
 1. **Write-Ahead Logging (WAL)**: SQLite writes changes to a `.db-wal` file sequentially, preventing corruption in case of unexpected shutdown or power loss.
 2. **Atomic Multi-Entity Operations**: Tree reordering, node duplication, and status updates run inside atomic SQL transactions.
 3. **Save-Before-Navigate**: Switching chapters or closing the application forcibly flushes any uncommitted keystroke buffer.
-4. **Non-Destructive Deletions**: Deleting manuscript nodes requires explicit confirmation, preserving authorial intent.
+4. **Non-Destructive Deletions**: Trashed entities are preserved with original JSON representations before deletion.

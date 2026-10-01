@@ -21,10 +21,12 @@ CREATE TABLE IF NOT EXISTS _migrations (
 );
 ```
 
-- **Migration 001**: `001_initial_schema` (Core relational DDL across all initial domain tables).
+- **Migration 001**: `001_initial_schema` (Core relational DDL across projects, manuscripts, documents, cast, locations, lore, timelines, notes, tags, attachments, goals, settings, trash).
 - **Migration 002**: `002_manuscript_enhancements` (Adds `archived_at`, `sort_order`, and explicit ordering/timestamp indexes to `manuscript_nodes`).
 - **Migration 003**: `003_organization_enhancements` (Adds flexible fictional calendar support `date_value`, `date_label`, `time_value` to `timeline_events`; creates `timeline_event_characters` junction; adds `archived_at` to `notes`; creates composite indexes).
 - **Migration 004**: `004_secure_attachments_and_entity_linking` (Adds `mime_type`, `relative_path`, `entity_type`, `entity_id`, and `updated_at` to `attachments`; adds `idx_attachments_entity` and `idx_attachments_project_created`).
+- **Migration 005**: `005_writing_sessions` (Creates `writing_sessions` table tracking per-session word counts, duration in seconds, active nodes, and date indexes).
+- **Migration 006**: `006_device_transfer_audit` (Creates `transfer_logs` table tracking outgoing exports, incoming imports, remote device IDs, SHA-256 package checksums, and status).
 
 ---
 
@@ -40,9 +42,14 @@ erDiagram
     PROJECTS ||--o{ NOTES : captures
     PROJECTS ||--o{ TAGS : categorizes
     PROJECTS ||--o{ ATTACHMENTS : references
+    PROJECTS ||--o{ WRITING_GOALS : targets
+    PROJECTS ||--o{ WRITING_SESSIONS : records
+    PROJECTS ||--o{ TRASH_ITEMS : preserves
+    PROJECTS ||--o{ TRANSFER_LOGS : audits
 
     MANUSCRIPT_NODES ||--o{ MANUSCRIPT_NODES : nests_children
     MANUSCRIPT_NODES ||--|| DOCUMENTS : has_content
+    MANUSCRIPT_NODES ||--o{ WRITING_SESSIONS : tracks_scene
     DOCUMENTS ||--o{ DOCUMENT_VERSIONS : preserves
 
     CHARACTERS ||--o{ CHARACTER_RELATIONSHIPS : initiates
@@ -311,6 +318,78 @@ CREATE TABLE IF NOT EXISTS document_versions (
 );
 ```
 
+### 12. `writing_goals`
+Project and daily writing goals, target word counts, and completion tracking.
+```sql
+CREATE TABLE IF NOT EXISTS writing_goals (
+    id TEXT PRIMARY KEY NOT NULL,
+    project_id TEXT NOT NULL,
+    goal_type TEXT NOT NULL, -- 'daily', 'project', 'chapter'
+    target_words INTEGER NOT NULL,
+    current_words INTEGER NOT NULL DEFAULT 0,
+    start_date TEXT,
+    end_date TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+```
+
+### 13. `writing_sessions`
+Tracks active writing session intervals, words produced, and writing velocity.
+```sql
+CREATE TABLE IF NOT EXISTS writing_sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    project_id TEXT NOT NULL,
+    node_id TEXT,
+    started_at TEXT NOT NULL,
+    ended_at TEXT,
+    duration_seconds INTEGER NOT NULL DEFAULT 0,
+    words_written INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY(node_id) REFERENCES manuscript_nodes(id) ON DELETE SET NULL
+);
+```
+
+### 14. `trash_items`
+Non-destructive trash recovery bin for deleted entities with serialized JSON backups.
+```sql
+CREATE TABLE IF NOT EXISTS trash_items (
+    id TEXT PRIMARY KEY NOT NULL,
+    project_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL, -- 'manuscript_node', 'character', 'location', 'worldbuilding', 'note', 'timeline'
+    entity_id TEXT NOT NULL,
+    entity_name TEXT NOT NULL,
+    original_data_json TEXT NOT NULL,
+    deleted_at TEXT NOT NULL,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+```
+
+### 15. `settings`
+Persistent application and project-level key-value preferences.
+```sql
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+```
+
+### 16. `transfer_logs`
+Audit log recording outgoing and incoming end-to-end encrypted device-to-device transfers.
+```sql
+CREATE TABLE IF NOT EXISTS transfer_logs (
+    id TEXT PRIMARY KEY NOT NULL,
+    transfer_type TEXT NOT NULL, -- 'export', 'import'
+    device_id TEXT NOT NULL,
+    package_hash TEXT,
+    status TEXT NOT NULL, -- 'started', 'completed', 'failed'
+    details TEXT,
+    created_at TEXT NOT NULL
+);
+```
+
 ---
 
 ## Indexing & Performance Strategy
@@ -330,3 +409,8 @@ The database includes explicit indexes to support fast queries across thousands 
 | `idx_entity_tags_lookup` | `entity_tags` | `(tag_id, entity_type, entity_id)` | Tagged entity queries |
 | `idx_attachments_entity` | `attachments` | `(entity_type, entity_id)` | Entity attachment backlinks |
 | `idx_attachments_project_created` | `attachments` | `(project_id, created_at DESC)` | Chronological attachments grid |
+| `idx_sessions_project_date` | `writing_sessions` | `(project_id, started_at DESC)` | Session history and streak queries |
+| `idx_sessions_node` | `writing_sessions` | `(node_id)` | Chapter/scene productivity queries |
+| `idx_writing_goals_project` | `writing_goals` | `(project_id)` | Active goals retrieval |
+| `idx_trash_project` | `trash_items` | `(project_id)` | Trash bin listing |
+| `idx_transfer_logs_created` | `transfer_logs` | `(created_at DESC)` | Transfer audit trail queries |
