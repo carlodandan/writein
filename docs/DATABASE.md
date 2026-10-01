@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS _migrations (
 - **Migration 003**: `003_organization_enhancements` (Adds flexible fictional calendar support `date_value`, `date_label`, `time_value` to `timeline_events`; creates `timeline_event_characters` junction; adds `archived_at` to `notes`; creates composite indexes).
 - **Migration 004**: `004_secure_attachments_and_entity_linking` (Adds `mime_type`, `relative_path`, `entity_type`, `entity_id`, and `updated_at` to `attachments`; adds `idx_attachments_entity` and `idx_attachments_project_created`).
 - **Migration 005**: `005_writing_sessions` (Creates `writing_sessions` table tracking per-session word counts, duration in seconds, active nodes, and date indexes).
-- **Migration 006**: `006_device_transfer_audit` (Creates `transfer_logs` table tracking outgoing exports, incoming imports, remote device IDs, SHA-256 package checksums, and status).
+- **Migration 006**: `006_device_and_transfer_support` (Creates `transfer_logs` table tracking outgoing exports, incoming imports, remote device IDs, SHA-256 package checksums, and status).
 
 ---
 
@@ -45,7 +45,6 @@ erDiagram
     PROJECTS ||--o{ WRITING_GOALS : targets
     PROJECTS ||--o{ WRITING_SESSIONS : records
     PROJECTS ||--o{ TRASH_ITEMS : preserves
-    PROJECTS ||--o{ TRANSFER_LOGS : audits
 
     MANUSCRIPT_NODES ||--o{ MANUSCRIPT_NODES : nests_children
     MANUSCRIPT_NODES ||--|| DOCUMENTS : has_content

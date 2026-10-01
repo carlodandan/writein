@@ -20,9 +20,9 @@ export function useChangelogWatcher({ onOpen, delayMs = 900 }: ChangelogWatcherO
 
   useEffect(() => {
     if (hasTriggeredRef.current) return;
-    hasTriggeredRef.current = true;
 
     const timer = setTimeout(async () => {
+      hasTriggeredRef.current = true;
       try {
         const currentVersion = await getAppVersion();
         const lastSeen = localStorage.getItem(STORAGE_KEY_LAST_SEEN);
