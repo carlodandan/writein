@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  BookOpen,
   ChevronDown,
   Plus,
   Search,
@@ -13,6 +12,7 @@ import {
   Upload,
   Archive,
 } from 'lucide-react';
+import writeIcon from '../../assets/writeicon.png';
 import { useProject } from '../../context/ProjectContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -46,8 +46,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     <header className="h-12 border-b border-[var(--paper-border)] bg-[var(--paper-surface)] flex items-center justify-between px-4 select-none shrink-0 z-10 transition-colors">
       {/* Left: Brand & Project Switcher */}
       <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2 text-[var(--amber-accent)] font-semibold text-base tracking-tight">
-          <BookOpen className="w-5 h-5 stroke-[2.2]" />
+        <div className="flex items-center space-x-2 font-semibold text-base tracking-tight">
+          <img src={writeIcon} alt="WriteIn" className="w-5 h-5 object-contain rounded-xs" />
           <span className="font-serif-novel text-lg tracking-normal text-[var(--ink-primary)]">WriteIn</span>
         </div>
 
