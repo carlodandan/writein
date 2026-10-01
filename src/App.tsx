@@ -27,6 +27,8 @@ import {
 } from './components/views/PlaceholderViews';
 import { UpdateWatcher } from './components/updater/UpdateWatcher';
 import { UpdateNotificationDialog } from './components/updater/UpdateNotificationDialog';
+import { ChangelogModal } from './components/changelog/ChangelogModal';
+import { useChangelogWatcher } from './components/changelog/useChangelogWatcher';
 import './App.css';
 
 function MainContent({
@@ -34,6 +36,7 @@ function MainContent({
   onSelectTab,
   onOpenNewProject,
   onOpenBackupModal,
+  onOpenChangelog,
   isDistractionFree,
   selectedEntityId,
 }: {
@@ -41,6 +44,7 @@ function MainContent({
   onSelectTab: (tab: ActiveNavTab, entityId?: string) => void;
   onOpenNewProject: () => void;
   onOpenBackupModal?: () => void;
+  onOpenChangelog?: () => void;
   isDistractionFree: boolean;
   selectedEntityId?: string | null;
 }) {
@@ -104,7 +108,12 @@ function MainContent({
       return <TrashWorkspace />;
 
     case 'settings':
-      return <SettingsView onOpenBackupModal={onOpenBackupModal} />;
+      return (
+        <SettingsView
+          onOpenBackupModal={onOpenBackupModal}
+          onOpenChangelog={onOpenChangelog}
+        />
+      );
 
     default:
       return (
@@ -125,11 +134,16 @@ function App() {
   const [isCompileOpen, setIsCompileOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState<{
     version: string;
     notes?: string | null;
   } | null>(null);
+
+  useChangelogWatcher({
+    onOpen: () => setIsChangelogOpen(true),
+  });
 
   const handleNavigate = (tab: ActiveNavTab, entityId?: string) => {
     setActiveTab(tab);
@@ -181,6 +195,7 @@ function App() {
               onSelectTab={handleNavigate}
               onOpenNewProject={() => setIsCreateModalOpen(true)}
               onOpenBackupModal={() => setIsBackupOpen(true)}
+              onOpenChangelog={() => setIsChangelogOpen(true)}
               isDistractionFree={isDistractionFree}
               selectedEntityId={selectedEntityId}
             />
@@ -218,6 +233,11 @@ function App() {
             <BackupModal
               isOpen={isBackupOpen}
               onClose={() => setIsBackupOpen(false)}
+            />
+
+            <ChangelogModal
+              isOpen={isChangelogOpen}
+              onClose={() => setIsChangelogOpen(false)}
             />
 
             <UpdateWatcher onAvailable={handleUpdateAvailable} />
