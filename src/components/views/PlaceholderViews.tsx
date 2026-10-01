@@ -105,8 +105,12 @@ export const GenericPlaceholder: React.FC<{
 import { UpdateCheck } from '../updater/UpdateCheck';
 import { DeviceTransferView } from '../settings/DeviceTransferView';
 
-export const SettingsView: React.FC<{ onOpenBackupModal?: () => void }> = ({
+export const SettingsView: React.FC<{
+  onOpenBackupModal?: () => void;
+  onOpenChangelog?: () => void;
+}> = ({
   onOpenBackupModal,
+  onOpenChangelog,
 }) => {
   const { theme, setTheme } = useTheme();
 
@@ -127,6 +131,29 @@ export const SettingsView: React.FC<{ onOpenBackupModal?: () => void }> = ({
 
         {/* Application Updates */}
         <UpdateCheck />
+
+        {/* Release Notes & What's New */}
+        <div className="bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-serif-novel text-base font-semibold text-[var(--ink-primary)]">
+                Release Notes & What's New
+              </h3>
+              <p className="text-xs text-[var(--ink-muted)]">
+                Explore latest feature additions, improvements, and full version history
+              </p>
+            </div>
+            {onOpenChangelog && (
+              <button
+                type="button"
+                onClick={onOpenChangelog}
+                className="px-3 py-1.5 rounded-lg border border-[var(--paper-border)] hover:bg-[var(--paper-desk-hover)] text-xs font-medium text-[var(--ink-primary)] transition-colors cursor-pointer"
+              >
+                View What's New
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Appearance */}
         <div className="bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl p-5 space-y-4">
