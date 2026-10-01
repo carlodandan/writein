@@ -16,7 +16,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
         {/* Release Pill Badge */}
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-[var(--paper-border)] bg-[var(--paper-surface)]/80 backdrop-blur-xs text-xs shadow-2xs">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-semibold text-[var(--ink-primary)]">WriteIn v4.2.1 Released</span>
+          <span className="font-semibold text-[var(--ink-primary)]">WriteIn v4.3.0 Released</span>
           <span className="text-[var(--paper-border)]">|</span>
           <span className="text-[var(--ink-muted)] flex items-center space-x-1">
             <span>Now with MS Word (.docx) Manuscript Compile</span>
@@ -45,7 +45,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
           >
             <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
             <span>Download for Windows 10/11</span>
-            <span className="text-[11px] opacity-75 font-normal">(v4.2.1 • 64-bit .exe/.msi)</span>
+            <span className="text-[11px] opacity-75 font-normal">(v4.3.0 • 64-bit .exe/.msi)</span>
           </a>
 
           <button
