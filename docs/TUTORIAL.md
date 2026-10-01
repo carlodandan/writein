@@ -442,7 +442,7 @@ Migrate your entire WriteIn studio library from one Windows PC to another withou
 3. Enter the pairing code shown on your source computer and click **Connect**.
 4. Both devices establish an **End-to-End Encrypted channel** (using ephemeral ECDH P-256 key exchange and AES-256-GCM authenticated encryption).
 5. Review the package summary (project counts, word totals, attachments) and click **Import Library**.
-6. The transfer completes atomically, and the temporary relay session is permanently destroyed.
+6. The imported database changes are committed atomically in a SQLite transaction. Attachment files are written separately, outside that transaction. WriteIn then notifies the relay that the transfer is complete; this notification is best-effort.
 
 ---
 

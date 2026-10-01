@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { X } from 'lucide-react';
 import { RELEASES } from './changelogData';
 import { useAppVersion } from '../../utils/appVersion';
@@ -18,6 +18,8 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
   const currentVersion = useAppVersion();
   const [activeTab, setActiveTab] = useState<'highlights' | 'history'>('highlights');
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (isOpen) {
@@ -27,14 +29,48 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
   }, [isOpen, currentVersion]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement;
+    dialogRef.current?.focus();
+
+    return () => {
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+        previouslyFocused.focus();
+      }
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         handleClose();
+      } else if (e.key === 'Tab' && dialogRef.current) {
+        const dialog = dialogRef.current;
+        const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]'
+        )).filter((element) => element.tabIndex >= 0 && !element.matches(':disabled, [hidden]'));
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+
+        if (!first || active === dialog || !dialog.contains(active)) {
+          e.preventDefault();
+          ((e.shiftKey ? last : first) ?? dialog).focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, dontShowAgain, currentVersion]);
+  }, [isOpen, dontShowAgain, currentVersion, onClose]);
 
   if (!isOpen) return null;
 
@@ -52,12 +88,12 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[var(--paper-border)] flex items-center justify-between bg-[var(--paper-desk)]">
           <div>
             <div className="flex items-center space-x-2.5">
-              <h3 className="font-serif-novel text-lg font-bold text-[var(--ink-primary)]">
+              <h3 id={titleId} className="font-serif-novel text-lg font-bold text-[var(--ink-primary)]">
                 What's New in WriteIn
               </h3>
               <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-[var(--paper-surface)] border border-[var(--paper-border)] text-[var(--amber-accent)]">
