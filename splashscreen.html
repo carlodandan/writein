@@ -95,6 +95,7 @@
         margin-bottom: 1.25rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         animation: pulse-glow 3s infinite ease-in-out;
+        overflow: hidden;
       }
 
       @keyframes pulse-glow {
@@ -107,9 +108,12 @@
       }
 
       .icon-svg {
-        width: 34px;
-        height: 34px;
-        color: var(--accent-amber);
+        width: 64px;
+        height: 64px;
+        display: block;
+        object-fit: contain;
+        padding: 0;
+        margin: 0;
       }
 
       .title {
@@ -220,20 +224,11 @@
       <!-- Top Section: Logo & Catchy Subtitle -->
       <div class="top-section">
         <div class="icon-container">
-          <!-- Feather / Quill / Book SVG -->
-          <svg
+          <img
+            src="/writeicon.png"
+            alt="WriteIn"
             class="icon-svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="m18 2 4 4-14 14H4v-4L18 2z" />
-            <path d="m14.5 5.5 4 4" />
-            <path d="M4 20h16" />
-          </svg>
+          />
         </div>
 
         <h1 class="title">WriteIn</h1>
