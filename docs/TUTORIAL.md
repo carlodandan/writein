@@ -26,7 +26,15 @@ WriteIn is crafted specifically for long-form fiction writers, novelists, and wo
 16. [Research Files & Attachments](#16-research-files--attachments)
 17. [Backlinks & Connected Content](#17-backlinks--connected-content)
 18. [Data Sovereignty, Backups & Portability](#18-data-sovereignty-backups--portability)
-19. [Keyboard Shortcuts Reference](#19-keyboard-shortcuts-reference)
+19. [Writing Goals, Targets & Session Velocity](#19-writing-goals-targets--session-velocity)
+20. [Manuscript Snapshots & Version History](#20-manuscript-snapshots--version-history)
+21. [Compiling Publication-Ready Books (.docx, .md, .txt)](#21-compiling-publication-ready-books-docx-md-txt)
+22. [Intelligent Manuscript Importer](#22-intelligent-manuscript-importer)
+23. [Clipboard & Paste Formatting Preferences](#23-clipboard--paste-formatting-preferences)
+24. [The Project Trash Can & Item Recovery](#24-the-project-trash-can--item-recovery)
+25. [End-to-End Encrypted Device Transfer](#25-end-to-end-encrypted-device-transfer)
+26. [Application Updates & Preferences](#26-application-updates--preferences)
+27. [Keyboard Shortcuts Reference](#27-keyboard-shortcuts-reference)
 
 ---
 
@@ -318,18 +326,144 @@ C:\Users\<YourUsername>\AppData\Roaming\WriteIn\
         └── attachments\                       # Your images, PDFs, and references
 ```
 
-### Making a Manual Backup
-Because WriteIn's architecture is self-contained, backing up your novel is as simple as copying the `{project-id}` directory to a USB thumb drive, external hard drive, or private backup folder. No proprietary export tools or cloud subscriptions required.
+### One-Click Project Backups (.writein)
+In addition to copying the `{project-id}` directory manually, WriteIn features a native backup manager:
+1. Open **Settings** or the project menu.
+2. Click **Export .writein Backup**.
+3. WriteIn bundles the database and all local attachments into a single compressed `.writein` archive.
+4. You can restore this archive at any time via **Restore Backup**, restoring your entire novel to that exact point in time.
 
 ---
 
-## 19. Keyboard Shortcuts Reference
+## 19. Writing Goals, Targets & Session Velocity
+
+WriteIn provides dedicated productivity tracking to help you maintain writing momentum:
+
+### Setting Word Count Goals
+1. Navigate to **Writing Goals** in the project dashboard or inspector.
+2. Create a goal:
+   - **Project Goal**: Overall target for your finished book (e.g., `80,000` words).
+   - **Daily Goal**: Daily quota (e.g., `1,000` words per day) with optional target completion dates.
+3. Progress rings visually display percentage completed, words remaining, and completion streaks.
+
+### Session Velocity & Analytics
+- When you begin writing, WriteIn automatically tracks your active writing intervals.
+- The **Writing Statistics** panel displays:
+  - Total words written in the current session.
+  - Active writing duration (in minutes and seconds).
+  - Current **Velocity** (words per minute).
+  - Historical session logs to analyze your most productive writing times.
+
+---
+
+## 20. Manuscript Snapshots & Version History
+
+Never fear making sweeping editorial changes again. WriteIn includes non-destructive document versioning:
+
+### Taking a Snapshot
+1. In the editor toolbar or document menu, click the **Version History** icon.
+2. Click **Create Snapshot**.
+3. Give your snapshot an optional label (e.g., *"Before cutting prologue"* or *"Draft 2 complete"*).
+4. WriteIn saves a permanent, timestamped snapshot of the document with its word count.
+
+### Inspecting Diffs & Restoring Earlier Drafts
+- Select any earlier snapshot from the history list to preview its contents.
+- Use the side-by-side diff view to compare the historical snapshot against your current document.
+- Click **Restore this Version** to revert your active document text safely.
+
+---
+
+## 21. Compiling Publication-Ready Books (.docx, .md, .txt)
+
+When your manuscript is ready for beta readers, agents, or formatters, use the **Manuscript Compiler**:
+
+1. Click **Compile Manuscript** in the sidebar or top menu.
+2. Select your target export format:
+   - **Microsoft Word (.docx)**: Compiles formatted strictly to publishing industry standards:
+     - 1-inch margins on all sides.
+     - 12pt Times New Roman font.
+     - 1.5 line spacing with 0.5-inch first-line paragraph indents.
+     - Centered `#` or `* * *` scene divider glyphs.
+     - Clean title page front-matter (Title, Subtitle, Author, Word Count).
+     - Page breaks between major chapters.
+   - **Markdown (.md)**: Clean Markdown export with customizable heading levels.
+   - **Plain Text (.txt)**: Clean plain text prose export.
+3. Choose which binder folders, chapters, or scenes to include.
+4. Click **Compile & Save**. WriteIn triggers the native Windows file save dialog.
+
+---
+
+## 22. Intelligent Manuscript Importer
+
+If you have an existing manuscript written in another application:
+1. Click **Import Manuscript** in the project binder.
+2. Drag and drop a `.txt`, `.md`, or `.docx` file, or paste your text directly into the import buffer.
+3. WriteIn's parsing engine scans your text and automatically detects chapter markers (e.g., *"Chapter 1"*, *"Act II"*, *"Prologue"*).
+4. Review the generated binder preview and click **Import**. WriteIn creates all folders, chapters, and scenes automatically.
+
+---
+
+## 23. Clipboard & Paste Formatting Preferences
+
+Copying and pasting text from web browsers, Word documents, or research notes often introduces jarring fonts and messy styling. WriteIn solves this with a smart paste sanitization engine:
+
+1. Open **Settings > Editor Preferences**.
+2. Select your default **Paste Behavior**:
+   - **Match Style (Default)**: Strips external font families, sizes, line heights, and background colors while preserving semantic italics, bolding, and links.
+   - **Plain Text**: Strips all formatting, pasting raw unformatted text.
+   - **Keep Format**: Retains external rich formatting where possible.
+3. **Quick Plain-Text Shortcut**: Regardless of your preference setting, pressing `Ctrl + Shift + V` always performs an immediate plain-text paste.
+
+---
+
+## 24. The Project Trash Can & Item Recovery
+
+Accidental deletions are completely reversible in WriteIn:
+1. When you delete a chapter, character, location, lore article, or note, it is moved to the **Project Trash Can**.
+2. Open **Settings > Trash & Recovery** to view all soft-deleted items with their original deletion timestamps.
+3. Click **Restore** to return any item back to its original place in your project.
+4. Click **Empty Trash** when you are ready to permanently purge deleted items.
+
+---
+
+## 25. End-to-End Encrypted Device Transfer
+
+Migrate your entire WriteIn studio library from one Windows PC to another without cloud accounts:
+
+### Starting a Transfer (Source PC)
+1. On your primary computer, go to **Settings > Devices**.
+2. Click **Transfer to another device**.
+3. WriteIn bundles your library and generates a temporary **8-character Pairing Code** (e.g., `8F4K-92QX`).
+4. A 10-minute security countdown begins.
+
+### Receiving on Your New Computer (Destination PC)
+1. On your second computer, open WriteIn and go to **Settings > Devices**.
+2. Click **Import from another device**.
+3. Enter the pairing code shown on your source computer and click **Connect**.
+4. Both devices establish an **End-to-End Encrypted channel** (using ephemeral ECDH P-256 key exchange and AES-256-GCM authenticated encryption).
+5. Review the package summary (project counts, word totals, attachments) and click **Import Library**.
+6. The transfer completes atomically, and the temporary relay session is permanently destroyed.
+
+---
+
+## 26. Application Updates & Preferences
+
+WriteIn includes a built-in desktop auto-updater verified with cryptographic minisign signatures:
+- **Quiet Background Detection**: WriteIn silently checks for official GitHub releases a few seconds after startup.
+- **Update Dialog**: When an update is detected, an unobtrusive banner notifies you with release highlights. You can choose to update now or later.
+- **Manual Check**: You can manually check for updates at any time by going to **Settings > Check for Updates**.
+
+---
+
+## 27. Keyboard Shortcuts Reference
 
 | Shortcut | Action | Scope |
 | :--- | :--- | :--- |
 | `Ctrl + S` | Force Manual Save | Editor |
 | `Ctrl + F` | Open In-Document Find & Replace | Editor |
 | `Ctrl + K` | Open Global Command Palette & Search | Project-wide |
+| `F11` | Toggle Distraction-Free Typewriter Mode | Editor |
+| `Ctrl + Shift + V` | Paste as Plain Text | Editor |
 | `Ctrl + B` | Toggle Bold | Editor |
 | `Ctrl + I` | Toggle Italic | Editor |
 | `Ctrl + U` | Toggle Underline | Editor |
@@ -344,3 +478,4 @@ Because WriteIn's architecture is self-contained, backing up your novel is as si
 ---
 
 *Happy writing! May your words flow freely and your story come to life.*
+

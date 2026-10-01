@@ -1,12 +1,23 @@
 # Testing Strategy & Automated Test Suite — WriteIn
 
-WriteIn uses a dual-layer automated testing strategy combining **Vitest** for the React frontend, text analysis, UI components, and client service operations, with **Rust Native Tests** for SQLite operations, schema migrations, foreign keys, secure filesystem storage, and repository CRUD logic.
+WriteIn uses a dual-layer automated testing strategy combining **Vitest** for the React frontend, text analysis, UI components, client cryptography, and service operations, with **Rust Native Tests** for SQLite operations, schema migrations, foreign keys, secure filesystem storage, and repository CRUD logic.
 
 ---
 
-## 1. Frontend Tests (Vitest)
+## 1. Test Suite Summary
 
-Run all frontend tests:
+| Test Layer | Test Runner | Test Files | Total Tests | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Frontend & Services** | Vitest (jsdom) | 41 suites | 174 tests | **All Passed (100%)** |
+| **Backend & Repositories** | Cargo Test | Rust binary | 37 tests | **All Passed (100%)** |
+| **Total Automated Coverage** | — | — | **211 tests** | **0 Failures** |
+
+---
+
+## 2. Frontend Tests (Vitest)
+
+### Running Tests
+Run all frontend test suites:
 ```pwsh
 pnpm test
 ```
@@ -16,172 +27,78 @@ Watch mode during active development:
 pnpm test:watch
 ```
 
-**Total Vitest Suites**: 19 test files, 84 passing tests (0 failures).
+Run a specific suite:
+```pwsh
+pnpm test src/tests/transferCrypto.test.ts
+```
 
-### Test Suites Overview
+### Vitest Test Suites Inventory
 
-#### A. Word & Character Counting (`src/tests/wordCount.test.ts`)
-Validates:
-- Standard prose word counts (`"Hello world"` -> 2 words)
-- Empty strings, whitespace-only, `null`, and `undefined` safely returning 0 words and characters
-- Punctuation, ellipses, and dialogue quotes (`'"I don\'t think so," she whispered.'` -> 6 words)
-- Em-dashes (`"love—hate"` -> 2 words) and hyphenated compounds
-- Embedded numbers in text (`"In 2024, there were 42 cats."` -> 6 words)
-- Unicode characters, CJK scripts, and diacritics
-- Total character counts with and without whitespace
+#### A. Core Text Analysis & Manuscript Mechanics
+- `src/tests/wordCount.test.ts` (9 tests): Validates standard prose word counts, empty strings, dialogue quotes, em-dashes (`"love—hate"` -> 2 words), embedded numbers, Unicode/CJK scripts, and character counts with/without spaces.
+- `src/tests/manuscriptHierarchy.test.ts` (6 tests): Validates hierarchy rules (Parts at root, Chapters in Parts, Scenes in Chapters), cycle prevention, sequential naming, and tree transformations.
+- `src/tests/manuscriptOrdering.test.ts` (1 test): Validates manual drag-and-drop reordering and contiguous sort order index maintenance.
+- `src/tests/manuscriptService.test.ts` (3 tests): Validates tree fetching, inline title editing, document autosaving, and chapter duplication.
+- `src/tests/manuscriptComponents.test.tsx` (4 tests): Tests `EditorStatus` states (`saving`, `saved`, `unsaved`, `error`), `FindReplaceBar` key handling, and `ManuscriptTreeNode` rename confirmations.
 
-#### B. React Component Tests (`src/tests/manuscriptComponents.test.tsx`)
-Validates user interaction and reactive UI behavior:
-- `EditorStatus`: Renders all 4 save states (`saving`, `unsaved`, `saved`, `error`) and distinguishes characters with vs. without spaces.
-- `FindReplaceBar`: Search input handling, key navigation, and closing cleanly on `Escape`.
-- `ManuscriptTreeNode`: Inline title editing, confirming on `Enter`, and canceling on `Escape` without altering the original title.
+#### B. Story Bible & Knowledge Graph
+- `src/tests/characterService.test.ts` (5 tests): Character CRUD, role hierarchy sorting, and cascade deletions.
+- `src/tests/relationshipGraph.test.ts` (8 tests): Radial circular layout geometry, centering, edge mappings, and narrative role styling.
+- `src/tests/characterRelationshipMap.test.tsx` (4 tests): Graph rendering, node interactions, and edge creation modals.
+- `src/tests/locationService.test.ts` (4 tests): Setting dossiers, atmosphere attributes, and location queries.
+- `src/tests/worldbuildingService.test.ts` (4 tests): Lore article filtering across 9 domains and article CRUD.
+- `src/tests/timelineService.test.ts` & `timelineSorting.test.ts` (7 tests): Chronological event ordering, custom fantasy calendars, and participant junctions.
+- `src/tests/noteService.test.ts` (4 tests): Notebook scratchpad operations, pinning, and soft archiving.
+- `src/tests/tagService.test.ts` (4 tests): Taxonomy management and polymorphic entity tag associations.
+- `src/tests/attachmentService.test.ts` (4 tests): Filesystem reference metadata, lightbox view models, and Windows Explorer folder reveal triggers.
+- `src/tests/searchService.test.ts` & `searchHighlight.test.ts` (9 tests): Project-wide multi-entity search and `<mark>` text highlight token generation.
+- `src/tests/crossLink.test.ts` (3 tests): Bidirectional backlink graph resolution.
 
-#### C. Writing Goals Calculations (`src/tests/writingGoals.test.ts`)
-Validates:
-- Progress percentage calculation (750 / 1,000 words -> 75%)
-- Reached and completed goals (5,000 / 5,000 words -> 100%, `isCompleted: true`)
-- Exceeded goals (1,500 / 1,000 words -> 150%, `isExceeded: true`)
-- Zero goal boundaries (safe division, no NaN/Infinity)
-- Negative or invalid numbers gracefully normalized to 0
+#### C. Writing Tools, Goals & Version History
+- `src/tests/writingGoals.test.ts` & `goalsService.test.ts` (9 tests): Target word goal progress percentages, completion states, exceeded goal flags, and safe division boundaries.
+- `src/tests/writingSession.test.ts` (4 tests): Session tracking intervals, elapsed duration, and typing velocity (words-per-minute).
+- `src/tests/versionHistory.test.ts` (4 tests): Snapshot creation, side-by-side diffing, and revision restoration.
+- `src/tests/pasteSanitizer.test.ts` & `editorPreferences.test.ts` (6 tests): Smart clipboard paste behavior (`match-style`, `keep-format`, `plain-text`), stripping unwanted CSS/fonts while preserving bold and italic tags.
 
-#### D. Project Client Service (`src/tests/projectService.test.ts`)
-Validates:
-- Project list retrieval
-- New project creation and immediate retrieval by ID
-- Project updates (title, genre, status transitions)
-- Project summary statistics aggregation
+#### D. Compilation, Import & Export
+- `src/tests/docxCompiler.test.ts` & `manuscriptCompiler.test.ts` (9 tests): Generates valid Office Open XML packages adhering to publishing guidelines (1-inch margins, 12pt Times New Roman, 1.5 line spacing, 0.5-inch indents, title page front-matter, and scene breaks).
+- `src/tests/manuscriptImporter.test.ts` (4 tests): Intelligent parsing of plain text and Markdown files, splitting chapters automatically via regex matching.
+- `src/tests/exportService.test.ts` & `exportSaveFlow.test.ts` (8 tests): Native file dialog saves and browser download fallbacks.
+- `src/tests/backupService.test.ts` & `trashService.test.ts` (7 tests): `.writein` archive backup packaging and non-destructive trash restoration.
 
-#### E. Manuscript Hierarchy & Validation (`src/tests/manuscriptHierarchy.test.ts`)
-Validates:
-- Part placement at root level only
-- Chapter placement at root or inside Part
-- Scene placement inside Chapter only
-- Cycle prevention (blocking move into self or own descendants)
-- Sequential default title generation (Part I, Chapter 01, Scene 01)
-- Flat node list to hierarchical tree transformation preserving sort order
+#### E. Device Transfer & Zero-Knowledge Cryptography
+- `src/tests/transferCrypto.test.ts` (5 tests): Ephemeral ECDH (P-256) key agreement, HKDF-SHA256 key derivation, AES-256-GCM encryption/decryption, and SHA-256 package checksum tamper detection.
+- `src/tests/transferService.test.ts` (6 tests): End-to-end device transfer simulation across sender and receiver states.
+- `src/tests/DeviceTransferView.test.tsx` (4 tests): UI rendering of pairing codes, 10-minute expiry countdown timers, stage progressions, and audit history.
 
-#### F. Manuscript Ordering & Drag-and-Drop (`src/tests/manuscriptOrdering.test.ts`)
-Validates:
-- Moving Chapter 3 before Chapter 1 and verifying resulting sort_order
-- Maintaining contiguous sort indices across sibling nodes
-
-#### G. Manuscript Client Service (`src/tests/manuscriptService.test.ts`)
-Validates:
-- Fetching manuscript tree for project
-- Node creation and inline title renaming
-- Document autosave and word count persistence
-- Node duplication cloning contents and child scenes
-
-#### H. Character Service & Relationships (`src/tests/characterService.test.ts`)
-Validates:
-- Fetching project characters with role ordering (Protagonist -> Antagonist -> Supporting -> Minor)
-- Character creation, profile updates, and cascade deletion
-- Relationship creation linking character A and character B with relation types and descriptions
-- Relationship updates and relationship deletion
-
-#### I. Character Relationship Graph Geometry (`src/tests/relationshipGraph.test.ts`)
-Validates:
-- Circular radial layout calculation for SVG canvas
-- Single-node centering and empty-set safety
-- Relationship mapping to graph edges
-- Distinct visual styling tokens across narrative roles
-
-#### J. Location Service (`src/tests/locationService.test.ts`)
-Validates:
-- Location listing, retrieval by UUID
-- Creation with setting types, atmospheres, appearances, and inhabitants
-- Location updates and deletion
-
-#### K. Worldbuilding Service (`src/tests/worldbuildingService.test.ts`)
-Validates:
-- Category filtering across story bible domains (History, Culture, Magic System, Factions, etc.)
-- Article creation, content updates, and deletion
-
-#### L. Timeline Service & Sorting (`src/tests/timelineService.test.ts` & `timelineSorting.test.ts`)
-Validates:
-- Timeline event creation with fictional date labels (`date_label`), sort collation (`date_value`), and time of day
-- Importance level assignments (`critical`, `high`, `normal`, `low`)
-- Multi-character participant links (`character_ids`)
-- Updates, event deletion, and bidirectional sort queries (ascending/descending)
-
-#### M. Note Service (`src/tests/noteService.test.ts`)
-Validates:
-- Category filtering (`Ideas`, `Plot`, `Dialogue`, `Research`, etc.)
-- Creation, retrieval, prose updates, and deletion
-- Soft-archiving and restoration without data loss (`toggleArchive`)
-
-#### N. Tag Service (`src/tests/tagService.test.ts`)
-Validates:
-- Project tag retrieval with usage counts
-- Tag creation and inline renaming
-- Associating tags with entities (`setEntityTags`, `assignTag`, `removeTag`)
-- Safe tag deletion without destroying tagged story entities
-
-#### O. Global Search Service & Highlighting (`src/tests/searchService.test.ts` & `searchHighlight.test.ts`)
-Validates:
-- Cross-entity query execution across chapters, characters, locations, worldbuilding lore, notes, and timeline events
-- Substring match splitting, case-insensitivity, and `<mark>` token generation
-- SQL wildcard and special character handling (`%`, `_`, `'`, `"`, `;--`)
-
-#### P. Attachments & File References (`src/tests/attachmentService.test.ts`)
-Validates:
-- Attachment metadata persistence
-- Base64 file saving
-- Strict path-traversal prevention (`../../../../etc/passwd` and `..\\..\\Windows\\System32\\cmd.exe`)
-- System viewer launching and folder reveal
-
-#### Q. Cross-Link & Backlinks Engine (`src/tests/crossLink.test.ts`)
-Validates:
-- Backlink aggregation across characters, locations, chapters, and timeline events
-- Empty backlink safety
+#### F. Auto-Updater & System Services
+- `src/tests/updater.test.ts` (3 tests): Desktop environment checks, mock fallbacks, and update installation.
+- `src/tests/useUpdater.test.tsx` & `updaterComponents.test.tsx` (4 tests): React hook state machine and modal notifications.
+- `src/tests/deepLinkService.test.ts` (2 tests): `writein://` custom URI scheme parsing and navigation.
+- `src/tests/appVersion.test.ts` & `logger.test.ts` (4 tests): Cached version lookups and diagnostic log outputs.
 
 ---
 
-## 2. Backend Tests (Rust `cargo test`)
+## 3. Backend Tests (Rust / Cargo Test)
 
-Run all backend tests:
+### Running Tests
+Execute all native Rust tests:
 ```pwsh
 cd src-tauri
 cargo test
 ```
 
-**Total Rust Unit Tests**: 25 passing tests (0 failures).
-
-### Test Coverage Highlights
-
-1. **`test_migrations_run_successfully`**: Verifies Migrations 001, 002, 003, and 004 execute idempotently with foreign keys and WAL mode.
-2. **`test_create_and_query_tree`**: Verifies Part, Chapter, and Scene tree creation and retrieval.
-3. **`test_hierarchy_validation_rules`**: Confirms strict hierarchy rules (Scenes cannot parent Chapters, etc.).
-4. **`test_cycle_prevention`**: Confirms cyclical parent reassignment is blocked and returns an error.
-5. **`test_duplicate_chapter`**: Verifies deep cloning of a chapter, its document, and child scenes with new IDs.
-6. **`test_save_document_and_word_count_rollup`**: Validates document persistence and automatic recursive word rollups to parent nodes.
-7. **`test_character_crud_and_sorting`**: Verifies character dossiers and ordering by narrative role.
-8. **`test_relationships_and_foreign_key_cascade`**: Validates character relationships and automatic cascading deletion when a character is deleted.
-9. **`test_location_crud`**: Tests location records, types, atmospheres, and tags.
-10. **`test_worldbuilding_crud_and_category_filtering`**: Tests lore articles and category filtering across 9 domains.
-11. **`test_timeline_crud_and_sorting`**: Tests timeline events, flexible fantasy dates, and ordering.
-12. **`test_note_crud_and_archiving`**: Tests notebook entries, pinning, and soft archiving.
-13. **`test_tags_crud_and_entity_linking`**: Tests tag creation, polymorphic entity association, and usage counts.
-14. **`test_assign_and_remove_tag_explicitly`**: Tests adding and removing tags from individual entities.
-15. **`test_filename_sanitization_and_security`**: Validates strict rejection of directory traversal (`../`, `..\`) and illegal characters.
-16. **`test_attachment_crud_and_entity_linking`**: Tests attachment metadata and filesystem storage.
-17. **`test_cross_link_query`**: Tests automated backlink aggregation across all entity types.
-18. **`test_global_search_across_entities`**: Tests parameterized SQL multi-entity search.
-19. **`test_realistic_search_dataset_with_maria`**: Tests realistic novel datasets with Maria Santos, Carlo Reyes, Anna Cruz, scenes, and lore.
-20. **`test_search_performance_with_large_dataset`**: Stress tests 2,900+ items, executing global search in < 1ms (well below 50ms budget).
-
----
-
-## 3. Production Build Verification
-
-Verify that TypeScript compiles with strict checking and Vite generates optimized bundles:
-```pwsh
-pnpm build
-```
-
-Verify that Tauri compiles cleanly:
-```pwsh
-cd src-tauri
-cargo check
-cargo test
-```
+### Rust Test Inventory (37 Passing Tests)
+- **Migrations & Schemas**: `test_migrations_run_successfully` (runs all migrations 001–006 on clean in-memory database and tests idempotency).
+- **Projects**: `test_create_and_get_project`, `test_update_project`, `test_delete_project`, `test_list_projects`, `test_empty_title_validation`.
+- **Manuscripts & Documents**: `test_create_and_query_tree`, `test_hierarchy_validation_rules`, `test_cycle_prevention`, `test_duplicate_chapter`, `test_save_document_and_word_count_rollup`.
+- **Characters & Cast**: `test_character_crud_and_sorting`, `test_relationships_and_foreign_key_cascade`.
+- **Locations & Worldbuilding**: `test_location_crud`, `test_worldbuilding_crud_and_category_filtering`.
+- **Timelines & Notes**: `test_timeline_crud_and_sorting`, `test_note_crud_and_archiving`.
+- **Tags & Links**: `test_tags_crud_and_entity_linking`, `test_assign_and_remove_tag_explicitly`, `test_cross_link_query`.
+- **Attachments & Security**: `test_filename_sanitization_and_security`, `test_attachment_crud_and_entity_linking`.
+- **Search Engine**: `test_global_search_across_entities`, `test_realistic_search_dataset_with_maria`, `test_search_performance_with_large_dataset`.
+- **Goals & Sessions**: `test_writing_goals_crud`, `test_writing_session_start_and_end`.
+- **Versions & Trash**: `test_version_snapshot_crud`, `test_trash_lifecycle`.
+- **Compilers & Backups**: `test_compile_manuscript_and_story_bible`, `test_backup_and_restore_roundtrip`, camelCase serialization tests.
+- **Device Transfer**: `test_device_id_generation_and_persistence`, `test_library_export_and_import_roundtrip`.
