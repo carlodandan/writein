@@ -6,9 +6,9 @@ import { ChangelogModal } from '../components/changelog/ChangelogModal';
 import { useChangelogWatcher } from '../components/changelog/useChangelogWatcher';
 
 describe('Changelog Data', () => {
-  it('contains valid release notes sorted chronologically with v4.2.1 as latest', () => {
+  it('contains valid release notes sorted chronologically with v4.3.0 as latest', () => {
     expect(RELEASES.length).toBeGreaterThan(0);
-    expect(RELEASES[0].version).toBe('v4.2.1');
+    expect(RELEASES[0].version).toBe('v4.3.0');
     expect(RELEASES[0].highlights.length).toBeGreaterThan(0);
     for (const release of RELEASES) {
       expect(release.version).toMatch(/^v\d+\.\d+\.\d+$/);
@@ -35,7 +35,7 @@ describe('ChangelogModal Component', () => {
 
     // Header title and latest badge
     expect(screen.getByText("What's New in WriteIn")).toBeDefined();
-    expect(screen.getByText('Desktop Environment Detection & Installer Polish')).toBeDefined();
+    expect(screen.getByText("In-App What's New Changelog & Brand Identity Polish")).toBeDefined();
 
     // Tab switching
     const historyTab = screen.getByText(/All Releases/);
@@ -46,7 +46,7 @@ describe('ChangelogModal Component', () => {
     const closeBtn = screen.getByText("Got it, Let's Write");
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
-    expect(localStorage.getItem('writein_last_seen_changelog_version')).toBe('v4.2.1');
+    expect(localStorage.getItem('writein_last_seen_changelog_version')).toBe('v4.3.0');
   });
 
   it('persists dont-show preference when checked', () => {
@@ -59,7 +59,7 @@ describe('ChangelogModal Component', () => {
     const closeBtn = screen.getByText("Got it, Let's Write");
     fireEvent.click(closeBtn);
 
-    expect(localStorage.getItem('writein_dont_show_changelog_on_startup')).toBe('v4.2.1');
+    expect(localStorage.getItem('writein_dont_show_changelog_on_startup')).toBe('v4.3.0');
   });
 
   it('names the modal, moves focus inside, and traps Tab in both directions', () => {
@@ -178,7 +178,7 @@ describe('useChangelogWatcher Hook', () => {
   });
 
   it('suppresses onOpen if user chose not to show on startup', async () => {
-    localStorage.setItem('writein_dont_show_changelog_on_startup', 'v4.2.1');
+    localStorage.setItem('writein_dont_show_changelog_on_startup', 'v4.3.0');
     const onOpen = vi.fn();
     render(<TestWatcherComponent onOpen={onOpen} />);
 
@@ -190,7 +190,7 @@ describe('useChangelogWatcher Hook', () => {
   });
 
   it('suppresses onOpen if user has already seen this version', async () => {
-    localStorage.setItem('writein_last_seen_changelog_version', 'v4.2.1');
+    localStorage.setItem('writein_last_seen_changelog_version', 'v4.3.0');
     const onOpen = vi.fn();
     render(<TestWatcherComponent onOpen={onOpen} />);
 

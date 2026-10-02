@@ -17,10 +17,44 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: 'v4.3.0',
+    date: 'October 2, 2026',
+    title: 'In-App What\'s New Changelog & Brand Identity Polish',
+    badge: 'Latest',
+    highlights: [
+      {
+        title: 'In-App "What\'s New" Changelog',
+        description: 'Stay up to date after every release with an accessible startup changelog modal, full version history, and on-demand review in Preferences.',
+      },
+      {
+        title: 'Brand Identity & Header Icon Refresh',
+        description: 'Integrated the official WriteIn crest icon into the desktop header and splashscreen, pairing with our distraction-free Warm Paper and Midnight Ink themes.',
+      },
+    ],
+    details: [
+      {
+        category: 'Added',
+        items: [
+          'Interactive What\'s New modal displayed automatically on startup when launching a newly installed version.',
+          'Release Notes & What\'s New preferences card to review version highlights anytime.',
+          'Accessible dialog implementation featuring full keyboard focus trapping, trigger focus restoration, and Escape dismissal.',
+          'Official WriteIn brand icon in header navigation and splashscreen.',
+        ],
+      },
+      {
+        category: 'Changed',
+        items: [
+          'Updated application and installer versions to v4.3.0 across desktop manifests and website.',
+          'Refined modal presentation with clean editorial typography matching our distraction-free aesthetic.',
+          'Streamlined website features showcase with expandable cards and end-to-end device transfer FAQ.',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v4.2.1',
     date: 'September 30, 2026',
     title: 'Desktop Environment Detection & Installer Polish',
-    badge: 'Latest',
     highlights: [
       {
         title: 'Desktop Environment Detection Fix',
