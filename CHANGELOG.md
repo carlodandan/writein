@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.0] - 2026-10-02
+
+### Added
+- **In-App "What's New" Changelog**: Interactive release notes modal dialog displayed automatically on startup when launching a newly installed version, with suppression options and on-demand review in Settings.
+- **Accessible Modal Implementation**: Modal dialog includes `role="dialog"`, `aria-modal="true"`, bidirectional Tab / Shift-Tab focus trapping, trigger focus restoration upon closing, and Escape key dismissal.
+- **Brand Identity & Header Icon**: Integrated official high-resolution `writeicon.png` into desktop HeaderBar and startup splashscreen.
+- **Changelog Settings Card**: Added dedicated "Release Notes & What's New" card in `Preferences & Settings` (`SettingsView`).
+
+### Changed
+- **Version Bump to 4.3.0**: Synchronized version across desktop app, Tauri configuration, Cargo manifests, splashscreen, and website.
+- **Clean Editorial Design**: Refined modal typography and removed extraneous decorative icons for a distraction-free, bookish aesthetic matching Warm Paper and Midnight Ink themes.
+- **Website Features Showcase**: Streamlined showcase to 3 key features with expandable view and added End-to-End Encrypted Device Transfer FAQ.
+
+---
+
 ## [4.2.1] - 2026-09-30
 
 ### Fixed
