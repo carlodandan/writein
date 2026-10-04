@@ -268,9 +268,9 @@ Tags cut across every element in your project:
 
 ---
 
-## 15. Global Project Search (`Ctrl + K`)
+## 15. Global Project Search (`Ctrl + K` / `⌘K`)
 
-Press `Ctrl + K` (or click the search icon in the top header) from anywhere in WriteIn:
+Press `Ctrl + K` (or `⌘K` on macOS, or click the search icon in the top header) from anywhere in WriteIn:
 
 1. **Instant Multi-Entity Results**: Type any name, place, dialogue snippet, or phrase. WriteIn searches across:
    - Manuscript documents and scene text
@@ -291,12 +291,12 @@ Press `Ctrl + K` (or click the search icon in the top header) from anywhere in W
 Keep your reference visual and documentary materials alongside your text:
 
 - **Supported Formats**: Images (`PNG`, `JPG`, `WEBP`, `SVG`), documents (`PDF`, `DOCX`, `TXT`, `MD`), and audio.
-- **Secure File Storage**: Files are copied into your novel's local project folder (`%APPDATA%/WriteIn/projects/{project-id}/attachments/{id}/`). WriteIn strips dangerous path traversal attempts and keeps your database lightweight.
+- **Secure File Storage**: Files are copied into your novel's local project folder (`<AppDataDir>/WriteIn/projects/{project-id}/attachments/{id}/`). WriteIn strips dangerous path traversal attempts and keeps your database lightweight.
 - **Entity Association**: Link reference maps directly to a Location, or a portrait directly to a Character.
 - **Lightbox & System Launch**:
   - Click images for a high-resolution lightbox preview.
-  - Click **Open** to launch the file in your default Windows viewer (e.g., Adobe Acrobat, Microsoft Word).
-  - Click **Reveal in Explorer** to open the exact file location in Windows File Explorer.
+  - Click **Open** to launch the file in your default system viewer (e.g., Preview, Adobe Acrobat, Microsoft Word).
+  - Click **Folder** to reveal the exact file location in your system file manager (Windows File Explorer, macOS Finder, or Linux file manager).
 
 ---
 
@@ -316,14 +316,18 @@ The right-hand **Inspector** panel features a dynamic **Related Content** sectio
 ## 18. Data Sovereignty, Backups & Portability
 
 ### Where is your data stored?
-On Windows, WriteIn stores everything under your user profile:
+WriteIn stores everything locally under your operating system's application directory:
+- **Windows**: `C:\Users\<YourUsername>\AppData\Roaming\WriteIn\` (`%APPDATA%\WriteIn\`)
+- **macOS**: `~/Library/Application Support/WriteIn/`
+- **Linux**: `~/.local/share/WriteIn/` (or `$XDG_DATA_HOME/WriteIn/`)
+
 ```text
-C:\Users\<YourUsername>\AppData\Roaming\WriteIn\
+<AppDataDir>/WriteIn/
 ├── app.db                                     # Global application state
-└── projects\
-    └── {project-id}\
+└── projects/
+    └── {project-id}/
         ├── project.db                         # Complete novel SQLite database
-        └── attachments\                       # Your images, PDFs, and references
+        └── attachments/                       # Your images, PDFs, and references
 ```
 
 ### One-Click Project Backups (.writein)
@@ -389,7 +393,7 @@ When your manuscript is ready for beta readers, agents, or formatters, use the *
    - **Markdown (.md)**: Clean Markdown export with customizable heading levels.
    - **Plain Text (.txt)**: Clean plain text prose export.
 3. Choose which binder folders, chapters, or scenes to include.
-4. Click **Compile & Save**. WriteIn triggers the native Windows file save dialog.
+4. Click **Compile & Save**. WriteIn triggers the native system file save dialog.
 
 ---
 
@@ -412,7 +416,7 @@ Copying and pasting text from web browsers, Word documents, or research notes of
    - **Match Style (Default)**: Strips external font families, sizes, line heights, and background colors while preserving semantic italics, bolding, and links.
    - **Plain Text**: Strips all formatting, pasting raw unformatted text.
    - **Keep Format**: Retains external rich formatting where possible.
-3. **Quick Plain-Text Shortcut**: Regardless of your preference setting, pressing `Ctrl + Shift + V` always performs an immediate plain-text paste.
+3. **Quick Plain-Text Shortcut**: Regardless of your preference setting, pressing `Ctrl + Shift + V` (or `⌘Shift+V` on macOS) always performs an immediate plain-text paste.
 
 ---
 
@@ -428,7 +432,7 @@ Accidental deletions are completely reversible in WriteIn:
 
 ## 25. End-to-End Encrypted Device Transfer
 
-Migrate your entire WriteIn studio library from one Windows PC to another without cloud accounts:
+Migrate your entire WriteIn studio library between computers (Windows, macOS, Linux) without cloud accounts:
 
 ### Starting a Transfer (Source PC)
 1. On your primary computer, go to **Settings > Devices**.

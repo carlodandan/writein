@@ -1,6 +1,6 @@
 # Architecture & System Design — WriteIn
 
-WriteIn is an offline-first, local-first Windows desktop application tailored for long-form fiction writers and novelists (*"Scrivener-lite + personal writing notebook + story database"*).
+WriteIn is an offline-first, local-first multi-platform desktop application (Windows, macOS, Linux) tailored for long-form fiction writers and novelists (*"Scrivener-lite + personal writing notebook + story database"*).
 
 ---
 
@@ -16,7 +16,7 @@ graph TD
         Editor["TipTap Rich Prose Editor"]
         Bible["Story Bible (Cast, Settings, Lore)"]
         Org["Organization (Timeline, Notes, Attachments)"]
-        Palette["Global Search & Command Palette (Ctrl+K)"]
+        Palette["Global Search & Command Palette (Ctrl+K / ⌘K)"]
         TransferUI["Device Transfer View (Settings > Devices)"]
         UpdaterUI["Updater Dialog & Preferences Check"]
     end
@@ -38,7 +38,7 @@ graph TD
 
     subgraph Storage ["Tier 4: Local Storage & Sovereignty"]
         SQLite["SQLite 3 Database (WAL Mode, Foreign Keys ON)"]
-        Filesystem["Local Filesystem Sandbox (%APPDATA%/WriteIn/)"]
+        Filesystem["Local Filesystem Sandbox (OS AppData/WriteIn/)"]
     end
 
     subgraph Relay ["Tier 5: Ephemeral Coordination (Optional)"]
@@ -69,10 +69,10 @@ graph TD
 
 ## 2. Directory Layout & Local Data Sovereignty
 
-All user data lives strictly on the local machine under the OS application data path (`%APPDATA%/WriteIn/` on Windows) without any third-party cloud services or telemetry:
+All user data lives strictly on the local machine under the OS application data path (`%APPDATA%/WriteIn/` on Windows, `~/Library/Application Support/WriteIn/` on macOS, and `~/.local/share/WriteIn/` on Linux) without any third-party cloud services or telemetry:
 
 ```text
-%APPDATA%/WriteIn/
+<AppDataDir>/WriteIn/
 ├── app.db                                     # Global application state & project registry
 └── projects/
     └── {project-id}/                          # Isolated project sandbox
@@ -150,7 +150,8 @@ All user data lives strictly on the local machine under the OS application data 
 ### H. Tauri v2 Auto-Updater Architecture
 - **Cryptographic Verification**: Updates are signed with a minisign private key; the desktop client validates artifacts against the public key declared in `tauri.conf.json`.
 - **Single-Flight Shared Promise**: Prevents concurrent duplicate download attempts across the background watcher and preferences check.
-- **Windows MSI/NSIS Integration**: Uses passive installer execution to perform clean updates with process relaunch.
+- **Cross-Platform Delivery**: Generates platform-specific update packages (`.msi` / `.exe` on Windows, `.app.tar.gz` on macOS, `.AppImage.tar.gz` on Linux) with multi-platform signatures aggregated into `latest.json`.
+- **Platform Execution**: Uses passive installer execution on Windows, and in-place application bundle replacement with clean process relaunch on macOS and Linux.
 
 ---
 
@@ -171,7 +172,7 @@ sequenceDiagram
     Note over Sec: Strips path separators (/, \), null bytes, and traversal tokens (..)
     Rust->>Sec: Validate Extension Whitelist
     Note over Sec: Allows: .png, .jpg, .webp, .svg, .pdf, .docx, .txt, .mp3, etc.
-    Rust->>FS: Write to %APPDATA%/WriteIn/projects/{project_id}/attachments/{id}/{filename}
+    Rust->>FS: Write to <AppDataDir>/WriteIn/projects/{project_id}/attachments/{id}/{filename}
     Rust->>DB: Record attachment metadata & relative path
     DB-->>Rust: Metadata stored
     Rust-->>UI: Return Attachment DTO
