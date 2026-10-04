@@ -499,7 +499,7 @@ export const ReferenceWorkspace: React.FC<ReferenceWorkspaceProps> = ({
                       <button
                         onClick={() => handleReveal(att)}
                         className="flex items-center space-x-1 px-2 py-1 rounded hover:bg-[var(--paper-desk)] text-[var(--ink-secondary)] transition-colors"
-                        title="Reveal file in Windows Explorer folder"
+                        title="Reveal file in folder"
                       >
                         <FolderOpen className="w-3.5 h-3.5" />
                         <span className="text-[11px]">Folder</span>

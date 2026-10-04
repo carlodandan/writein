@@ -51,7 +51,7 @@ pnpm test src/tests/transferCrypto.test.ts
 - `src/tests/timelineService.test.ts` & `timelineSorting.test.ts` (6 tests): Chronological event ordering, custom fantasy calendars, and participant junctions.
 - `src/tests/noteService.test.ts` (4 tests): Notebook scratchpad operations, pinning, and soft archiving.
 - `src/tests/tagService.test.ts` (5 tests): Taxonomy management and polymorphic entity tag associations.
-- `src/tests/attachmentService.test.ts` (7 tests): Filesystem reference metadata, lightbox view models, and Windows Explorer folder reveal triggers.
+- `src/tests/attachmentService.test.ts` (7 tests): Filesystem reference metadata, lightbox view models, and system file manager folder reveal triggers.
 - `src/tests/searchService.test.ts` & `searchHighlight.test.ts` (12 tests): Project-wide multi-entity search and `<mark>` text highlight token generation.
 - `src/tests/crossLink.test.ts` (4 tests): Bidirectional backlink graph resolution.
 

@@ -224,8 +224,8 @@ Queries session logs, calculating daily writing velocity (words per minute) and 
 ### Attachments & Filesystem Sandboxing
 - `get_attachments(project_id: string)`: Lists attachment records.
 - `save_attachment(input: SaveAttachmentDataInput)`: Writes binary data to disk and records metadata.
-- `open_attachment(id: string)`: Launches file in system default application.
-- `reveal_attachment_folder(id: string)`: Opens Windows File Explorer highlighting the file.
+- `open_attachment(id: string)`: Launches file in system default application (`cmd /c start` on Windows, `open` on macOS, `xdg-open` on Linux).
+- `reveal_attachment_folder(id: string)`: Reveals file in system file manager (Windows File Explorer, macOS Finder, or Linux desktop file manager).
 
 ### Search & Cross-Linking
 - `search_project(project_id: string, query: string, entity_types?: string[])`: Indexed multi-entity search.
@@ -245,7 +245,7 @@ Compiles selected nodes into an industry-standard MS Word `.docx` file.
 Compiles manuscript into formatted Markdown or plain text files.
 
 ### `select_export_path` / `save_exported_file`
-Native Windows Save File dialog interaction and binary buffer persistence.
+Native platform Save File dialog interaction and binary buffer persistence.
 
 ---
 

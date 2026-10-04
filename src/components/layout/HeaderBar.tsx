@@ -75,19 +75,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
       {/* Center: Search trigger */}
       <div className="flex items-center">
-        <button
-          onClick={onOpenSearch}
-          className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-[var(--paper-desk)] hover:bg-[var(--paper-desk-hover)] text-xs text-[var(--ink-muted)] transition-colors border border-[var(--paper-border-subtle)] w-64 justify-between"
-          title="Global Project Search (Ctrl + K)"
-        >
-          <div className="flex items-center space-x-2">
-            <Search className="w-3.5 h-3.5" />
-            <span>Search project...</span>
-          </div>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded text-[var(--ink-secondary)]">
-            Ctrl K
-          </kbd>
-        </button>
+        {(() => {
+          const isMac = typeof navigator !== 'undefined' && /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent || navigator.platform);
+          return (
+            <button
+              onClick={onOpenSearch}
+              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-[var(--paper-desk)] hover:bg-[var(--paper-desk-hover)] text-xs text-[var(--ink-muted)] transition-colors border border-[var(--paper-border-subtle)] w-64 justify-between"
+              title={`Global Project Search (${isMac ? '⌘K' : 'Ctrl + K'})`}
+            >
+              <div className="flex items-center space-x-2">
+                <Search className="w-3.5 h-3.5" />
+                <span>Search project...</span>
+              </div>
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-[var(--paper-surface)] border border-[var(--paper-border)] rounded text-[var(--ink-secondary)]">
+                {isMac ? '⌘K' : 'Ctrl K'}
+              </kbd>
+            </button>
+          );
+        })()}
       </div>
 
       {/* Right: Actions */}

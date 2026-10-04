@@ -148,7 +148,15 @@ pub fn open_attachment(db: State<DbManager>, id: String) -> Result<bool, AppErro
             .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
+    }
+
+    #[cfg(target_os = "linux")]
     {
         std::process::Command::new("xdg-open")
             .arg(&path)
@@ -179,7 +187,15 @@ pub fn reveal_attachment_folder(db: State<DbManager>, id: String) -> Result<bool
             .map_err(|e| AppError::Internal(format!("Failed to reveal file: {}", e)))?;
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .args(["-R", &path.to_string_lossy()])
+            .spawn()
+            .map_err(|e| AppError::Internal(format!("Failed to reveal file in Finder: {}", e)))?;
+    }
+
+    #[cfg(target_os = "linux")]
     {
         if let Some(parent) = path.parent() {
             std::process::Command::new("xdg-open")

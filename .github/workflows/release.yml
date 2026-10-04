@@ -7,10 +7,31 @@ jobs:
   release:
     permissions:
       contents: write
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils libxdo-dev libssl-dev
 
       - uses: pnpm/setup@v1
         with:
@@ -20,6 +41,16 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: pnpm install
 
       - name: Build & Publish Release with Updater Artifacts
         uses: tauri-apps/tauri-action@v1
@@ -28,8 +59,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: v__VERSION__
-          releaseName: "WriteIn v__VERSION__"
+          tagName: ${{ github.ref_name == 'staging' && 'staging-__VERSION__' || 'v__VERSION__' }}
+          releaseName: ${{ github.ref_name == 'staging' && 'WriteIn staging-__VERSION__' || 'WriteIn v__VERSION__' }}
           generateReleaseNotes: true
           releaseDraft: false
           prerelease: false
+          args: ${{ matrix.args }}
