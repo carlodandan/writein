@@ -20,7 +20,7 @@ jobs:
             target: 'x86_64-apple-darwin'
             args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
-            args: ''
+            args: '--bundles deb,appimage'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -63,5 +63,5 @@ jobs:
           releaseName: ${{ github.ref_name == 'staging' && 'WriteIn staging-__VERSION__' || 'WriteIn v__VERSION__' }}
           generateReleaseNotes: true
           releaseDraft: false
-          prerelease: false
+          prerelease: ${{ github.ref_name == 'staging' }}
           args: ${{ matrix.args }}

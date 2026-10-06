@@ -296,7 +296,7 @@ Keep your reference visual and documentary materials alongside your text:
 - **Lightbox & System Launch**:
   - Click images for a high-resolution lightbox preview.
   - Click **Open** to launch the file in your default system viewer (e.g., Preview, Adobe Acrobat, Microsoft Word).
-  - Click **Folder** to reveal the exact file location in your system file manager (Windows File Explorer, macOS Finder, or Linux file manager).
+  - Click **Folder** to reveal and select the file in Windows File Explorer or macOS Finder, or open the containing folder in your Linux file manager.
 
 ---
 
