@@ -128,7 +128,7 @@ $WebDownloadSection = Join-Path $Root "website\src\components\DownloadSection.ts
 if (Test-Path $WebDownloadSection) {
     $downloadContent = Read-Utf8 $WebDownloadSection
     $downloadContent = $downloadContent -replace '(/releases/download/)v[^/]+/', "`$1v$Version/"
-    $downloadContent = $downloadContent -replace 'write-in_\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?_', "write-in_${Version}_"
+    $downloadContent = $downloadContent -replace 'WriteIn_\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?_', "WriteIn_${Version}_"
     Write-Utf8NoBom $WebDownloadSection $downloadContent
     Write-Host "  [OK] website/src/components/DownloadSection.tsx (download links)"
 }

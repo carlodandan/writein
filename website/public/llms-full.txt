@@ -1,0 +1,42 @@
+# WriteIn — Complete System & Feature Specification
+
+WriteIn is an open-source, local-first desktop application designed specifically for authors writing novels, series, and complex long-form fiction. It replaces fragmented workflows (spreadsheets, separate mind maps, cloud processors) with an integrated local environment.
+
+## 1. Core Architecture & Privacy Model
+- **Engine**: Built with Tauri v2, Rust backend, and React/TypeScript frontend.
+- **Data Engine**: SQLite database stored locally in the user's application data directory.
+- **Zero Cloud Dependence**: No network requests required for any core feature. No telemetry, analytics, or automated cloud backups.
+- **Cryptographic Release Integrity**: Desktop installers (.exe, .msi) are cryptographically signed with SHA-256 Minisign signatures.
+- **Deep-Link Protocol**: Supports the `writein://` desktop protocol for launching specific manuscripts, scenes, or compiler presets.
+
+## 2. Manuscript Management (Binder & Hierarchy)
+- **Three-Tier Hierarchy**: Supports Acts -> Chapters -> Scenes, matching standard fiction narrative structures (e.g., Three-Act Structure, Hero's Journey, Save the Cat).
+- **Manuscript Status Tracking**: Scenes can be tagged with progress states: `Idea`, `Outline`, `Draft`, `Revised`, `Final`.
+- **Word Count Targets**: Live calculation of scene, chapter, and total manuscript word counts against custom daily or total project goals.
+- **Non-Destructive Snapshots**: Authors can take point-in-time snapshots of any chapter or scene before major edits, comparing revisions side-by-side.
+
+## 3. Worldbuilding & Character Visual Web
+- **Character Web**: An infinite 2D canvas enabling writers to position character cards and connect them with labeled, color-coded lines. Relationships include Allies, Enemies, Family, Mentors, Romantic, and Custom.
+- **Story Bible**: A structured wiki for locations, items, magic systems, factions, and historical lore.
+- **Bidirectional Linking**: Mentions of lore items or characters inside scenes automatically cross-reference back to their dossier entries.
+- **Chronological Timeline**: An interactive timeline tracker to sequence plot beats, flash-backs, and character birthdays across long book series.
+
+## 4. Industry-Standard MS Word (.docx) Compilation
+- **Export Presets**: Produces `.docx` files formatted to traditional manuscript submission guidelines:
+  - Margins: 1 inch on all sides.
+  - Typeface: 12pt Times New Roman (or Courier).
+  - Line Spacing: 1.5x or Double spaced.
+  - Paragraphs: 0.5-inch first-line indent, zero paragraph spacing.
+  - Scene Breaks: Centered pound sign (`#`) or triple asterisks (`* * *`).
+  - Title Page: Formatted front-matter with title, author contact information, and approximate word count.
+
+## 5. Comparison With Alternatives
+- **vs. Scrivener**: Free and open-source, lighter memory footprint, built-in visual character relationship web without third-party plugins, modern UI, cross-platform Tauri architecture.
+- **vs. Ulysses**: No recurring monthly/yearly subscription fees, runs on Windows and Linux alongside macOS, full offline local SQLite data sovereignty.
+- **vs. Notion / Google Docs**: Complete offline privacy, dedicated fiction tools (scene metadata, word count targets, relationship web), no risk of unexpected cloud sync conflicts or downtime.
+
+## 6. Official Resources
+- Website: https://writein.pages.dev/
+- GitHub: https://github.com/carlodandan/writein
+- Releases: https://github.com/carlodandan/writein/releases
+- Documentation: https://github.com/carlodandan/writein/blob/main/docs/TUTORIAL.md

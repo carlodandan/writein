@@ -1,0 +1,27 @@
+# WriteIn
+
+> WriteIn is a calm, distraction-free desktop studio engineered for novelists and long-form fiction writers. 100% offline, local SQLite storage, infinite character relationship webs, story bible, timeline, and standard MS Word (.docx) manuscript compiler with zero subscriptions.
+
+## Overview
+WriteIn provides authors with an all-in-one local writing environment combining hierarchical manuscript management with deep narrative worldbuilding tools. Unlike cloud-dependent writing software, all project data is saved in a local SQLite database on the author's computer.
+
+## Key Capabilities
+- **100% Offline & Private**: Zero cloud sync, zero telemetry, local-first architecture. All story drafts, character dossiers, and research remain strictly private on the user's hard drive.
+- **Multi-Act Manuscript Organization**: Organize novels into Acts, Chapters, and Scenes. Drag-and-drop reordering, progress tags (Idea, Outline, Draft, Revised, Final), and automatic word count rollups.
+- **Infinite Character Relationship Web**: Pan-and-zoom node canvas to map character connections, alliances, rivalries, family trees, and romance arcs with customizable visual links.
+- **Story Bible & Narrative Timelines**: Dossiers for lore, factions, and worldbuilding elements with bidirectional scene links, alongside chronological timelines to track flashbacks and subplots.
+- **MS Word (.docx) Manuscript Compiler**: Direct export to industry-standard manuscript format (1-inch margins, 12pt Times New Roman, 1.5 line spacing, 0.5-inch indents, title page front-matter).
+- **Distraction-Free Typewriter Desk**: Centered line scrolling, customizable font and desk themes, session timers, and daily word count targets.
+- **Data Sovereignty**: Open `.writein` archive format for easy portability, automated database backups, and snapshot versioning.
+
+## Target Platforms
+- **Windows**: Windows 10 & Windows 11 (64-bit x64 & ARM64)
+- **macOS**: Apple Silicon & Intel (macOS 10.13+)
+- **Linux**: x86_64 AppImage / deb (WebKitGTK 4.1)
+
+## Links
+- [Website & Downloads](https://writein.pages.dev/)
+- [GitHub Repository](https://github.com/carlodandan/writein)
+- [GitHub Releases](https://github.com/carlodandan/writein/releases)
+- [Tutorial & Documentation](https://github.com/carlodandan/writein/blob/main/docs/TUTORIAL.md)
+- [Full LLM Specification](https://writein.pages.dev/llms-full.txt)

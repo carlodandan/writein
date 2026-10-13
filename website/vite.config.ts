@@ -14,23 +14,38 @@ export default defineConfig({
     tailwindcss(),
     Sitemap({
       hostname: 'https://writein.pages.dev',
-      dynamicRoutes: [
-        '/home',
-      ],
-      priority: {
-        '/home': 0.9,
-      },
+      changefreq: 'weekly',
+      priority: 1.0,
+      readable: true,
       generateRobotsTxt: true,
       robots: [
         {
           userAgent: '*',
           allow: '/',
-          disallow: '/api/',
-          crawlDelay: 2,
+          disallow: ['/?code=', '/?token='],
+        },
+        {
+          userAgent: 'GPTBot',
+          allow: '/',
+        },
+        {
+          userAgent: 'ClaudeBot',
+          allow: '/',
+        },
+        {
+          userAgent: 'PerplexityBot',
+          allow: '/',
+        },
+        {
+          userAgent: 'Applebot-Extended',
+          allow: '/',
+        },
+        {
+          userAgent: 'CCBot',
+          allow: '/',
         },
       ],
-      readable: true,
-    })
+    }),
   ],
   build: {
     outDir: resolve(__dirname, 'dist'),
