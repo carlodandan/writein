@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>WriteIn — The Private Desktop Studio for Long-Form Fiction & Novelists</title>
+    <title>WriteIn — Private Desktop Studio for Fiction Writers</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZR6KL5DSQY"></script>
     <script>
@@ -15,31 +15,44 @@
     
       gtag('config', 'G-ZR6KL5DSQY');
     </script>
-    <meta name="title" content="WriteIn — The Private Desktop Studio for Long-Form Fiction & Novelists" />
-    <meta name="description" content="A calm, distraction-free desktop novel writing studio. 100% offline, local SQLite, infinite character relationship web, story bible, timeline, and standard MS Word (.docx) manuscript compiler. Zero subscriptions." />
-    <meta name="keywords" content="novel writing software, Scrivener alternative, offline writing app, manuscript compiler, character relationship map, story bible, writer desk, book writing app, local-first" />
+    <meta name="title" content="WriteIn — Private Desktop Studio for Fiction Writers" />
+    <meta name="description" content="Private, offline-first desktop studio for novelists. Organize manuscripts, map character relationship webs, and compile to standard MS Word (.docx)." />
+    <meta name="keywords" content="novel writing software, Scrivener alternative, offline writing app, manuscript compiler, character relationship map, story bible, writer desk, book writing app, local-first, distraction-free writing" />
     <meta name="author" content="WriteIn Team" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#FAF8F5" />
+    <link rel="canonical" href="https://writein.pages.dev/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://writein.pages.dev/" />
     <meta property="og:title" content="WriteIn — Private Desktop Studio for Fiction Writers" />
-    <meta property="og:description" content="Local-first novel writing studio. Craft multi-act manuscripts, map character webs, track timelines, and compile to MS Word (.docx). 100% offline, zero cloud, zero telemetry." />
+    <meta property="og:description" content="Private, offline-first desktop studio for novelists. Organize manuscripts, map character relationship webs, and compile to standard MS Word (.docx)." />
     <meta property="og:image" content="https://writein.pages.dev/writein_logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="WriteIn — Private Desktop Studio for Novelists" />
+    <meta property="og:site_name" content="WriteIn" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://writein.pages.dev/" />
-    <meta property="twitter:title" content="WriteIn — Private Desktop Studio for Fiction Writers" />
-    <meta property="twitter:description" content="Local-first novel writing studio. Craft multi-act manuscripts, map character webs, track timelines, and compile to MS Word (.docx). 100% offline, zero cloud, zero telemetry." />
-    <meta property="twitter:image" content="https://writein.pages.dev/writein_logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://writein.pages.dev/" />
+    <meta name="twitter:title" content="WriteIn — Private Desktop Studio for Fiction Writers" />
+    <meta name="twitter:description" content="Private, offline-first desktop studio for novelists. Organize manuscripts, map character relationship webs, and compile to standard MS Word (.docx)." />
+    <meta name="twitter:image" content="https://writein.pages.dev/writein_logo.png" />
+    <meta name="twitter:image:alt" content="WriteIn — Private Desktop Studio for Novelists" />
 
-    <!-- Favicon -->
+    <!-- Favicon & Icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/writeicon.png" />
+    <link rel="apple-touch-icon" href="/writeicon.png" />
     
-    <!-- Google Fonts: Newsreader (Literary Serif) & Public Sans (Modern Clean UI) -->
+    <!-- Crawler & LLM Directives -->
+    <link rel="help" type="text/plain" title="LLMs Context" href="/llms.txt" />
+
+    <!-- Performance & Preload -->
+    <link rel="preload" as="image" href="/projectpage.webp" type="image/webp" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -47,24 +60,79 @@
       rel="stylesheet"
     />
 
-    <!-- Schema.org Application Metadata -->
+    <!-- Schema.org Application & WebSite Metadata -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "WriteIn",
-        "operatingSystem": "Windows 10, Windows 11 (64-bit)",
-        "applicationCategory": "ProductivityApplication",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Offline-first desktop writing and manuscript management software for novelists, fiction writers, and worldbuilders."
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://writein.pages.dev/#software",
+            "name": "WriteIn",
+            "url": "https://writein.pages.dev/",
+            "operatingSystem": "Windows 10, Windows 11, macOS 10.13+, Linux",
+            "applicationCategory": "ProductivityApplication",
+            "applicationSubCategory": "WordProcessor, TextEditor",
+            "softwareVersion": "4.3.0",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
+            },
+            "description": "Offline-first desktop writing and manuscript management software for novelists, fiction writers, and worldbuilders.",
+            "image": "https://writein.pages.dev/writein_logo.png",
+            "screenshot": "https://writein.pages.dev/projectpage.webp",
+            "downloadUrl": "https://github.com/carlodandan/writein/releases",
+            "author": {
+              "@type": "Organization",
+              "name": "WriteIn",
+              "url": "https://writein.pages.dev/"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "WriteIn",
+              "url": "https://writein.pages.dev/"
+            },
+            "featureList": [
+              "100% Offline Local SQLite Storage",
+              "Infinite Character Relationship Web",
+              "Multi-Act Manuscript Organization",
+              "Word Count Goals and Session Tracking",
+              "Direct MS Word (.docx) Manuscript Compilation",
+              "Story Bible and Worldbuilding Timeline"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://writein.pages.dev/#website",
+            "name": "WriteIn",
+            "url": "https://writein.pages.dev/",
+            "description": "The private desktop studio for long-form fiction writers and novelists.",
+            "publisher": {
+              "@id": "https://writein.pages.dev/#software"
+            }
+          }
+        ]
       }
     </script>
   </head>
   <body class="bg-[#FAF8F5] text-[#24201D] antialiased selection:bg-[#FEF3C7] selection:text-[#C26100]">
+    <noscript>
+      <header style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #24201D;">
+        <h1>WriteIn — Private Desktop Studio for Fiction Writers</h1>
+        <p>A calm, distraction-free desktop novel writing studio. 100% offline, local SQLite, infinite character relationship web, story bible, timeline, and standard MS Word (.docx) manuscript compiler. Zero subscriptions.</p>
+        <h2>Core Features</h2>
+        <ul>
+          <li><strong>Offline-First &amp; Private:</strong> 100% local SQLite storage, zero cloud telemetry, zero subscriptions.</li>
+          <li><strong>Manuscript Hierarchy:</strong> Organize Acts, Chapters, and Scenes with word count rollups.</li>
+          <li><strong>Character Web:</strong> Visual node-graph canvas to connect protagonists, factions, and family trees.</li>
+          <li><strong>Story Bible:</strong> Worldbuilding dossiers and narrative timelines with bidirectional linking.</li>
+          <li><strong>MS Word (.docx) Compiler:</strong> Export submission-ready manuscripts directly.</li>
+        </ul>
+        <p><a href="https://github.com/carlodandan/writein/releases" style="color: #C26100; font-weight: bold;">Download WriteIn from GitHub Releases</a></p>
+      </header>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

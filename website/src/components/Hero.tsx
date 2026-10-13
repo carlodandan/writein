@@ -74,6 +74,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDeepLinkModal, onScrollToDemo 
                 alt="WriteIn Novelist Studio Workspace"
                 className="w-full h-auto object-cover rounded-xl transition-transform duration-500 group-hover:scale-[1.01]"
                 loading="eager"
+                fetchPriority="high"
+                width={1200}
+                height={675}
               />
             </div>
           </div>

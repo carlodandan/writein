@@ -1,5 +1,15 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": []
+  "exclude": [
+    "/robots.txt",
+    "/sitemap.xml",
+    "/llms.txt",
+    "/llms-full.txt",
+    "/favicon.ico",
+    "/writeicon.png",
+    "/writein_logo.png",
+    "/projectpage.webp",
+    "/assets/*"
+  ]
 }
