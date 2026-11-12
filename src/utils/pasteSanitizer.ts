@@ -233,7 +233,7 @@ export function sanitizeKeepFormatHTML(doc: Document): string {
   );
   dangerous.forEach((el) => el.remove());
 
-  // 2. Strip all inline event handlers (on*) and javascript:/vbscript: URIs
+  // 2. Strip all inline event handlers (on*) and javascript:/vbscript:/data: URIs
   const allElements = doc.querySelectorAll('*');
   allElements.forEach((el) => {
     const attrs = Array.from(el.attributes);
@@ -243,7 +243,10 @@ export function sanitizeKeepFormatHTML(doc: Document): string {
       if (name.startsWith('on')) {
         el.removeAttribute(attr.name);
       }
-      if ((name === 'href' || name === 'src') && (val.startsWith('javascript:') || val.startsWith('vbscript:'))) {
+      if (
+        (name === 'href' || name === 'src') &&
+        (val.startsWith('javascript:') || val.startsWith('vbscript:') || val.startsWith('data:'))
+      ) {
         el.removeAttribute(attr.name);
       }
     }
