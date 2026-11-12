@@ -221,28 +221,60 @@ function sanitizeMatchStyleHTML(doc: Document): string {
 }
 
 /**
+ * Sanitizes pasted HTML for 'keep-format' mode:
+ * - Preserves structural and stylistic HTML (classes, inline styles, font colors, tables, etc.).
+ * - Strips dangerous executable tags (script, iframe, object, embed, applet, meta, link, base, form, svg, math).
+ * - Strips inline event handlers (onload, onerror, onclick, etc.) and javascript:/vbscript: links.
+ */
+export function sanitizeKeepFormatHTML(doc: Document): string {
+  // 1. Remove active and dangerous executable elements
+  const dangerous = doc.querySelectorAll(
+    'script, noscript, iframe, object, embed, applet, meta, link, base, form, svg, math'
+  );
+  dangerous.forEach((el) => el.remove());
+
+  // 2. Strip all inline event handlers (on*) and javascript:/vbscript: URIs
+  const allElements = doc.querySelectorAll('*');
+  allElements.forEach((el) => {
+    const attrs = Array.from(el.attributes);
+    for (const attr of attrs) {
+      const name = attr.name.toLowerCase();
+      const val = attr.value.trim().toLowerCase();
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+      }
+      if ((name === 'href' || name === 'src') && (val.startsWith('javascript:') || val.startsWith('vbscript:'))) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  });
+
+  return doc.body.innerHTML;
+}
+
+/**
  * Sanitizes pasted clipboard HTML according to the user's selected preference:
  * - 'match-style': Inherits editor typography & theme while preserving semantic marks (bold, italic, etc.).
- * - 'keep-format': Retains original clipboard HTML structure and styles as permitted by TipTap.
+ * - 'keep-format': Retains original clipboard HTML structure and styles while neutralizing script execution risks.
  * - 'plain-text': Converts content to unformatted plain-text paragraphs.
  */
 export function sanitizePastedHTML(
   html: string,
   behavior: PasteBehavior = 'match-style'
 ): string {
-  if (behavior === 'keep-format') {
-    return html;
-  }
-
   if (!html || typeof html !== 'string') {
     return '';
+  }
+
+  if (behavior === 'plain-text') {
+    return convertHtmlToPlainParagraphs(html);
   }
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 
-  if (behavior === 'plain-text') {
-    return convertHtmlToPlainParagraphs(html);
+  if (behavior === 'keep-format') {
+    return sanitizeKeepFormatHTML(doc);
   }
 
   return sanitizeMatchStyleHTML(doc);

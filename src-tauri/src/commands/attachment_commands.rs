@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use tauri::State;
+use tauri_plugin_opener::OpenerExt;
 use uuid::Uuid;
 
 use crate::db::{attachment_repo, cross_link_repo, DbManager};
@@ -129,7 +130,7 @@ pub fn delete_attachment(db: State<DbManager>, id: String) -> Result<bool, AppEr
 }
 
 #[tauri::command]
-pub fn open_attachment(db: State<DbManager>, id: String) -> Result<bool, AppError> {
+pub fn open_attachment(app: tauri::AppHandle, db: State<DbManager>, id: String) -> Result<bool, AppError> {
     let att = db.with_conn(|conn| attachment_repo::get_attachment(conn, &id))?;
     let path = PathBuf::from(&att.file_path);
 
@@ -140,29 +141,30 @@ pub fn open_attachment(db: State<DbManager>, id: String) -> Result<bool, AppErro
         )));
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/c", "start", "", &path.to_string_lossy()])
-            .spawn()
-            .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
+    if !path.is_file() {
+        return Err(AppError::Validation("Path is not a regular file".to_string()));
     }
 
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    const BLOCKED_EXTENSIONS: &[&str] = &[
+        "exe", "bat", "cmd", "ps1", "vbs", "vbe", "js", "jse", "wsf", "wsh",
+        "msc", "msi", "msp", "com", "scr", "hta", "cpl", "jar", "reg", "pif",
+    ];
+    if BLOCKED_EXTENSIONS.contains(&ext.as_str()) {
+        return Err(AppError::Validation(format!(
+            "Opening executable or script files (.{}) is blocked for security reasons",
+            ext
+        )));
     }
 
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
-    }
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
+        .map_err(|e| AppError::Internal(format!("Failed to launch file: {}", e)))?;
 
     Ok(true)
 }

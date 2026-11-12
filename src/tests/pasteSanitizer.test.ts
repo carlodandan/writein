@@ -144,11 +144,23 @@ describe('pasteSanitizer', () => {
   });
 
   describe('keep-format behavior', () => {
-    it('passes through original HTML untouched', () => {
+    it('passes through original safe HTML with formatting intact', () => {
       const rawHtml = '<div class="custom-class" style="color: magenta;">Unchanged content</div>';
       const result = sanitizePastedHTML(rawHtml, 'keep-format');
 
       expect(result).toBe(rawHtml);
+    });
+
+    it('neutralizes malicious scripts and event handlers in keep-format mode', () => {
+      const maliciousHtml = '<div style="color: red;" onclick="alert(1)"><script>alert("xss")</script><img src="x" onerror="evil()" /><a href="javascript:doBad()">Click</a>Safe text</div>';
+      const result = sanitizePastedHTML(maliciousHtml, 'keep-format');
+
+      expect(result).not.toContain('<script');
+      expect(result).not.toContain('onclick');
+      expect(result).not.toContain('onerror');
+      expect(result).not.toContain('javascript:');
+      expect(result).toContain('Safe text');
+      expect(result).toContain('style="color: red;"');
     });
   });
 
