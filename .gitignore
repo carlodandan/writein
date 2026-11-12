@@ -47,3 +47,6 @@ signkey/
 # Context Files
 context.md
 sync.md 
+
+# Skill Lock
+skills-lock.json
