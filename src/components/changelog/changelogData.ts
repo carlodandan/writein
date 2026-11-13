@@ -17,10 +17,67 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: 'v4.3.1',
+    date: 'November 13, 2026',
+    title: 'Multi-Platform Desktop Support, Security Hardening & Web SEO',
+    badge: 'Latest',
+    highlights: [
+      {
+        title: 'macOS & Linux Multi-Platform Support',
+        description: 'WriteIn is now built for macOS (Apple Silicon & Intel) and Linux (Ubuntu .deb & AppImage) alongside Windows, featuring platform-adaptive shortcuts and native system integration.',
+      },
+      {
+        title: 'Security Hardening & Content Isolation',
+        description: 'Hardened attachment file handling with native system openers and extension blocking, enforced strict Content Security Policy, and sanitized clipboard paste and deep links.',
+      },
+      {
+        title: 'Web Discoverability & SEO Polish',
+        description: 'Added automated sitemaps, robots configuration, enhanced structured data, and LLM-friendly index files for writein.pages.dev.',
+      },
+    ],
+    details: [
+      {
+        category: 'Added',
+        items: [
+          'Multi-platform GitHub Actions release matrix generating desktop builds for Windows x64, macOS (Universal/arm64/x64), and Linux (.deb, .AppImage).',
+          'Dynamic platform-aware search shortcut in HeaderBar displaying ⌘K on macOS and Ctrl K on Windows and Linux.',
+          'Native operating system file open and folder reveal commands for macOS (open, open -R) and Linux (xdg-open).',
+          'Branch-aware staging release workflow tagging builds as staging-__VERSION__ and marking them as prereleases.',
+          'Automated sitemap.xml and robots.txt generation on writein.pages.dev via vite-plugin-sitemap.',
+          'Enhanced website metadata, OpenGraph cards, JSON-LD schema, and machine-readable llms.txt index.',
+        ],
+      },
+      {
+        category: 'Security',
+        items: [
+          'Replaced shell execution (cmd.exe /c start) with tauri_plugin_opener to prevent command injection risks.',
+          'Blocked opening executable and script files (.exe, .bat, .cmd, .ps1, .vbs, .js, .msi, etc.) from the attachment manager.',
+          'Configured strict Content Security Policy (CSP) in tauri.conf.json restricting script execution to self.',
+          'Hardened keep-format paste mode to actively strip dangerous executable elements, on* event handlers, and javascript:/vbscript:/data: URIs.',
+          'Enforced strict regex token validation on deep-link project IDs and navigation targets.',
+        ],
+      },
+      {
+        category: 'Changed',
+        items: [
+          'Updated Linux package dependencies in tauri.conf.json to require libwebkit2gtk-4.1-0.',
+          'Updated project Node.js engine target to 24.22.1.',
+          'Synchronized documentation across README, Architecture, API, and Tutorial for multi-platform support.',
+        ],
+      },
+      {
+        category: 'Fixed',
+        items: [
+          'Standardized asset naming and URL casing across website download targets.',
+          'Scoped Vitest test runner include paths to src/ to prevent running non-test scripts.',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v4.3.0',
     date: 'October 2, 2026',
     title: 'In-App What\'s New Changelog & Brand Identity Polish',
-    badge: 'Latest',
     highlights: [
       {
         title: 'In-App "What\'s New" Changelog',
