@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.1] - 2026-11-13
+
+### Added
+- **Multi-Platform Desktop Support & Release Matrix**: Expanded GitHub Actions CI/CD release workflow to build native desktop packages for macOS (Apple Silicon `aarch64` and Intel `x86_64`) and Linux (Ubuntu 22.04 LTS `.deb` and `.AppImage`), alongside Windows x64 installers.
+- **Platform-Aware Desktop Shortcuts**: Desktop header bar dynamically displays `⌘K` on macOS and `Ctrl K` on Windows and Linux for global search.
+- **Cross-Platform OS Shell Handlers**: Integrated native attachment opening and file reveals for macOS (`open`, `open -R`), Linux (`xdg-open`), and Windows.
+- **Branch-Aware Staging Release Tags**: Automated GitHub Actions staging workflow formatting release tags as `staging-__VERSION__` and marking staging releases as prereleases.
+- **Web SEO & Discovery Metadata**: Added automated `sitemap.xml` and `robots.txt` generation via `vite-plugin-sitemap`, enhanced OpenGraph & JSON-LD schema metadata, and machine-readable LLM indexing files (`llms.txt`, `llms-full.txt`).
+
+### Security
+- **Attachment Opener Hardening**: Replaced shell command processor execution (`cmd.exe /c start`) with `tauri_plugin_opener` (`app.opener().open_path`) to prevent command injection and unquoted argument exploitation.
+- **File & Extension Blocklist**: Enforced regular file validation (`path.is_file()`) and blocked dangerous executable and script file types (`.exe`, `.bat`, `.cmd`, `.ps1`, `.vbs`, `.js`, `.msi`, `.scr`, etc.) from being opened via attachments.
+- **Strict Content Security Policy (CSP)**: Added strict CSP in `tauri.conf.json` restricting `script-src` to `'self'`, permitting Google Fonts typography and the Cloudflare Workers transfer relay, while securing IPC and asset protocols.
+- **Clipboard Paste Sanitization**: Hardened `keep-format` paste behavior in `pasteSanitizer.ts` to actively neutralize executable markup (`<script>`, `<iframe>`, `<object>`, `<embed>`, `<meta>`, `<link>`, `<form>`, `<svg>`, `<math>`), inline `on*` event handlers, and `javascript:`, `vbscript:`, and `data:` URIs while preserving formatting.
+- **Deep Link Parameter Validation**: Enforced strict alphanumeric regex validation on incoming `writein://open?id=` and `writein://tab` / `writein://navigate` parameters to mitigate path traversal and injection risks.
+
+### Changed
+- **Linux WebKitGTK Dependency**: Updated package dependencies in `tauri.conf.json` to require modern `libwebkit2gtk-4.1-0` for Linux desktop packages.
+- **Node.js Environment**: Updated project Node.js engine target to 24.22.1 (`.node-version`).
+- **Documentation Synchronization**: Updated `README.md`, `docs/ARCHITECTURE.md`, `docs/API.md`, and `docs/TUTORIAL.md` with multi-platform paths, dependencies, and Linux folder reveal behaviors.
+
+### Fixed
+- **Download Asset Link Casing**: Standardized download asset casing and links across the landing page.
+- **Test Runner Scoping**: Isolated Vitest test discovery in `vite.config.ts` to `src/**/*.{test,spec}.{ts,tsx}`.
+
+---
+
 ## [4.3.0] - 2026-10-02
 
 ### Added
